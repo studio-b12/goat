@@ -16,6 +16,21 @@ var (
 	rxOptionHeader     = regexp.MustCompile(`(?m)^\s*\[([\w\-]+)\]\s*(.*\n)*`)
 )
 
+type context struct {
+	raw     string
+	section string
+	index   int
+}
+
+func (t context) wrapErr(err error) error {
+	var cErr ContextError
+
+	cErr.context = t
+	cErr.Inner = err
+
+	return cErr
+}
+
 // Unmarshal takes a raw string of a Gurlfile and tries
 // to parse it. Returns the parsed Gurlfile.
 func Unmarshal(raw string, params ...any) (Gurlfile, error) {
@@ -67,8 +82,9 @@ func parseSection(name, content string, gf *Gurlfile) error {
 	requestsRaw := rxRequestSeparator.Split(content, -1)
 	requests := make([]Request, 0, len(requestsRaw))
 
-	for _, requestRaw := range requestsRaw {
-		request, err := parseRequest(requestRaw, nil)
+	for i, requestRaw := range requestsRaw {
+		ctx := context{section: name, index: i}
+		request, err := ctx.parseRequest(requestRaw, nil)
 		if err != nil {
 			return err
 		}
@@ -95,7 +111,15 @@ func parseSection(name, content string, gf *Gurlfile) error {
 	return nil
 }
 
-func parseRequest(requestRaw string, params any) (Request, error) {
+func (t context) parseRequest(requestRaw string, params any) (req Request, err error) {
+	defer func() {
+		// If an error is returned, wrap the error
+		// in a ContextError.
+		if err != nil {
+			err = t.wrapErr(err)
+		}
+	}()
+
 	requestRaw = strings.TrimSpace(requestRaw)
 
 	if requestRaw == "" {
@@ -133,11 +157,9 @@ func parseRequest(requestRaw string, params any) (Request, error) {
 		return Request{}, ErrInvalidHead
 	}
 
-	var (
-		err error
-		req = newRequest()
-	)
+	req = newRequest()
 
+	req.context = t
 	if params == nil {
 		req.raw = requestRaw
 	}

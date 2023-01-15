@@ -52,13 +52,13 @@ type Options struct {
 type Request struct {
 	Options
 
+	context
+
 	Method string
 	URI    string
 	Header http.Header
 	Body   []byte
 	Script string
-
-	raw string
 }
 
 func newRequest() (r Request) {
@@ -76,7 +76,7 @@ func (t Request) ParseWithParams(params any) (Request, error) {
 		return Request{}, ErrAlreadyParsed
 	}
 
-	return parseRequest(t.raw, params)
+	return t.parseRequest(t.raw, params)
 }
 
 func (t Request) ToHttpRequest() (*http.Request, error) {

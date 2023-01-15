@@ -20,7 +20,7 @@ GET https://example.com
 		exp.Method = "GET"
 		exp.URI = "https://example.com"
 
-		res, err := parseRequest(raw, nil)
+		res, err := testCtx().parseRequest(raw, nil)
 		assert.Nil(t, err)
 		assert.Equal(t, exp, res)
 	})
@@ -41,7 +41,7 @@ X-XSRF-Token:	 some token
 			"X-Xsrf-Token": []string{"some token"},
 		}
 
-		res, err := parseRequest(raw, nil)
+		res, err := testCtx().parseRequest(raw, nil)
 		assert.Nil(t, err)
 		assert.Equal(t, exp, res)
 	})
@@ -60,7 +60,7 @@ GET https://example.com
 		exp.URI = "https://example.com"
 		exp.Body = []byte("{\n\t\"hello\": \"world\"\n}")
 
-		res, err := parseRequest(raw, nil)
+		res, err := testCtx().parseRequest(raw, nil)
 		assert.Nil(t, err)
 		assert.Equal(t, exp, res)
 	})
@@ -85,7 +85,7 @@ X-XSRF-Token:	 some token
 		}
 		exp.Body = []byte("{\n\t\"hello\": \"world\"\n}")
 
-		res, err := parseRequest(raw, nil)
+		res, err := testCtx().parseRequest(raw, nil)
 		assert.Nil(t, err)
 		assert.Equal(t, exp, res)
 	})
@@ -110,7 +110,7 @@ filter = [1, 2, 3]
 			"filter": []any{int64(1), int64(2), int64(3)},
 		}
 
-		res, err := parseRequest(raw, nil)
+		res, err := testCtx().parseRequest(raw, nil)
 		assert.Nil(t, err)
 		assert.Equal(t, exp, res)
 	})
@@ -129,7 +129,7 @@ var a = 1;
 		exp.URI = "https://example.com"
 		exp.Script = "assert(true);\nvar a = 1;"
 
-		res, err := parseRequest(raw, nil)
+		res, err := testCtx().parseRequest(raw, nil)
 		assert.Nil(t, err)
 		assert.Equal(t, exp, res)
 	})
@@ -168,7 +168,7 @@ var a = 1;
 		}
 		exp.Script = "assert(true);\nvar a = 1;"
 
-		res, err := parseRequest(raw, nil)
+		res, err := testCtx().parseRequest(raw, nil)
 		assert.Nil(t, err)
 		assert.Equal(t, exp, res)
 	})
@@ -207,7 +207,7 @@ var a = {{.A}};
 		}
 		exp.Script = "assert(true);\nvar a = {{.A}};"
 
-		res, err := parseRequest(raw, nil)
+		res, err := testCtx().parseRequest(raw, nil)
 		assert.Nil(t, err)
 		assert.Equal(t, exp, res)
 	})
@@ -219,8 +219,12 @@ var a = {{.A}};
 
 		exp := Request{}
 
-		res, err := parseRequest(raw, nil)
+		res, err := testCtx().parseRequest(raw, nil)
 		assert.ErrorIs(t, err, ErrEmptyRequest)
 		assert.Equal(t, exp, res)
 	})
+}
+
+func testCtx() context {
+	return context{}
 }

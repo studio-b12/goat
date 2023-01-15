@@ -20,21 +20,15 @@ func (t InnerError) Unwrap() error {
 	return t.Inner
 }
 
-type ParseError struct {
+type ContextError struct {
 	InnerError
 
-	RequestNumber int
+	context
 }
 
-func newParseError(reqNumb int, inner error) (t ParseError) {
-	t.RequestNumber = reqNumb
-	t.Inner = inner
-	return t
-}
-
-func (t ParseError) Error() string {
-	return fmt.Sprintf("Request #%02d: %s",
-		t.RequestNumber, t.Inner.Error())
+func (t ContextError) Error() string {
+	return fmt.Sprintf("Request [%s] #%02d: %s",
+		t.section, t.index+1, t.Inner.Error())
 }
 
 type DetailedError struct {
