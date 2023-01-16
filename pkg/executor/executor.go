@@ -78,7 +78,7 @@ func (t *Executor) Execute(gf gurlfile.Gurlfile, initialParams engine.State) (er
 				log.Error().Str("req", req.String()).Err(err).Msg("teardown step failed")
 				break
 			}
-			log.Info().Str("req", req.String()).Msg("Setup step completed")
+			log.Info().Str("req", req.String()).Msg("Teardown step completed")
 		}
 	}()
 
