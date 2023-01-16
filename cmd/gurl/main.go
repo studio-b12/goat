@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
+	"path"
 	"time"
 
 	"github.com/dop251/goja"
@@ -28,6 +30,12 @@ func Assert(v bool) {
 }
 
 func main() {
+	flag.Usage = func() {
+		out := flag.CommandLine.Output()
+		fmt.Fprintf(out, "Usage: %s [OPTION]... [GURLFILE]\n\nOptions:\n",
+			path.Base(os.Args[0]))
+		flag.PrintDefaults()
+	}
 	flag.Parse()
 
 	zerolog.SetGlobalLevel(zerolog.Level(*fLogLevel))
