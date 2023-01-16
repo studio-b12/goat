@@ -50,7 +50,8 @@ func (t *Goja) State() State {
 	values := make(State)
 	for _, key := range t.rt.GlobalObject().Keys() {
 		v := t.rt.Get(key)
-		if v.ExportType().Kind() == reflect.Func {
+		typ := v.ExportType()
+		if typ == nil || typ.Kind() == reflect.Func {
 			continue
 		}
 		values[key] = v.Export()
