@@ -46,6 +46,21 @@ type Options struct {
 	QueryParams map[string]any
 }
 
+type context struct {
+	raw     string
+	section string
+	index   int
+}
+
+func (t context) WrapErr(err error) error {
+	var cErr ContextError
+
+	cErr.context = t
+	cErr.Inner = err
+
+	return cErr
+}
+
 // Request holds the specifications
 // for a HTTP request with options
 // and script commands.

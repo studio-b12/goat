@@ -134,13 +134,21 @@ func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlf
 }
 
 func (t *Executor) executeRequest(eng engine.Engine, req gurlfile.Request) (err error) {
+	defer func() {
+		// If an error is returned, wrap the error
+		// in a ContextError.
+		if err != nil {
+			err = req.WrapErr(err)
+		}
+	}()
+
 	state := eng.State()
-	req, err = req.ParseWithParams(state)
+	parsedReq, err := req.ParseWithParams(state)
 	if err != nil {
 		return fmt.Errorf("failed infusing request with parameters: %s", err.Error())
 	}
 
-	httpReq, err := req.ToHttpRequest()
+	httpReq, err := parsedReq.ToHttpRequest()
 	if err != nil {
 		return fmt.Errorf("failed transforming to http request: %s", err.Error())
 	}
@@ -158,7 +166,7 @@ func (t *Executor) executeRequest(eng engine.Engine, req gurlfile.Request) (err 
 	state.Merge(engine.State{"response": resp})
 	eng.SetState(state)
 
-	err = eng.Run(req.Script)
+	err = eng.Run(parsedReq.Script)
 	if err != nil {
 		return fmt.Errorf("script failed: %s", err.Error())
 	}

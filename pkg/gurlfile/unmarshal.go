@@ -16,21 +16,6 @@ var (
 	rxOptionHeader     = regexp.MustCompile(`(?m)^\s*\[([\w\-]+)\]\s*(.*\n)*`)
 )
 
-type context struct {
-	raw     string
-	section string
-	index   int
-}
-
-func (t context) wrapErr(err error) error {
-	var cErr ContextError
-
-	cErr.context = t
-	cErr.Inner = err
-
-	return cErr
-}
-
 // Unmarshal takes a raw string of a Gurlfile and tries
 // to parse it. Returns the parsed Gurlfile.
 func Unmarshal(raw string, params ...any) (Gurlfile, error) {
@@ -116,7 +101,7 @@ func (t context) parseRequest(requestRaw string, params any) (req Request, err e
 		// If an error is returned, wrap the error
 		// in a ContextError.
 		if err != nil {
-			err = t.wrapErr(err)
+			err = t.WrapErr(err)
 		}
 	}()
 
