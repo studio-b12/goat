@@ -19,6 +19,9 @@ var (
 // Unmarshal takes a raw string of a Gurlfile and tries
 // to parse it. Returns the parsed Gurlfile.
 func Unmarshal(raw string, params ...any) (Gurlfile, error) {
+
+	raw = removeComments(raw)
+
 	sections := splitSections(raw)
 
 	var (
@@ -235,4 +238,27 @@ func parseOptions(raw string) (Options, error) {
 	}
 
 	return options, nil
+}
+
+func removeComments(raw string) string {
+	lines := strings.Split(raw, "\n")
+
+	for i, line := range lines {
+		cidx := strings.Index(line, "//")
+		if cidx == -1 {
+			continue
+		}
+
+		if cidx > 0 {
+			if line[cidx-1] == ' ' {
+				cidx -= 1
+			} else {
+				continue
+			}
+		}
+
+		lines[i] = line[:cidx]
+	}
+
+	return strings.Join(lines, "\n")
 }
