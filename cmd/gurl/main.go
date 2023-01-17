@@ -1,13 +1,10 @@
 package main
 
 import (
-	"flag"
-	"fmt"
 	"os"
-	"path"
 	"time"
 
-	"github.com/dop251/goja"
+	"github.com/alexflint/go-arg"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/studio-b12/gurl/pkg/config"
@@ -16,47 +13,26 @@ import (
 	"github.com/studio-b12/gurl/pkg/requester"
 )
 
-var (
-	fLogLevel = flag.Int("level", 2, "Log level - see https://github.com/rs/zerolog#leveled-logging")
-	fParams   = flag.String("params", "", "Path to file with initial parameters")
-)
-
-var vm = goja.New()
-
-func Assert(v bool) {
-	if !v {
-		panic(vm.ToValue("test"))
-	}
+type Args struct {
+	Gurlfile string `arg:"positional,required" help:"Gurlfile(s) location"`
+	LogLevel int    `arg:"-l,--loglevel" default:"1" help:"Logging level (see https://github.com/rs/zerolog#leveled-logging for reference)"`
+	Params   string `arg:"-p,--params" help:"Params file location"`
 }
 
 func main() {
-	flag.Usage = func() {
-		out := flag.CommandLine.Output()
-		fmt.Fprintf(out, "Usage: %s [OPTION]... [GURLFILE]\n\nOptions:\n",
-			path.Base(os.Args[0]))
-		flag.PrintDefaults()
-	}
-	flag.Parse()
 
-	zerolog.SetGlobalLevel(zerolog.Level(*fLogLevel))
+	var args Args
+	arg.MustParse(&args)
+
+	zerolog.SetGlobalLevel(zerolog.Level(args.LogLevel))
 	log.Logger = log.Output(zerolog.ConsoleWriter{
 		Out:        os.Stdout,
 		TimeFormat: time.RFC3339,
 	})
 
-	path := flag.Arg(0)
-	if path == "" {
-		log.Fatal().Msg("No path to execute is given")
-	}
-
-	var err error
-	state := engine.State{}
-
-	if *fParams != "" {
-		state, err = config.Parse[engine.State](*fParams, "GURL_")
-		if err != nil {
-			log.Fatal().Err(err).Msg("parameter parsing failed")
-		}
+	state, err := config.Parse[engine.State](args.Params, "GURL_")
+	if err != nil {
+		log.Fatal().Err(err).Msg("parameter parsing failed")
 	}
 
 	engineMaker := engine.NewGoja
@@ -66,7 +42,7 @@ func main() {
 	}
 
 	executor := executor.New(engineMaker, req)
-	err = executor.ExecuteFromDir(path, state)
+	err = executor.ExecuteFromDir(args.Gurlfile, state)
 	if err != nil {
 		log.Fatal().Err(err).Msg("execution failed")
 	}

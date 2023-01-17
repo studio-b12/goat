@@ -25,14 +25,15 @@ func Parse[T any](cfgFile string, envPrefix string, def ...T) (cfg T, err error)
 		cfg = def[0]
 	}
 
-	if err = file.Decode(cfgFile, &cfg); err != nil && !os.IsNotExist(err) {
-		return cfg, err
+	if cfgFile != "" {
+		err = file.Decode(cfgFile, &cfg)
+		if err != nil && !os.IsNotExist(err) {
+			return cfg, err
+		}
 	}
 
 	godotenv.Load()
-	if err = env.Decode(os.Environ(), envPrefix, &cfg); err != nil {
-		return cfg, err
-	}
+	err = env.Decode(os.Environ(), envPrefix, &cfg)
 
-	return cfg, nil
+	return cfg, err
 }
