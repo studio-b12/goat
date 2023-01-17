@@ -37,3 +37,11 @@ func (t *Goja) builtin_error(msg string) {
 func (t *Goja) builtin_fatal(msg string) {
 	log.Fatal().Msg(msg)
 }
+
+func (t *Goja) builtin_print(msg string) {
+	fmt.Print(msg)
+}
+
+func (t *Goja) builtin_println(msg string) {
+	fmt.Println(msg)
+}

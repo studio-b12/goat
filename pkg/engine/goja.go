@@ -27,6 +27,8 @@ func NewGoja() Engine {
 	t.rt.Set("warn", t.builtin_warn)
 	t.rt.Set("error", t.builtin_error)
 	t.rt.Set("fatal", t.builtin_fatal)
+	t.rt.Set("print", t.builtin_print)
+	t.rt.Set("println", t.builtin_println)
 
 	return &t
 }
