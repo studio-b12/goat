@@ -1,12 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/alexflint/go-arg"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/studio-b12/gurl/internal/version"
 	"github.com/studio-b12/gurl/pkg/config"
 	"github.com/studio-b12/gurl/pkg/engine"
 	"github.com/studio-b12/gurl/pkg/executor"
@@ -48,4 +51,13 @@ func main() {
 	}
 
 	log.Info().Msg("Execution finished successfully")
+}
+
+func (Args) Description() string {
+	return "Automation tool for executing and evaluating API requests."
+}
+
+func (Args) Version() string {
+	return fmt.Sprintf("gurl v%s (%s %s %s)",
+		version.Version, version.CommitHash, version.BuildDate, runtime.Version())
 }
