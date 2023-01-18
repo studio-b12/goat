@@ -22,6 +22,7 @@ var (
 // to parse it. Returns the parsed Gurlfile.
 func Unmarshal(raw string, currDir string, params ...any) (gf Gurlfile, err error) {
 
+	raw = crlf2lf(raw)
 	raw = removeComments(raw)
 
 	importPathes, rest, err := parseImports(raw)

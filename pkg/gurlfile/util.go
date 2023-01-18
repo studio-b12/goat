@@ -62,3 +62,7 @@ func extend(v string, ext string) string {
 
 	return v
 }
+
+func crlf2lf(v string) string {
+	return strings.ReplaceAll(v, "\r\n", "\n")
+}
