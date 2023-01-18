@@ -3,6 +3,7 @@ package gurlfile
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"text/template"
 )
 
@@ -19,4 +20,27 @@ func applyTemplate(raw string, params any) (string, error) {
 	}
 
 	return out.String(), nil
+}
+
+func removeComments(raw string) string {
+	lines := strings.Split(raw, "\n")
+
+	for i, line := range lines {
+		cidx := strings.Index(line, "//")
+		if cidx == -1 {
+			continue
+		}
+
+		if cidx > 0 {
+			if line[cidx-1] == ' ' {
+				cidx -= 1
+			} else {
+				continue
+			}
+		}
+
+		lines[i] = line[:cidx]
+	}
+
+	return strings.Join(lines, "\n")
 }
