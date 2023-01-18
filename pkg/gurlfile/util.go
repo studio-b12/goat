@@ -3,6 +3,7 @@ package gurlfile
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"text/template"
 )
@@ -43,4 +44,21 @@ func removeComments(raw string) string {
 	}
 
 	return strings.Join(lines, "\n")
+}
+
+func unquote(v string) string {
+	if len(v) > 1 && (v[0] == '"' && v[len(v)-1] == '"' ||
+		v[0] == '\'' && v[len(v)-1] == '\'') {
+		return v[1 : len(v)-1]
+	}
+
+	return v
+}
+
+func extend(v string, ext string) string {
+	if filepath.Ext(v) == "" {
+		return v + "." + ext
+	}
+
+	return v
 }

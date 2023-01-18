@@ -3,6 +3,8 @@ package gurlfile
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -18,16 +20,44 @@ var (
 
 // Unmarshal takes a raw string of a Gurlfile and tries
 // to parse it. Returns the parsed Gurlfile.
-func Unmarshal(raw string, params ...any) (Gurlfile, error) {
+func Unmarshal(raw string, currDir string, params ...any) (gf Gurlfile, err error) {
 
 	raw = removeComments(raw)
 
+	importPathes, rest, err := parseImports(raw)
+	if err != nil {
+		return Gurlfile{}, err
+	}
+	raw = rest
+
+	if currDir == "" {
+		currDir, err = os.Getwd()
+		if err != nil {
+			return Gurlfile{}, fmt.Errorf("failed getting cwd: %s", err.Error())
+		}
+	}
+
+	for _, path := range importPathes {
+		fullPath := extend(filepath.Join(currDir, path), FileExtension)
+
+		raw, err := os.ReadFile(fullPath)
+		if err != nil {
+			return Gurlfile{}, fmt.Errorf("failed following import %s: %s",
+				fullPath, err.Error())
+		}
+
+		relativeCurrDir := filepath.Dir(fullPath)
+		importGf, err := Unmarshal(string(raw), relativeCurrDir, params...)
+		if err != nil {
+			return Gurlfile{}, fmt.Errorf("failed parsing imported file %s: %s",
+				fullPath, err.Error())
+		}
+
+		(&gf).Merge(importGf)
+	}
+
 	sections := splitSections(raw)
 
-	var (
-		gf  Gurlfile
-		err error
-	)
 	for _, section := range sections {
 		err = parseSection(section[0], section[1], &gf)
 		if err != nil {
@@ -238,4 +268,32 @@ func parseOptions(raw string) (Options, error) {
 	}
 
 	return options, nil
+}
+
+func parseImports(raw string) (pathes []string, rest string, err error) {
+	lines := strings.Split(raw, "\n")
+
+	for i, line := range lines {
+		if !strings.HasPrefix(strings.TrimSpace(line), "use") {
+			continue
+		}
+
+		split := strings.Fields(line)
+
+		var path string
+		if len(split) > 1 {
+			path = unquote(strings.Join(split[1:], " "))
+		}
+
+		if path == "" {
+			return nil, "", newDetailedError(ErrInvalidUse,
+				"use statement must follow a path to a gurlfile")
+		}
+
+		pathes = append(pathes, path)
+		lines[i] = ""
+	}
+
+	rest = strings.Join(lines, "\n")
+	return pathes, rest, err
 }

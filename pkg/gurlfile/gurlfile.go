@@ -34,10 +34,10 @@ type Gurlfile struct {
 // to the current Gurlfile.
 func (t *Gurlfile) Merge(with Gurlfile) {
 	t.Setup = append(t.Setup, with.Setup...)
-	t.SetupEach = append(t.Setup, with.SetupEach...)
-	t.Tests = append(t.Setup, with.Tests...)
-	t.Teardown = append(t.Setup, with.Teardown...)
-	t.TeardownEach = append(t.Setup, with.TeardownEach...)
+	t.SetupEach = append(t.SetupEach, with.SetupEach...)
+	t.Tests = append(t.Tests, with.Tests...)
+	t.Teardown = append(t.Teardown, with.Teardown...)
+	t.TeardownEach = append(t.TeardownEach, with.TeardownEach...)
 }
 
 // Options holds the specific request

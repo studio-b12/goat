@@ -3,6 +3,7 @@ package executor
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/rs/zerolog/log"
 	"github.com/studio-b12/gurl/pkg/engine"
@@ -52,7 +53,8 @@ func (t *Executor) ExecuteFromDir(path string, initialParams engine.State) error
 	}
 
 	log.Debug().Msg("Parsing gurlfile ...")
-	gf, err := gurlfile.Unmarshal(string(data), initialParams)
+	relCurrDir := filepath.Dir(path)
+	gf, err := gurlfile.Unmarshal(string(data), relCurrDir, initialParams)
 	if err != nil {
 		return fmt.Errorf("failed parsing gurlfile: %s", err.Error())
 	}

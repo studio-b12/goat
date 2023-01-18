@@ -10,6 +10,7 @@ var (
 	ErrInvalidHead        = errors.New("invalid request head")
 	ErrInvalidSectionName = errors.New("invalid section name")
 	ErrAlreadyParsed      = errors.New("request has already been parsed")
+	ErrInvalidUse         = errors.New("invalid use statement")
 )
 
 type InnerError struct {

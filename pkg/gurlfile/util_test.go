@@ -30,3 +30,47 @@ test
 	res = removeComments(raw)
 	assert.Equal(t, exp, res)
 }
+
+func TestUnquote(t *testing.T) {
+	var raw, exp, res string
+
+	raw = `"Hello world"`
+	exp = `Hello world`
+	res = unquote(raw)
+	assert.Equal(t, exp, res)
+
+	raw = `'Hello world'`
+	exp = `Hello world`
+	res = unquote(raw)
+	assert.Equal(t, exp, res)
+
+	raw = `'"Hello" world'`
+	exp = `"Hello" world`
+	res = unquote(raw)
+	assert.Equal(t, exp, res)
+
+	raw = `"Hello" world`
+	exp = `"Hello" world`
+	res = unquote(raw)
+	assert.Equal(t, exp, res)
+
+	raw = `"Hello world'`
+	exp = `"Hello world'`
+	res = unquote(raw)
+	assert.Equal(t, exp, res)
+
+	raw = `""`
+	exp = ``
+	res = unquote(raw)
+	assert.Equal(t, exp, res)
+
+	raw = `"`
+	exp = `"`
+	res = unquote(raw)
+	assert.Equal(t, exp, res)
+
+	raw = ``
+	exp = ``
+	res = unquote(raw)
+	assert.Equal(t, exp, res)
+}
