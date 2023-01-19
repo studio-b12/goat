@@ -153,6 +153,20 @@ func (t context) parseRequest(requestRaw string, params any) (req Request, err e
 		}
 	}
 
+	// Part 1: Parse Request Method, URL, Headers and Payload
+
+	req = newRequest()
+
+	req.context = t
+	if params == nil {
+		req.raw = requestRaw
+	}
+
+	requestRaw, err = parseHead(requestRaw, &req)
+	if err != nil {
+		return Request{}, err
+	}
+
 	// Split into sections (separated by one or more empty new lines)
 	sectionsSplit := strings.Split(requestRaw, "\n\n")
 	sections := make([]string, 0, len(sectionsSplit))
@@ -163,77 +177,12 @@ func (t context) parseRequest(requestRaw string, params any) (req Request, err e
 		}
 	}
 
-	if len(sections) == 0 {
-		return Request{}, ErrEmptyRequest
-	}
-
-	// Part 1: Parse Request Method, URL, Headers and Payload
-
-	lines := strings.Split(sections[0], "\n")
-
-	headerSplit := strings.Fields(lines[0])
-	if len(headerSplit) < 2 {
-		return Request{}, ErrInvalidHead
-	}
-
-	req = newRequest()
-
-	req.context = t
-	if params == nil {
-		req.raw = requestRaw
-	}
-
-	req.Method = headerSplit[0]
-	req.URI = headerSplit[1]
-	if err != nil {
-		return Request{}, fmt.Errorf("invalid URL: %s", err.Error())
-	}
-
-	parsingHeaders := true
-	bodyBuf := bytes.Buffer{}
-
-	for i := 1; i < len(lines); i++ {
-		line := lines[i]
-
-		if parsingHeaders {
-			matches := rxHeader.FindAllStringSubmatch(line, -1)
-			if len(matches) == 0 {
-				parsingHeaders = false
-			} else {
-				for _, match := range matches {
-					req.Header.Set(match[1], match[2])
-				}
-			}
-		}
-
-		if !parsingHeaders {
-			// Appending a line break before every line of
-			// body content to compensate for the missing
-			// line break at the end due to the split.
-			err = bodyBuf.WriteByte('\n')
-			if err != nil {
-				return Request{}, fmt.Errorf("failed appending request body: %s", err.Error())
-			}
-			_, err := bodyBuf.WriteString(line)
-			if err != nil {
-				return Request{}, fmt.Errorf("failed appending request body: %s", err.Error())
-			}
-		}
-	}
-
-	if bodyBuf.Len() > 1 {
-		// Removing the first line break.
-		req.Body = bodyBuf.Bytes()[1:]
-	}
-
 	// Part 2: Parse Toml Options
 
 	var optionsB, scriptB strings.Builder
 	parsingOptions := true
 
-	for i := 1; i < len(sections); i++ {
-		section := sections[i]
-
+	for _, section := range sections {
 		if parsingOptions {
 			if !rxOptionHeader.MatchString(section) {
 				parsingOptions = false
@@ -256,6 +205,81 @@ func (t context) parseRequest(requestRaw string, params any) (req Request, err e
 	req.Script = scriptB.String()
 
 	return req, nil
+}
+
+func parseHead(raw string, req *Request) (rest string, err error) {
+	lines := strings.Split(raw, "\n")
+	if len(lines) == 0 {
+		return "", ErrEmptyRequest
+	}
+
+	headerSplit := strings.Fields(lines[0])
+	if len(headerSplit) < 2 {
+		return "", ErrInvalidHead
+	}
+
+	req.Method = headerSplit[0]
+	req.URI = headerSplit[1]
+	if err != nil {
+		return "", fmt.Errorf("invalid URL: %s", err.Error())
+	}
+
+	parsingHeaders := true
+	inEscape := false
+	bodyBuf := bytes.Buffer{}
+	i := 1
+
+	for ; i < len(lines); i++ {
+		line := lines[i]
+
+		if parsingHeaders {
+			matches := rxHeader.FindAllStringSubmatch(line, -1)
+			if len(matches) == 0 {
+				parsingHeaders = false
+			} else {
+				for _, match := range matches {
+					req.Header.Set(match[1], match[2])
+				}
+			}
+		}
+
+		if !parsingHeaders {
+			if line == "```" {
+				if inEscape {
+					if i == len(lines)-1 || strings.TrimSpace(lines[i+1]) == "" {
+						i++
+						break
+					}
+				} else {
+					inEscape = true
+					continue
+				}
+			}
+
+			if !inEscape && line == "" {
+				break
+			}
+
+			// Appending a line break before every line of
+			// body content to compensate for the missing
+			// line break at the end due to the split.
+			err = bodyBuf.WriteByte('\n')
+			if err != nil {
+				return "", fmt.Errorf("failed appending request body: %s", err.Error())
+			}
+			_, err := bodyBuf.WriteString(line)
+			if err != nil {
+				return "", fmt.Errorf("failed appending request body: %s", err.Error())
+			}
+		}
+	}
+
+	if bodyBuf.Len() > 1 {
+		// Removing the first line break.
+		req.Body = bodyBuf.Bytes()[1:]
+	}
+
+	return strings.Join(lines[i:], "\n"), nil
 }
 
 func parseOptions(raw string) (Options, error) {

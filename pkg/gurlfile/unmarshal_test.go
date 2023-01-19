@@ -212,6 +212,84 @@ var a = {{.A}};
 		assert.Equal(t, exp, res)
 	})
 
+	t.Run("body-escaped", func(t *testing.T) {
+		const raw = `
+GET https://example.com/{{.Path}}
+Content-Type: {{.ContentType}}
+X-XSRF-Token:	 some token
+` +
+			"```\n" +
+			`This is
+
+some escaped
+
+
+body content
+` +
+			"```"
+
+		exp := newRequest()
+		exp.raw = strings.TrimSpace(raw)
+		exp.Method = "GET"
+		exp.URI = "https://example.com/{{.Path}}"
+		exp.Header = http.Header{
+			"Content-Type": []string{"{{.ContentType}}"},
+			"X-Xsrf-Token": []string{"some token"},
+		}
+		exp.Body = []byte("This is\n\nsome escaped\n\n\nbody content")
+
+		res, err := testCtx().parseRequest(raw, nil)
+		assert.Nil(t, err)
+		assert.Equal(t, exp, res)
+	})
+
+	t.Run("body-escaped-withparams", func(t *testing.T) {
+		const raw = `
+GET https://example.com/{{.Path}}
+Content-Type: {{.ContentType}}
+X-XSRF-Token:	 some token
+` +
+			"```\n" +
+			`This is
+
+some escaped
+
+
+body content
+` +
+			"```\n" +
+
+			`
+[QueryParams]
+page = {{.Page}}
+sortBy = "date"
+filter = [1, 2, 3]
+
+assert(true);
+var a = {{.A}};
+		`
+
+		exp := newRequest()
+		exp.raw = strings.TrimSpace(raw)
+		exp.Method = "GET"
+		exp.URI = "https://example.com/{{.Path}}"
+		exp.Header = http.Header{
+			"Content-Type": []string{"{{.ContentType}}"},
+			"X-Xsrf-Token": []string{"some token"},
+		}
+		exp.Body = []byte("This is\n\nsome escaped\n\n\nbody content")
+		exp.QueryParams = map[string]any{
+			"page":   "{{.Page}}",
+			"sortBy": "date",
+			"filter": []any{int64(1), int64(2), int64(3)},
+		}
+		exp.Script = "assert(true);\nvar a = {{.A}};"
+
+		res, err := testCtx().parseRequest(raw, nil)
+		assert.Nil(t, err)
+		assert.Equal(t, exp, res)
+	})
+
 	t.Run("error-empty", func(t *testing.T) {
 		const raw = `
 
