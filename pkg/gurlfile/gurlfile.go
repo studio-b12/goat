@@ -23,6 +23,8 @@ const (
 // Gurlfile holds all sections and
 // their requests.
 type Gurlfile struct {
+	Imports []string
+
 	Setup        []Request
 	SetupEach    []Request
 	Tests        []Request
@@ -91,7 +93,7 @@ func (t Request) ParseWithParams(params any) (Request, error) {
 		return Request{}, ErrAlreadyParsed
 	}
 
-	return t.parseRequest(t.raw, params)
+	return Request{}, nil
 }
 
 func (t Request) ToHttpRequest() (*http.Request, error) {

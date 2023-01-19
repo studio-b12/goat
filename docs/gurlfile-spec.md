@@ -8,20 +8,37 @@ A Gurlfile is an UTF-8 encoded plain text file with the file extension `.gurl`.
                  |
 Section Heading  |  ### Setup
                  |
-   Method & URL  |  POST <https://example.com>
-        Headers  |  X-Requested-With: XMLHttpRequest
+   Method & URL  |  POST https://example.com
+                 |  
+        Headers  |  [Headers]
+                 |  X-Requested-With: XMLHttpRequest
                  |  Content-Type: application/json
-           Body  |  {
-                 |	  "hello": "world"
+                 |  Hash: {{ sha256 .data }}
+                 |
+           Body  |  [Body]
+                 |  ```
+                 |  {
+                 |	  "hello": "world",
+                 |    "hash": "{{ sha256 .data }}",
+                 |    "dontescapethis": "\{\{ \}\}"
                  |  }
+                 |  ```
                  |  
         Comment  |  // This is a comment!
                  |
   Option Blocks  |  [QueryParams]
                  |  page = 2
                  |  items = 30
+                 |  filters = ["time", "name"]
                  |
-         Script  |  // assertions
+                 |  [MultipartFormdata]
+                 |  image = @myimage.jpeg
+                 |
+                 |  [Config]
+                 |  cookiejar = "foo"
+                 |  storecookies = false
+                 |
+         Script  |  [Script]
                  |  assert(response.status >= 200 && response.status < 400);
                  |  assert(response.body["name"] == "somename");
                  |

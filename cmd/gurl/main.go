@@ -20,6 +20,7 @@ type Args struct {
 	Gurlfile string `arg:"positional,required" help:"Gurlfile(s) location"`
 	LogLevel int    `arg:"-l,--loglevel" default:"1" help:"Logging level (see https://github.com/rs/zerolog#leveled-logging for reference)"`
 	Params   string `arg:"-p,--params" help:"Params file location"`
+	Dry      bool   `arg:"--dry" help:"Only parse the gurlfile(s) without executing any requests"`
 }
 
 func main() {
@@ -45,6 +46,8 @@ func main() {
 	}
 
 	executor := executor.New(engineMaker, req)
+	executor.Dry = args.Dry
+
 	err = executor.ExecuteFromDir(args.Gurlfile, state)
 	if err != nil {
 		log.Fatal().Err(err).Msg("execution failed")

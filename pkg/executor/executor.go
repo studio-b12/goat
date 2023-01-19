@@ -15,6 +15,8 @@ import (
 type Executor struct {
 	engineMaker func() engine.Engine
 	req         requester.Requester
+
+	Dry bool
 }
 
 // New initializes a new instance of Executor using
@@ -67,6 +69,11 @@ func (t *Executor) ExecuteFromDir(path string, initialParams engine.State) error
 // used as initial state for the runtime engine.
 func (t *Executor) Execute(gf gurlfile.Gurlfile, initialParams engine.State) (err error) {
 	log.Debug().Interface("gf", gf).Send()
+
+	if t.Dry {
+		log.Warn().Msg("This is a dry run: no requets will be executed")
+		return nil
+	}
 
 	eng := t.engineMaker()
 	eng.SetState(initialParams)

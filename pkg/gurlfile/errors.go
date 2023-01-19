@@ -21,6 +21,18 @@ func (t InnerError) Unwrap() error {
 	return t.Inner
 }
 
+type ParseError struct {
+	InnerError
+
+	Line    int
+	LinePos int
+}
+
+func (t ParseError) Error() string {
+	return fmt.Sprintf("%d:%d: %s",
+		t.Line+1, t.LinePos, t.Inner.Error())
+}
+
 type ContextError struct {
 	InnerError
 

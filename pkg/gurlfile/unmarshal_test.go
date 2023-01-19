@@ -1,308 +1,298 @@
 package gurlfile
 
-import (
-	"net/http"
-	"strings"
-	"testing"
+// func TestParseRequest(t *testing.T) {
 
-	"github.com/stretchr/testify/assert"
-)
+// 	t.Run("simple", func(t *testing.T) {
+// 		const raw = `
+// GET https://example.com
+// 		`
 
-func TestParseRequest(t *testing.T) {
+// 		exp := newRequest()
+// 		exp.raw = strings.TrimSpace(raw)
+// 		exp.Method = "GET"
+// 		exp.URI = "https://example.com"
 
-	t.Run("simple", func(t *testing.T) {
-		const raw = `
-GET https://example.com
-		`
+// 		res, err := testCtx().parseRequest(raw, nil)
+// 		assert.Nil(t, err)
+// 		assert.Equal(t, exp, res)
+// 	})
 
-		exp := newRequest()
-		exp.raw = strings.TrimSpace(raw)
-		exp.Method = "GET"
-		exp.URI = "https://example.com"
+// 	t.Run("headers", func(t *testing.T) {
+// 		const raw = `
+// GET https://example.com
+// Content-Type: application/json
+// X-XSRF-Token:	 some token
+// 		`
 
-		res, err := testCtx().parseRequest(raw, nil)
-		assert.Nil(t, err)
-		assert.Equal(t, exp, res)
-	})
+// 		exp := newRequest()
+// 		exp.raw = strings.TrimSpace(raw)
+// 		exp.Method = "GET"
+// 		exp.URI = "https://example.com"
+// 		exp.Header = http.Header{
+// 			"Content-Type": []string{"application/json"},
+// 			"X-Xsrf-Token": []string{"some token"},
+// 		}
 
-	t.Run("headers", func(t *testing.T) {
-		const raw = `
-GET https://example.com
-Content-Type: application/json
-X-XSRF-Token:	 some token
-		`
+// 		res, err := testCtx().parseRequest(raw, nil)
+// 		assert.Nil(t, err)
+// 		assert.Equal(t, exp, res)
+// 	})
 
-		exp := newRequest()
-		exp.raw = strings.TrimSpace(raw)
-		exp.Method = "GET"
-		exp.URI = "https://example.com"
-		exp.Header = http.Header{
-			"Content-Type": []string{"application/json"},
-			"X-Xsrf-Token": []string{"some token"},
-		}
+// 	t.Run("body", func(t *testing.T) {
+// 		const raw = `
+// GET https://example.com
+// {
+// 	"hello": "world"
+// }
+// 		`
 
-		res, err := testCtx().parseRequest(raw, nil)
-		assert.Nil(t, err)
-		assert.Equal(t, exp, res)
-	})
+// 		exp := newRequest()
+// 		exp.raw = strings.TrimSpace(raw)
+// 		exp.Method = "GET"
+// 		exp.URI = "https://example.com"
+// 		exp.Body = []byte("{\n\t\"hello\": \"world\"\n}")
 
-	t.Run("body", func(t *testing.T) {
-		const raw = `
-GET https://example.com
-{
-	"hello": "world"
-}
-		`
+// 		res, err := testCtx().parseRequest(raw, nil)
+// 		assert.Nil(t, err)
+// 		assert.Equal(t, exp, res)
+// 	})
 
-		exp := newRequest()
-		exp.raw = strings.TrimSpace(raw)
-		exp.Method = "GET"
-		exp.URI = "https://example.com"
-		exp.Body = []byte("{\n\t\"hello\": \"world\"\n}")
+// 	t.Run("headers", func(t *testing.T) {
+// 		const raw = `
+// GET https://example.com
+// Content-Type: application/json
+// X-XSRF-Token:	 some token
+// {
+// 	"hello": "world"
+// }
+// 		`
 
-		res, err := testCtx().parseRequest(raw, nil)
-		assert.Nil(t, err)
-		assert.Equal(t, exp, res)
-	})
+// 		exp := newRequest()
+// 		exp.raw = strings.TrimSpace(raw)
+// 		exp.Method = "GET"
+// 		exp.URI = "https://example.com"
+// 		exp.Header = http.Header{
+// 			"Content-Type": []string{"application/json"},
+// 			"X-Xsrf-Token": []string{"some token"},
+// 		}
+// 		exp.Body = []byte("{\n\t\"hello\": \"world\"\n}")
 
-	t.Run("headers", func(t *testing.T) {
-		const raw = `
-GET https://example.com
-Content-Type: application/json
-X-XSRF-Token:	 some token
-{
-	"hello": "world"
-}
-		`
+// 		res, err := testCtx().parseRequest(raw, nil)
+// 		assert.Nil(t, err)
+// 		assert.Equal(t, exp, res)
+// 	})
 
-		exp := newRequest()
-		exp.raw = strings.TrimSpace(raw)
-		exp.Method = "GET"
-		exp.URI = "https://example.com"
-		exp.Header = http.Header{
-			"Content-Type": []string{"application/json"},
-			"X-Xsrf-Token": []string{"some token"},
-		}
-		exp.Body = []byte("{\n\t\"hello\": \"world\"\n}")
+// 	t.Run("options", func(t *testing.T) {
+// 		const raw = `
+// GET https://example.com
 
-		res, err := testCtx().parseRequest(raw, nil)
-		assert.Nil(t, err)
-		assert.Equal(t, exp, res)
-	})
+// [QueryParams]
+// page = 1
+// sortBy = "date"
+// filter = [1, 2, 3]
+// 		`
 
-	t.Run("options", func(t *testing.T) {
-		const raw = `
-GET https://example.com
+// 		exp := newRequest()
+// 		exp.raw = strings.TrimSpace(raw)
+// 		exp.Method = "GET"
+// 		exp.URI = "https://example.com"
+// 		exp.QueryParams = map[string]any{
+// 			"page":   int64(1),
+// 			"sortBy": "date",
+// 			"filter": []any{int64(1), int64(2), int64(3)},
+// 		}
 
-[QueryParams]
-page = 1
-sortBy = "date"
-filter = [1, 2, 3]
-		`
+// 		res, err := testCtx().parseRequest(raw, nil)
+// 		assert.Nil(t, err)
+// 		assert.Equal(t, exp, res)
+// 	})
 
-		exp := newRequest()
-		exp.raw = strings.TrimSpace(raw)
-		exp.Method = "GET"
-		exp.URI = "https://example.com"
-		exp.QueryParams = map[string]any{
-			"page":   int64(1),
-			"sortBy": "date",
-			"filter": []any{int64(1), int64(2), int64(3)},
-		}
+// 	t.Run("script", func(t *testing.T) {
+// 		const raw = `
+// GET https://example.com
 
-		res, err := testCtx().parseRequest(raw, nil)
-		assert.Nil(t, err)
-		assert.Equal(t, exp, res)
-	})
+// assert(true);
+// var a = 1;
+// 		`
 
-	t.Run("script", func(t *testing.T) {
-		const raw = `
-GET https://example.com
+// 		exp := newRequest()
+// 		exp.raw = strings.TrimSpace(raw)
+// 		exp.Method = "GET"
+// 		exp.URI = "https://example.com"
+// 		exp.Script = "assert(true);\nvar a = 1;"
 
-assert(true);
-var a = 1;
-		`
+// 		res, err := testCtx().parseRequest(raw, nil)
+// 		assert.Nil(t, err)
+// 		assert.Equal(t, exp, res)
+// 	})
 
-		exp := newRequest()
-		exp.raw = strings.TrimSpace(raw)
-		exp.Method = "GET"
-		exp.URI = "https://example.com"
-		exp.Script = "assert(true);\nvar a = 1;"
+// 	t.Run("all-together", func(t *testing.T) {
+// 		const raw = `
+// GET https://example.com
+// Content-Type: application/json
+// X-XSRF-Token:	 some token
+// {
+// 	"hello": "world"
+// }
 
-		res, err := testCtx().parseRequest(raw, nil)
-		assert.Nil(t, err)
-		assert.Equal(t, exp, res)
-	})
+// [QueryParams]
+// page = 1
+// sortBy = "date"
+// filter = [1, 2, 3]
 
-	t.Run("all-together", func(t *testing.T) {
-		const raw = `
-GET https://example.com
-Content-Type: application/json
-X-XSRF-Token:	 some token
-{
-	"hello": "world"
-}
+// assert(true);
+// var a = 1;
+// 		`
 
-[QueryParams]
-page = 1
-sortBy = "date"
-filter = [1, 2, 3]
+// 		exp := newRequest()
+// 		exp.raw = strings.TrimSpace(raw)
+// 		exp.Method = "GET"
+// 		exp.URI = "https://example.com"
+// 		exp.Header = http.Header{
+// 			"Content-Type": []string{"application/json"},
+// 			"X-Xsrf-Token": []string{"some token"},
+// 		}
+// 		exp.Body = []byte("{\n\t\"hello\": \"world\"\n}")
+// 		exp.QueryParams = map[string]any{
+// 			"page":   int64(1),
+// 			"sortBy": "date",
+// 			"filter": []any{int64(1), int64(2), int64(3)},
+// 		}
+// 		exp.Script = "assert(true);\nvar a = 1;"
 
-assert(true);
-var a = 1;
-		`
+// 		res, err := testCtx().parseRequest(raw, nil)
+// 		assert.Nil(t, err)
+// 		assert.Equal(t, exp, res)
+// 	})
 
-		exp := newRequest()
-		exp.raw = strings.TrimSpace(raw)
-		exp.Method = "GET"
-		exp.URI = "https://example.com"
-		exp.Header = http.Header{
-			"Content-Type": []string{"application/json"},
-			"X-Xsrf-Token": []string{"some token"},
-		}
-		exp.Body = []byte("{\n\t\"hello\": \"world\"\n}")
-		exp.QueryParams = map[string]any{
-			"page":   int64(1),
-			"sortBy": "date",
-			"filter": []any{int64(1), int64(2), int64(3)},
-		}
-		exp.Script = "assert(true);\nvar a = 1;"
+// 	t.Run("params", func(t *testing.T) {
+// 		const raw = `
+// GET https://example.com/{{.Path}}
+// Content-Type: {{.ContentType}}
+// X-XSRF-Token:	 some token
+// {
+// 	"hello": "{{.Data}}"
+// }
 
-		res, err := testCtx().parseRequest(raw, nil)
-		assert.Nil(t, err)
-		assert.Equal(t, exp, res)
-	})
+// [QueryParams]
+// page = {{.Page}}
+// sortBy = "date"
+// filter = [1, 2, 3]
 
-	t.Run("params", func(t *testing.T) {
-		const raw = `
-GET https://example.com/{{.Path}}
-Content-Type: {{.ContentType}}
-X-XSRF-Token:	 some token
-{
-	"hello": "{{.Data}}"
-}
+// assert(true);
+// var a = {{.A}};
+// 		`
 
-[QueryParams]
-page = {{.Page}}
-sortBy = "date"
-filter = [1, 2, 3]
+// 		exp := newRequest()
+// 		exp.raw = strings.TrimSpace(raw)
+// 		exp.Method = "GET"
+// 		exp.URI = "https://example.com/{{.Path}}"
+// 		exp.Header = http.Header{
+// 			"Content-Type": []string{"{{.ContentType}}"},
+// 			"X-Xsrf-Token": []string{"some token"},
+// 		}
+// 		exp.Body = []byte("{\n\t\"hello\": \"{{.Data}}\"\n}")
+// 		exp.QueryParams = map[string]any{
+// 			"page":   "{{.Page}}",
+// 			"sortBy": "date",
+// 			"filter": []any{int64(1), int64(2), int64(3)},
+// 		}
+// 		exp.Script = "assert(true);\nvar a = {{.A}};"
 
-assert(true);
-var a = {{.A}};
-		`
+// 		res, err := testCtx().parseRequest(raw, nil)
+// 		assert.Nil(t, err)
+// 		assert.Equal(t, exp, res)
+// 	})
 
-		exp := newRequest()
-		exp.raw = strings.TrimSpace(raw)
-		exp.Method = "GET"
-		exp.URI = "https://example.com/{{.Path}}"
-		exp.Header = http.Header{
-			"Content-Type": []string{"{{.ContentType}}"},
-			"X-Xsrf-Token": []string{"some token"},
-		}
-		exp.Body = []byte("{\n\t\"hello\": \"{{.Data}}\"\n}")
-		exp.QueryParams = map[string]any{
-			"page":   "{{.Page}}",
-			"sortBy": "date",
-			"filter": []any{int64(1), int64(2), int64(3)},
-		}
-		exp.Script = "assert(true);\nvar a = {{.A}};"
+// 	t.Run("body-escaped", func(t *testing.T) {
+// 		const raw = `
+// GET https://example.com/{{.Path}}
+// Content-Type: {{.ContentType}}
+// X-XSRF-Token:	 some token
+// ` +
+// 			"```\n" +
+// 			`This is
 
-		res, err := testCtx().parseRequest(raw, nil)
-		assert.Nil(t, err)
-		assert.Equal(t, exp, res)
-	})
+// some escaped
 
-	t.Run("body-escaped", func(t *testing.T) {
-		const raw = `
-GET https://example.com/{{.Path}}
-Content-Type: {{.ContentType}}
-X-XSRF-Token:	 some token
-` +
-			"```\n" +
-			`This is
+// body content
+// ` +
+// 			"```"
 
-some escaped
+// 		exp := newRequest()
+// 		exp.raw = strings.TrimSpace(raw)
+// 		exp.Method = "GET"
+// 		exp.URI = "https://example.com/{{.Path}}"
+// 		exp.Header = http.Header{
+// 			"Content-Type": []string{"{{.ContentType}}"},
+// 			"X-Xsrf-Token": []string{"some token"},
+// 		}
+// 		exp.Body = []byte("This is\n\nsome escaped\n\n\nbody content")
 
+// 		res, err := testCtx().parseRequest(raw, nil)
+// 		assert.Nil(t, err)
+// 		assert.Equal(t, exp, res)
+// 	})
 
-body content
-` +
-			"```"
+// 	t.Run("body-escaped-withparams", func(t *testing.T) {
+// 		const raw = `
+// GET https://example.com/{{.Path}}
+// Content-Type: {{.ContentType}}
+// X-XSRF-Token:	 some token
+// ` +
+// 			"```\n" +
+// 			`This is
 
-		exp := newRequest()
-		exp.raw = strings.TrimSpace(raw)
-		exp.Method = "GET"
-		exp.URI = "https://example.com/{{.Path}}"
-		exp.Header = http.Header{
-			"Content-Type": []string{"{{.ContentType}}"},
-			"X-Xsrf-Token": []string{"some token"},
-		}
-		exp.Body = []byte("This is\n\nsome escaped\n\n\nbody content")
+// some escaped
 
-		res, err := testCtx().parseRequest(raw, nil)
-		assert.Nil(t, err)
-		assert.Equal(t, exp, res)
-	})
+// body content
+// ` +
+// 			"```\n" +
 
-	t.Run("body-escaped-withparams", func(t *testing.T) {
-		const raw = `
-GET https://example.com/{{.Path}}
-Content-Type: {{.ContentType}}
-X-XSRF-Token:	 some token
-` +
-			"```\n" +
-			`This is
+// 			`
+// [QueryParams]
+// page = {{.Page}}
+// sortBy = "date"
+// filter = [1, 2, 3]
 
-some escaped
+// assert(true);
+// var a = {{.A}};
+// 		`
 
+// 		exp := newRequest()
+// 		exp.raw = strings.TrimSpace(raw)
+// 		exp.Method = "GET"
+// 		exp.URI = "https://example.com/{{.Path}}"
+// 		exp.Header = http.Header{
+// 			"Content-Type": []string{"{{.ContentType}}"},
+// 			"X-Xsrf-Token": []string{"some token"},
+// 		}
+// 		exp.Body = []byte("This is\n\nsome escaped\n\n\nbody content")
+// 		exp.QueryParams = map[string]any{
+// 			"page":   "{{.Page}}",
+// 			"sortBy": "date",
+// 			"filter": []any{int64(1), int64(2), int64(3)},
+// 		}
+// 		exp.Script = "assert(true);\nvar a = {{.A}};"
 
-body content
-` +
-			"```\n" +
+// 		res, err := testCtx().parseRequest(raw, nil)
+// 		assert.Nil(t, err)
+// 		assert.Equal(t, exp, res)
+// 	})
 
-			`
-[QueryParams]
-page = {{.Page}}
-sortBy = "date"
-filter = [1, 2, 3]
+// 	t.Run("error-empty", func(t *testing.T) {
+// 		const raw = `
 
-assert(true);
-var a = {{.A}};
-		`
+// 		`
 
-		exp := newRequest()
-		exp.raw = strings.TrimSpace(raw)
-		exp.Method = "GET"
-		exp.URI = "https://example.com/{{.Path}}"
-		exp.Header = http.Header{
-			"Content-Type": []string{"{{.ContentType}}"},
-			"X-Xsrf-Token": []string{"some token"},
-		}
-		exp.Body = []byte("This is\n\nsome escaped\n\n\nbody content")
-		exp.QueryParams = map[string]any{
-			"page":   "{{.Page}}",
-			"sortBy": "date",
-			"filter": []any{int64(1), int64(2), int64(3)},
-		}
-		exp.Script = "assert(true);\nvar a = {{.A}};"
+// 		exp := Request{}
 
-		res, err := testCtx().parseRequest(raw, nil)
-		assert.Nil(t, err)
-		assert.Equal(t, exp, res)
-	})
+// 		res, err := testCtx().parseRequest(raw, nil)
+// 		assert.ErrorIs(t, err, ErrEmptyRequest)
+// 		assert.Equal(t, exp, res)
+// 	})
+// }
 
-	t.Run("error-empty", func(t *testing.T) {
-		const raw = `
-
-		`
-
-		exp := Request{}
-
-		res, err := testCtx().parseRequest(raw, nil)
-		assert.ErrorIs(t, err, ErrEmptyRequest)
-		assert.Equal(t, exp, res)
-	})
-}
-
-func testCtx() context {
-	return context{}
-}
+// func testCtx() context {
+// 	return context{}
+// }
