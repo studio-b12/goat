@@ -66,10 +66,45 @@ func TestScanString(t *testing.T) {
 }
 
 func TestScanNumber(t *testing.T) {
-	t.Run("integer", func(t *testing.T) {
+	t.Run("integer-eof", func(t *testing.T) {
 		r := strings.NewReader(`123`)
-		tk, lit := newScanner(r).scanString()
-		assert.Equal(t, STRING, tk)
+		tk, lit := newScanner(r).scanNumber()
+		assert.Equal(t, INTEGER, tk)
 		assert.Equal(t, "123", lit)
+	})
+
+	t.Run("integer-lf", func(t *testing.T) {
+		r := strings.NewReader("123\n")
+		tk, lit := newScanner(r).scanNumber()
+		assert.Equal(t, INTEGER, tk)
+		assert.Equal(t, "123", lit)
+	})
+
+	t.Run("integer-sub", func(t *testing.T) {
+		r := strings.NewReader("123someident")
+		tk, lit := newScanner(r).scanNumber()
+		assert.Equal(t, INTEGER, tk)
+		assert.Equal(t, "123", lit)
+	})
+
+	t.Run("float-eof", func(t *testing.T) {
+		r := strings.NewReader(`123.456`)
+		tk, lit := newScanner(r).scanNumber()
+		assert.Equal(t, FLOAT, tk)
+		assert.Equal(t, "123.456", lit)
+	})
+
+	t.Run("float-lf", func(t *testing.T) {
+		r := strings.NewReader("123.456\n")
+		tk, lit := newScanner(r).scanNumber()
+		assert.Equal(t, FLOAT, tk)
+		assert.Equal(t, "123.456", lit)
+	})
+
+	t.Run("float-sub", func(t *testing.T) {
+		r := strings.NewReader("123.456someident")
+		tk, lit := newScanner(r).scanNumber()
+		assert.Equal(t, FLOAT, tk)
+		assert.Equal(t, "123.456", lit)
 	})
 }

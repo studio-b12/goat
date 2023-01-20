@@ -32,20 +32,3 @@ func (t ParseError) Error() string {
 	return fmt.Sprintf("%d:%d: %s",
 		t.Line+1, t.LinePos, t.Inner.Error())
 }
-
-type DetailedError struct {
-	InnerError
-
-	Details string
-}
-
-func newDetailedError(inner error, details string, params ...any) (t DetailedError) {
-	t.Details = fmt.Sprintf(details, params...)
-	t.Inner = inner
-	return t
-}
-
-func (t DetailedError) Error() string {
-	return fmt.Sprintf("%s\n%s",
-		t.Inner.Error(), t.Details)
-}
