@@ -17,10 +17,11 @@ import (
 )
 
 type Args struct {
-	Gurlfile string `arg:"positional,required" help:"Gurlfile(s) location"`
-	LogLevel int    `arg:"-l,--loglevel" default:"1" help:"Logging level (see https://github.com/rs/zerolog#leveled-logging for reference)"`
-	Params   string `arg:"-p,--params" help:"Params file location"`
-	Dry      bool   `arg:"--dry" help:"Only parse the gurlfile(s) without executing any requests"`
+	Gurlfile string   `arg:"positional,required" help:"Gurlfile(s) location"`
+	LogLevel int      `arg:"-l,--loglevel" default:"1" help:"Logging level (see https://github.com/rs/zerolog#leveled-logging for reference)"`
+	Params   string   `arg:"-p,--params" help:"Params file location"`
+	Dry      bool     `arg:"--dry" help:"Only parse the gurlfile(s) without executing any requests"`
+	Skip     []string `arg:"--skip" help:"Section(s) to be skipped during execution"`
 }
 
 func main() {
@@ -47,6 +48,7 @@ func main() {
 
 	executor := executor.New(engineMaker, req)
 	executor.Dry = args.Dry
+	executor.Skip = args.Skip
 
 	err = executor.ExecuteFromDir(args.Gurlfile, state)
 	if err != nil {

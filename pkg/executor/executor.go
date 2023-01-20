@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 	"github.com/studio-b12/gurl/pkg/engine"
@@ -16,7 +17,8 @@ type Executor struct {
 	engineMaker func() engine.Engine
 	req         requester.Requester
 
-	Dry bool
+	Dry  bool
+	Skip []string
 }
 
 // New initializes a new instance of Executor using
@@ -81,6 +83,11 @@ func (t *Executor) Execute(gf gurlfile.Gurlfile, initialParams engine.State) (er
 	defer func() {
 		// Teardown Procedures
 
+		if t.isSkip("teardown") {
+			log.Warn().Msg("skipping teardown steps")
+			return
+		}
+
 		for _, req := range gf.Teardown {
 			err := t.executeRequest(eng, req)
 			if err != nil {
@@ -93,20 +100,28 @@ func (t *Executor) Execute(gf gurlfile.Gurlfile, initialParams engine.State) (er
 
 	// Setup Procedures
 
-	for _, req := range gf.Setup {
-		err := t.executeRequest(eng, req)
-		if err != nil {
-			return err
+	if t.isSkip("setup") {
+		log.Warn().Msg("skipping setup steps")
+	} else {
+		for _, req := range gf.Setup {
+			err := t.executeRequest(eng, req)
+			if err != nil {
+				return err
+			}
+			log.Info().Str("req", req.String()).Msg("Setup step completed")
 		}
-		log.Info().Str("req", req.String()).Msg("Setup step completed")
 	}
 
 	// Test Procedures
 
-	for _, req := range gf.Tests {
-		err := t.executeTest(req, eng, gf)
-		if err != nil {
-			return err
+	if t.isSkip("tests") {
+		log.Warn().Msg("skipping test steps")
+	} else {
+		for _, req := range gf.Tests {
+			err := t.executeTest(req, eng, gf)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -115,6 +130,11 @@ func (t *Executor) Execute(gf gurlfile.Gurlfile, initialParams engine.State) (er
 
 func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlfile.Gurlfile) (err error) {
 	defer func() {
+		if t.isSkip("teardown-each") {
+			log.Warn().Msg("skipping teardown-each steps")
+			return
+		}
+
 		for _, postReq := range gf.TeardownEach {
 			err := t.executeRequest(eng, postReq)
 			if err != nil {
@@ -125,12 +145,16 @@ func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlf
 		}
 	}()
 
-	for _, preReq := range gf.SetupEach {
-		err := t.executeRequest(eng, preReq)
-		if err != nil {
-			return fmt.Errorf("pre-setup-each step failed: %s", err.Error())
+	if t.isSkip("setup-each") {
+		log.Warn().Msg("skipping setup-each steps")
+	} else {
+		for _, preReq := range gf.SetupEach {
+			err := t.executeRequest(eng, preReq)
+			if err != nil {
+				return fmt.Errorf("pre-setup-each step failed: %s", err.Error())
+			}
+			log.Info().Str("req", req.String()).Msg("Setup-Each step completed")
 		}
-		log.Info().Str("req", req.String()).Msg("Setup-Each step completed")
 	}
 
 	err = t.executeRequest(eng, req)
@@ -173,4 +197,13 @@ func (t *Executor) executeRequest(eng engine.Engine, req gurlfile.Request) (err 
 	}
 
 	return nil
+}
+
+func (t *Executor) isSkip(section string) bool {
+	for _, s := range t.Skip {
+		if strings.ToLower(s) == section {
+			return true
+		}
+	}
+	return false
 }
