@@ -2,6 +2,7 @@ package gurlfile
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -40,6 +41,14 @@ func (t *Gurlfile) Merge(with Gurlfile) {
 	t.Tests = append(t.Tests, with.Tests...)
 	t.Teardown = append(t.Teardown, with.Teardown...)
 	t.TeardownEach = append(t.TeardownEach, with.TeardownEach...)
+}
+
+func (t Gurlfile) String() string {
+	b, err := json.MarshalIndent(t, "", "  ")
+	if err != nil {
+		return fmt.Sprintf("error: %s", err.Error())
+	}
+	return string(b)
 }
 
 // Options holds the specific request

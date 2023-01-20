@@ -56,7 +56,7 @@ func (t *Executor) ExecuteFromDir(path string, initialParams engine.State) error
 
 	log.Debug().Msg("Parsing gurlfile ...")
 	relCurrDir := filepath.Dir(path)
-	gf, err := gurlfile.Unmarshal(string(data), relCurrDir, initialParams)
+	gf, err := gurlfile.Unmarshal(string(data), relCurrDir)
 	if err != nil {
 		return fmt.Errorf("failed parsing gurlfile: %s", err.Error())
 	}
@@ -68,7 +68,7 @@ func (t *Executor) ExecuteFromDir(path string, initialParams engine.State) error
 // Execute runs the given parsed Gurlfile. The given initialParams are
 // used as initial state for the runtime engine.
 func (t *Executor) Execute(gf gurlfile.Gurlfile, initialParams engine.State) (err error) {
-	log.Debug().Interface("gf", gf).Send()
+	log.Debug().Msg("Parsed Gurlfile\n" + gf.String())
 
 	if t.Dry {
 		log.Warn().Msg("This is a dry run: no requets will be executed")
