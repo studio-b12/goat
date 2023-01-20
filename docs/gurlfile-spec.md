@@ -154,6 +154,24 @@ GET https://example2.com
 POST https://example3.com
 ```
 
+#### `Script`
+
+Defines an esecutable script which is executed after the request has been performed.
+
+Equal to the `Body` block, everything after the block header is considered to be content until a new block, a delimiter or a new section is detected. The content can also be escaped.
+
+The script parts is getting passed builtin functions as well as the response context. The representation of the script language used and the passed in data is specific to the implementation.
+
+> To find more information about the details of this implementation, see [implementation.md](implementation.md).
+
+*Example (using ECMAScript 5):*
+```
+[Script]
+assert(response.StatusCode == 200);
+info(response.Body);
+var uid = response.BodyJson.Uid;
+```
+
 ### Parameters
 
 Parameters can be passed into a request via [Go Templates](https://pkg.go.dev/text/template) placeholders.
