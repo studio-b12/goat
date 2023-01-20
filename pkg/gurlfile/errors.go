@@ -33,17 +33,6 @@ func (t ParseError) Error() string {
 		t.Line+1, t.LinePos, t.Inner.Error())
 }
 
-type ContextError struct {
-	InnerError
-
-	context
-}
-
-func (t ContextError) Error() string {
-	return fmt.Sprintf("Request [%s] #%02d: %s",
-		t.section, t.index+1, t.Inner.Error())
-}
-
 type DetailedError struct {
 	InnerError
 

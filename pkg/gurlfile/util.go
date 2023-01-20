@@ -9,7 +9,9 @@ import (
 )
 
 func applyTemplate(raw string, params any) (string, error) {
-	tmpl, err := template.New("").Parse(raw)
+	tmpl, err := template.New("").
+		Option("missingkey=error").
+		Parse(raw)
 	if err != nil {
 		return "", fmt.Errorf("parsing template failed: %s", err.Error())
 	}
@@ -21,6 +23,25 @@ func applyTemplate(raw string, params any) (string, error) {
 	}
 
 	return out.String(), nil
+}
+
+func applyTemplateToArray(arr []any, params any) (err error) {
+	for i, v := range arr {
+		switch vt := v.(type) {
+		case string:
+			arr[i], err = applyTemplate(vt, params)
+		case []any:
+			err = applyTemplateToArray(vt, params)
+		default:
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func removeComments(raw string) string {

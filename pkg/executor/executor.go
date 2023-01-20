@@ -143,14 +143,6 @@ func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlf
 }
 
 func (t *Executor) executeRequest(eng engine.Engine, req gurlfile.Request) (err error) {
-	defer func() {
-		// If an error is returned, wrap the error
-		// in a ContextError.
-		if err != nil {
-			err = req.WrapErr(err)
-		}
-	}()
-
 	state := eng.State()
 	parsedReq, err := req.ParseWithParams(state)
 	if err != nil {

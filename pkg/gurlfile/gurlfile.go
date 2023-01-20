@@ -57,34 +57,19 @@ type Options struct {
 	QueryParams map[string]any
 }
 
-type context struct {
-	raw     string
-	section string
-	index   int
-}
-
-func (t context) WrapErr(err error) error {
-	var cErr ContextError
-
-	cErr.context = t
-	cErr.Inner = err
-
-	return cErr
-}
-
 // Request holds the specifications
 // for a HTTP request with options
 // and script commands.
 type Request struct {
 	Options
 
-	context
-
 	Method string
 	URI    string
 	Header http.Header
 	Body   []byte
 	Script string
+
+	parsed bool
 }
 
 func newRequest() (r Request) {
@@ -98,11 +83,53 @@ func newRequest() (r Request) {
 //
 // Returns the new parsed request.
 func (t Request) ParseWithParams(params any) (Request, error) {
-	if t.raw == "" {
+	if t.parsed {
 		return Request{}, ErrAlreadyParsed
 	}
 
-	return Request{}, nil
+	var err error
+
+	t.URI, err = applyTemplate(t.URI, params)
+	if err != nil {
+		return Request{}, err
+	}
+
+	for _, vals := range t.Header {
+		for i, v := range vals {
+			vals[i], err = applyTemplate(v, params)
+			if err != nil {
+				return Request{}, err
+			}
+		}
+	}
+
+	bodyStr, err := applyTemplate(string(t.Body), params)
+	if err != nil {
+		return Request{}, err
+	}
+	t.Body = []byte(bodyStr)
+
+	t.Script, err = applyTemplate(t.Script, params)
+	if err != nil {
+		return Request{}, err
+	}
+
+	for k, v := range t.QueryParams {
+		switch vt := v.(type) {
+		case string:
+			t.QueryParams[k], err = applyTemplate(vt, params)
+		case []any:
+			err = applyTemplateToArray(vt, params)
+		default:
+			continue
+		}
+
+		if err != nil {
+			return Request{}, err
+		}
+	}
+
+	return t, nil
 }
 
 func (t Request) ToHttpRequest() (*http.Request, error) {

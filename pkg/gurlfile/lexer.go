@@ -249,8 +249,6 @@ func (t *scanner) scanString() (tk token, lit string) {
 func (t *scanner) scanUntilLF() string {
 	var b bytes.Buffer
 
-	t.unread()
-
 	for {
 		r := t.read()
 		if r == eof {
