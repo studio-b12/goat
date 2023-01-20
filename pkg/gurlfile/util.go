@@ -10,6 +10,7 @@ import (
 
 func applyTemplate(raw string, params any) (string, error) {
 	tmpl, err := template.New("").
+		Funcs(builtinFuncsMap).
 		Option("missingkey=error").
 		Parse(raw)
 	if err != nil {
