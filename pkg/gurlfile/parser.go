@@ -43,7 +43,7 @@ func (t *Parser) Parse() (gf Gurlfile, err error) {
 			err = t.parseUse(&gf)
 
 		case SECTION:
-			err = t.parseSection(lit, &gf)
+			err = t.parseSection(&gf)
 		case EOF:
 			return gf, nil
 
@@ -111,10 +111,12 @@ func (t *Parser) parseUse(gf *Gurlfile) error {
 	return nil
 }
 
-func (t *Parser) parseSection(name string, gf *Gurlfile) error {
+func (t *Parser) parseSection(gf *Gurlfile) error {
+	name := strings.TrimSpace(t.s.readToLF())
+
 	var r *[]Request
 
-	switch strings.ToLower(strings.TrimSpace(name)) {
+	switch strings.ToLower(name) {
 	case "setup":
 		r = &gf.Setup
 	case "setup-each":
@@ -182,7 +184,7 @@ loop:
 
 		case WS, LF:
 			continue loop
-		case EOF:
+		case EOF, SECTION:
 			t.unscan()
 			break loop
 		case DELIMITER:
@@ -345,6 +347,13 @@ func (t *Parser) parseRaw() (string, error) {
 				t.s.unread()
 				t.unscan()
 				out.Truncate(out.Len() - 2)
+				break
+			}
+			if out.Len() > 3 && string(out.Bytes()[out.Len()-4:]) == "\n###" {
+				t.buf.tok = SECTION
+				t.buf.lit = ""
+				t.unscan()
+				out.Truncate(out.Len() - 4)
 				break
 			}
 		}

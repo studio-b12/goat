@@ -271,9 +271,7 @@ func (t *scanner) scanSection() (tk token, lit string) {
 		}
 	}
 
-	name := t.readToLF()
-
-	return SECTION, name
+	return SECTION, ""
 }
 
 func (t *scanner) scanIdent() (tk token, lit string) {
