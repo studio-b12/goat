@@ -66,6 +66,10 @@ func (t *Parser) scan() (tok token, lit string) {
 	}
 
 	t.buf.tok, t.buf.lit = t.s.Scan()
+	if t.buf.tok == COMMENT {
+		t.buf.tok = LF
+		t.buf.lit = ""
+	}
 
 	return t.buf.tok, t.buf.lit
 }
@@ -206,7 +210,7 @@ loop:
 func (t *Parser) parseBlock(req *Request) error {
 	var blockHeader string
 
-	tok, lit := t.scan()
+	tok, lit := t.scanSkipWS()
 	if tok != IDENT || lit == "" {
 		return fmt.Errorf("invalid block header")
 	}
@@ -217,7 +221,7 @@ func (t *Parser) parseBlock(req *Request) error {
 		return fmt.Errorf("invalid block header")
 	}
 
-	tok, _ = t.scan()
+	tok, _ = t.scanSkipWS()
 	if tok != LF {
 		return fmt.Errorf("invalid token (block)")
 	}

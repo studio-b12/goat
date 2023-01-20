@@ -4,7 +4,7 @@
 
 ### `Options`
 
-> Warning  
+> **Warning**  
 > This is not implemented yet.
 
 Additional options that control the request and response behavior.
