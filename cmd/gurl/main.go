@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"runtime"
@@ -10,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/studio-b12/gurl/internal/version"
+	"github.com/studio-b12/gurl/pkg/advancer"
 	"github.com/studio-b12/gurl/pkg/config"
 	"github.com/studio-b12/gurl/pkg/engine"
 	"github.com/studio-b12/gurl/pkg/executor"
@@ -17,11 +19,13 @@ import (
 )
 
 type Args struct {
-	Gurlfile string   `arg:"positional,required" help:"Gurlfile(s) location"`
-	LogLevel int      `arg:"-l,--loglevel" default:"1" help:"Logging level (see https://github.com/rs/zerolog#leveled-logging for reference)"`
-	Params   string   `arg:"-p,--params" help:"Params file location"`
-	Dry      bool     `arg:"--dry" help:"Only parse the gurlfile(s) without executing any requests"`
-	Skip     []string `arg:"--skip" help:"Section(s) to be skipped during execution"`
+	Gurlfile string        `arg:"positional,required" help:"Gurlfile(s) location"`
+	LogLevel int           `arg:"-l,--loglevel" default:"1" help:"Logging level (see https://github.com/rs/zerolog#leveled-logging for reference)"`
+	Params   string        `arg:"-p,--params" help:"Params file location"`
+	Dry      bool          `arg:"--dry" help:"Only parse the gurlfile(s) without executing any requests"`
+	Skip     []string      `arg:"--skip" help:"Section(s) to be skipped during execution"`
+	Manual   bool          `arg:"--manual" help:"Advance the requests maually."`
+	Delay    time.Duration `arg:"--delay" help:"Delay requests by the given duration."`
 }
 
 func main() {
@@ -50,6 +54,15 @@ func main() {
 	executor.Dry = args.Dry
 	executor.Skip = args.Skip
 
+	if args.Manual {
+		ad := make(advancer.Channel)
+		executor.Waiter = ad
+		go advanceManually(ad)
+	} else if args.Delay != 0 {
+		log.Info().Msgf("Delay mode: Advancing every %s", args.Delay.String())
+		executor.Waiter = advancer.NewTicker(args.Delay)
+	}
+
 	err = executor.ExecuteFromDir(args.Gurlfile, state)
 	if err != nil {
 		log.Fatal().Err(err).Msg("execution failed")
@@ -65,4 +78,13 @@ func (Args) Description() string {
 func (Args) Version() string {
 	return fmt.Sprintf("gurl v%s (%s %s %s)",
 		version.Version, version.CommitHash, version.BuildDate, runtime.Version())
+}
+
+func advanceManually(a advancer.Advancer) {
+	scanner := bufio.NewScanner(os.Stdin)
+	log.Info().Msg("Manual mode: Press [enter] to advance requests")
+	for {
+		scanner.Scan()
+		a.Advance()
+	}
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/studio-b12/gurl/pkg/advancer"
 	"github.com/studio-b12/gurl/pkg/engine"
 	"github.com/studio-b12/gurl/pkg/gurlfile"
 	"github.com/studio-b12/gurl/pkg/requester"
@@ -17,8 +18,9 @@ type Executor struct {
 	engineMaker func() engine.Engine
 	req         requester.Requester
 
-	Dry  bool
-	Skip []string
+	Dry    bool
+	Skip   []string
+	Waiter advancer.Waiter
 }
 
 // New initializes a new instance of Executor using
@@ -31,6 +33,7 @@ func New(engineMaker func() engine.Engine, req requester.Requester) *Executor {
 
 	t.engineMaker = engineMaker
 	t.req = req
+	t.Waiter = advancer.None{}
 
 	return &t
 }
@@ -167,6 +170,8 @@ func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlf
 }
 
 func (t *Executor) executeRequest(eng engine.Engine, req gurlfile.Request) (err error) {
+	t.Waiter.Wait()
+
 	state := eng.State()
 	parsedReq, err := req.ParseWithParams(state)
 	if err != nil {
