@@ -326,6 +326,10 @@ func (t *Parser) parseRaw() (string, error) {
 
 	for {
 		r := t.s.read()
+		if r == eof {
+			t.s.unread()
+			break
+		}
 
 		if !inEscape {
 			if out.Len() > 3 && string(out.Bytes()[out.Len()-4:]) == "\n---" {
@@ -335,12 +339,12 @@ func (t *Parser) parseRaw() (string, error) {
 				out.Truncate(out.Len() - 4)
 				break
 			}
-			if out.Len() > 0 && out.Bytes()[out.Len()-1] == '[' {
+			if out.Len() > 1 && string(out.Bytes()[out.Len()-2:]) == "\n[" {
 				t.buf.tok = BLOCK_START
 				t.buf.lit = ""
 				t.s.unread()
 				t.unscan()
-				out.Truncate(out.Len() - 1)
+				out.Truncate(out.Len() - 2)
 				break
 			}
 		}
