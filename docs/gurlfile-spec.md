@@ -5,6 +5,7 @@ A Gurlfile is an UTF-8 encoded plain text file with the file extension `.gurl`.
 ```
          Import  |  use ./setup.gurl
                  |
+        Comment  |  // This is a comment!
                  |
 Section Heading  |  ### Setup
                  |
@@ -23,8 +24,6 @@ Section Heading  |  ### Setup
                  |    "dontescapethis": "\{\{ \}\}"
                  |  }
                  |  ```
-                 |  
-        Comment  |  // This is a comment!
                  |
   Option Blocks  |  [QueryParams]
                  |  page = 2
@@ -67,7 +66,7 @@ When two Gurlfiles are merged (for example on importing one into another), all r
 
 ### Requests
 
-A request consists of the following parts which must be placed in the right order.
+A request consists of the following parts.
 
 First, the Method and URL is specified separated by one or more spaces or tabs. These fields are mandatory.
 
@@ -76,44 +75,83 @@ First, the Method and URL is specified separated by one or more spaces or tabs. 
 GET https://example.com
 ```
 
-In the next lines, request headers and the request body can be defined. There must not be a new line between these.
-Request headers are defined as key-value pairs separated by a colon (`:`). The key must not contain any non-word characters
-besides numbers, dashes and underscores.
+After that, further optional request details are provided in **blocks**. Every block starts with a **block header** followed by the specific block content.
 
-The body can be any type of data which must not contain a newline.
+
+The following blocks are required to be implemented by the specification.
+
+#### `Header`
+
+Define a list of request headers sent with the request.
+
+The values of this block consists of one header per line where the key and value are separated by a colon.
 
 *Example:*
 ```
+[Header]
+Accept: */*
 Content-Type: application/json
-X-Requested-With: XHTMLRequest
+Cookie: token=89034567n08924t
+```
+
+#### `Body`
+
+Define a body payload which is sent with the request.
+
+Everything following under this block header is considered to be the content until a new block, request or section is found. Optionally, you can escape the content using three backticks at the start and end of the content.
+
+*Example (unescaped):*
+```
+[Body]
 {
-    "some": "data"
+    "username": "root",
+    "password": "foo",
 }
 ```
 
-Followed by one or more newlines, you can specify additional request options. See [options](#options) for more information.
-Options are defined as [TOML](https://toml.io/en/) blocks.
+*Example (escaped):*
+````
+[Body]
+```
+{
+    "username": "root",
+    "password": "foo",
+}
+```
+````
+
+#### `QueryParams`
+
+Allows to specify query parameters in a more human readable way.
+
+Values are defined in a [TOML](https://toml.io/en/)-like key-value representation.
 
 *Example:*
 ```
 [QueryParams]
-page = 1
-count = 30
-sortBy = "date"
+page = 2
+count = 10
+orderBy = "date"
+filters = ["date", "name"]
 ```
 
-Finally, followed by another one or more newlines, a script section can be specified.
-There, assertions and output logic can be specified depending on the implemented scripting language.
+> For all available blocks in this imlementation, see [implementation.md](implementation.md).
 
-Multiple requests are separated by a line containing at least 3 dashes (`-`).
+Multiple subsequent requests in a section are separated by a delimiter consisting of at least three dashes (`---`). A request does not need to be terminalized with a delimiter when it is at the end of a batch or at the end of a section. 
 
 *Example:*
 ```
-// ... Request 1 ...
+### Tests
+
+GET https://example1.com
 
 ---
 
-// ... Request 2 ...
+GET https://example2.com
+
+### Teardown
+
+POST https://example3.com
 ```
 
 ### Parameters
@@ -137,6 +175,8 @@ Then, the defined parameters are referenced as following in the request.
 
 ```
 POST {{.instance}}/api/auth/login
+
+[Body]
 {
     "username": "{{.credentials.username}}",
     "password": "{{.credentials.password}}"
@@ -150,11 +190,14 @@ You can also reference captured variables from previous requests.
 For example:
 ```
 POST {{.instance}}/api/auth/token
+
+[Body]
 {
     "client_id": "{{.credentials.client_id}}",
     "client_secret": "{{.credentials.client_secret}}"
 }
 
+[Script]
 assert(response.StatusCode == 200);
 
 var bearerToken = response.BodyJson.bearer_token;
@@ -162,5 +205,7 @@ var bearerToken = response.BodyJson.bearer_token;
 ---
 
 GET {{.instance}}/api/me
+
+[Header]
 Authorization: bearer {{.bearerToken}}
 ```
