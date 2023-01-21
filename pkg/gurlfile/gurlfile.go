@@ -51,17 +51,18 @@ func (t Gurlfile) String() string {
 	return string(b)
 }
 
-// Options holds the specific request
+// Opts holds the specific request
 // options.
-type Options struct {
+type Opts struct {
 	QueryParams map[string]any
+	Options     map[string]any
 }
 
 // Request holds the specifications
 // for a HTTP request with options
 // and script commands.
 type Request struct {
-	Options
+	Opts
 
 	Method string
 	URI    string
@@ -138,7 +139,7 @@ func (t Request) ToHttpRequest() (*http.Request, error) {
 		return nil, fmt.Errorf("failed parsing URI: %s", err.Error())
 	}
 
-	for key, val := range t.Options.QueryParams {
+	for key, val := range t.Opts.QueryParams {
 		if arr, ok := val.([]any); ok {
 			for _, v := range arr {
 				uri.Query().Add(key, toString(v))

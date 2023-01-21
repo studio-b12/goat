@@ -183,7 +183,8 @@ func (t *Executor) executeRequest(eng engine.Engine, req gurlfile.Request) (err 
 		return fmt.Errorf("failed transforming to http request: %s", err.Error())
 	}
 
-	httpResp, err := t.req.Do(httpReq)
+	opts := requester.OptionsFromMap(parsedReq.Options)
+	httpResp, err := t.req.Do(httpReq, opts)
 	if err != nil {
 		return fmt.Errorf("http request failed: %s", err.Error())
 	}

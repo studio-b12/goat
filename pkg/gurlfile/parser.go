@@ -256,6 +256,13 @@ func (t *Parser) parseBlock(req *Request) error {
 		}
 		req.Script = raw
 
+	case "options":
+		data, err := t.parseBlockEntries()
+		if err != nil {
+			return err
+		}
+		req.Options = data
+
 	default:
 		return newDetailedErr(ErrInvalidBlockHeader,
 			fmt.Sprintf("('%s')", blockHeader))

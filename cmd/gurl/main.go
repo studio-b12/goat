@@ -45,10 +45,7 @@ func main() {
 	}
 
 	engineMaker := engine.NewGoja
-	req, err := requester.NewHttpWithCookies()
-	if err != nil {
-		log.Fatal().Err(err).Msg("requester initialization failed")
-	}
+	req := requester.NewHttpWithCookies()
 
 	executor := executor.New(engineMaker, req)
 	executor.Dry = args.Dry
