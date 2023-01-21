@@ -321,6 +321,10 @@ func (t *Parser) parseHeaders(header http.Header) error {
 		}
 
 		val := strings.TrimSpace(t.s.scanUntilLF())
+		if val == "" {
+			return ErrNoHeaderValue
+		}
+
 		header.Add(key, val)
 	}
 

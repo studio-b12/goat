@@ -19,6 +19,7 @@ var (
 	ErrInvalidBlockEntryAssignment = errors.New("block entry must start with an assignment")
 	ErrInvalidHeaderKey            = errors.New("header values must start with a key")
 	ErrInvalidHeaderSeparator      = errors.New("header key and value must be separated by a colon (:)")
+	ErrNoHeaderValue               = errors.New("no header value")
 	ErrFollowingImport             = errors.New("failed following import")
 )
 
