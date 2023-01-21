@@ -48,9 +48,10 @@ func (t *Parser) Parse() (gf Gurlfile, err error) {
 			return gf, nil
 
 		case ILLEGAL:
-			return Gurlfile{}, fmt.Errorf("illegal character")
+			return Gurlfile{}, ErrIllegalCharacter
 		default:
-			err = fmt.Errorf("unexpected error (%d '%s')", tok, lit)
+			err = newDetailedErr(ErrUnexpected,
+				fmt.Sprintf("(%d '%s')", tok, lit))
 		}
 
 		if err != nil {
@@ -103,11 +104,11 @@ func (t *Parser) wrapErr(err error) error {
 func (t *Parser) parseUse(gf *Gurlfile) error {
 	tk, lit := t.s.scanString()
 	if tk == ILLEGAL {
-		return fmt.Errorf("invalid string literal")
+		return ErrInvalidStringLiteral
 	}
 
 	if lit == "" {
-		return fmt.Errorf("empty use path")
+		return ErrEmptyUsePath
 	}
 
 	gf.Imports = append(gf.Imports, lit)
@@ -132,7 +133,7 @@ func (t *Parser) parseSection(gf *Gurlfile) error {
 	case "teardown-each":
 		r = &gf.TeardownEach
 	default:
-		return fmt.Errorf("invalid section")
+		return ErrInvalidSection
 	}
 
 	for {
@@ -163,18 +164,18 @@ func (t *Parser) parseRequest(section *[]Request) (err error) {
 
 	tok, lit := t.scan()
 	if tok != IDENT && tok != STRING || lit == "" {
-		return fmt.Errorf("invalid request method")
+		return ErrInvalidRequestMethod
 	}
 	req.Method = lit
 
 	tok, lit = t.scan()
 	if tok != WS && tok != LF {
-		return fmt.Errorf("method must be followed by the request URI")
+		return ErrNoRequestURI
 	}
 
 	tok, lit = t.s.scanString()
 	if tok != STRING || lit == "" {
-		return fmt.Errorf("method must be followed by the request URI")
+		return ErrNoRequestURI
 	}
 	req.URI = lit
 
@@ -195,7 +196,7 @@ loop:
 			break loop
 
 		default:
-			err = fmt.Errorf("invalid token (request)")
+			err = newDetailedErr(ErrInvalidToken, "(request)")
 		}
 
 		if err != nil {
@@ -212,18 +213,18 @@ func (t *Parser) parseBlock(req *Request) error {
 
 	tok, lit := t.scanSkipWS()
 	if tok != IDENT || lit == "" {
-		return fmt.Errorf("invalid block header")
+		return ErrInvalidBlockHeader
 	}
 	blockHeader = lit
 
 	tok, _ = t.scan()
 	if tok != BLOCK_END {
-		return fmt.Errorf("invalid block header")
+		return ErrInvalidBlockHeader
 	}
 
 	tok, _ = t.scanSkipWS()
 	if tok != LF {
-		return fmt.Errorf("invalid token (block)")
+		return newDetailedErr(ErrInvalidToken, "(block)")
 	}
 
 	switch strings.ToLower(blockHeader) {
@@ -256,7 +257,8 @@ func (t *Parser) parseBlock(req *Request) error {
 		req.Script = raw
 
 	default:
-		return fmt.Errorf("invalid block header '%s'", blockHeader)
+		return newDetailedErr(ErrInvalidBlockHeader,
+			fmt.Sprintf("('%s')", blockHeader))
 	}
 
 	return nil
@@ -276,14 +278,14 @@ func (t *Parser) parseBlockEntries() (map[string]any, error) {
 		}
 
 		if tok != IDENT {
-			return nil, fmt.Errorf("block entry must start with an assignment")
+			return nil, ErrInvalidBlockEntryAssignment
 		}
 
 		key := lit
 
 		tok, lit = t.scanSkipWS()
 		if tok != ASSIGNMENT {
-			return nil, fmt.Errorf("block entry key must be followed by an assignment")
+			return nil, ErrInvalidBlockEntryAssignment
 		}
 
 		val, err := t.parseValue()
@@ -309,13 +311,13 @@ func (t *Parser) parseHeaders(header http.Header) error {
 		}
 
 		if tok != IDENT {
-			return fmt.Errorf("header values must start with a key")
+			return ErrInvalidHeaderKey
 		}
 		key := lit
 
 		tok, _ = t.scanSkipWS()
 		if tok != COLON {
-			return fmt.Errorf("header key and value must be separated by a colon (:)")
+			return ErrInvalidHeaderSeparator
 		}
 
 		val := strings.TrimSpace(t.s.scanUntilLF())
@@ -398,7 +400,7 @@ func (t *Parser) parseValue() (any, error) {
 		return t.parseArray()
 	}
 
-	return nil, fmt.Errorf("invalid token (value)")
+	return nil, newDetailedErr(ErrInvalidToken, "(value)")
 }
 
 func (t *Parser) parseArray() ([]any, error) {
@@ -419,7 +421,7 @@ loop:
 		case COMMA:
 			continue loop
 		default:
-			return nil, fmt.Errorf("invalid token (value array)")
+			return nil, newDetailedErr(ErrInvalidToken, "(value array)")
 		}
 	}
 

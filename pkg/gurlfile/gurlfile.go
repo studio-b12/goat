@@ -84,7 +84,7 @@ func newRequest() (r Request) {
 // Returns the new parsed request.
 func (t Request) ParseWithParams(params any) (Request, error) {
 	if t.parsed {
-		return Request{}, ErrAlreadyParsed
+		return Request{}, ErrTemplateAlreadyParsed
 	}
 
 	var err error
