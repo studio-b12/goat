@@ -8,6 +8,11 @@ import (
 	"text/template"
 )
 
+// applyTemplate parses the given raw string as a template
+// and applies the given values in params onto it.
+//
+// If a key in the template is not present in the params,
+// an error will be returned.
 func applyTemplate(raw string, params any) (string, error) {
 	tmpl, err := template.New("").
 		Funcs(builtinFuncsMap).
@@ -26,6 +31,9 @@ func applyTemplate(raw string, params any) (string, error) {
 	return out.String(), nil
 }
 
+// applyTemplateToArray executes applyTemplate
+// on all string instances in the given array
+// or sub arrays.
 func applyTemplateToArray(arr []any, params any) (err error) {
 	for i, v := range arr {
 		switch vt := v.(type) {
@@ -45,38 +53,8 @@ func applyTemplateToArray(arr []any, params any) (err error) {
 	return nil
 }
 
-func removeComments(raw string) string {
-	lines := strings.Split(raw, "\n")
-
-	for i, line := range lines {
-		cidx := strings.Index(line, "//")
-		if cidx == -1 {
-			continue
-		}
-
-		if cidx > 0 {
-			if line[cidx-1] == ' ' {
-				cidx -= 1
-			} else {
-				continue
-			}
-		}
-
-		lines[i] = line[:cidx]
-	}
-
-	return strings.Join(lines, "\n")
-}
-
-func unquote(v string) string {
-	if len(v) > 1 && (v[0] == '"' && v[len(v)-1] == '"' ||
-		v[0] == '\'' && v[len(v)-1] == '\'') {
-		return v[1 : len(v)-1]
-	}
-
-	return v
-}
-
+// extend takes a file path and adds the given extension
+// to it if the path does not end with any file extension.
 func extend(v string, ext string) string {
 	if filepath.Ext(v) == "" {
 		return v + "." + ext
@@ -85,6 +63,8 @@ func extend(v string, ext string) string {
 	return v
 }
 
+// crlf2lf converts all CRLF line endings in the given
+// string to LF line endings and returns the result.
 func crlf2lf(v string) string {
 	return strings.ReplaceAll(v, "\r\n", "\n")
 }

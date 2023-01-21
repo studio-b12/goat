@@ -23,6 +23,9 @@ var (
 	ErrFollowingImport             = errors.New("failed following import")
 )
 
+// InnerError wraps an inner error and
+// implements the Unwrap() function to
+// unwrap the inner error.
 type InnerError struct {
 	Inner error
 }
@@ -31,6 +34,8 @@ func (t InnerError) Unwrap() error {
 	return t.Inner
 }
 
+// ParseError wraps an inner error with
+// additional parsing context.
 type ParseError struct {
 	InnerError
 
@@ -43,12 +48,23 @@ func (t ParseError) Error() string {
 		t.Line+1, t.LinePos, t.Inner.Error())
 }
 
+// ErrorWithDetails wraps an inner error
+// with additional details attached on
+// calling Error().
+//
+// If the type of Details implements the
+// String() string function, it will be
+// used to stringify the attached details.
+// Otherwise, the value will be determined
+// via fmt.Sprintf("%v", ...).
 type ErrorWithDetails struct {
 	InnerError
 
 	Details any
 }
 
+// newDetailedErr returns a new ErrorWithDetails
+// with the given inner error and details.
 func newDetailedErr(inner error, details any) error {
 	var t ErrorWithDetails
 

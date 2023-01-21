@@ -6,26 +6,31 @@ import (
 	"net/url"
 )
 
-// HttpWithCookies implements Requester with
-// the default net/http Client. Also, a cookiejar
-// is attached to the client to collect and send
-// cookies between requests.
-type HttpWithCookies struct {
-	client     *http.Client
-	cookieJars map[any]http.CookieJar
-}
-
+// noSetWrapper wraps a cookiejar where no
+// cookies can be set by the response.
 type noSetWrapper struct {
 	http.CookieJar
 }
 
 func (t noSetWrapper) SetCookies(u *url.URL, cookies []*http.Cookie) { return }
 
+// noGetWrapper wraps a cookiejar where no
+// cookies will be sent with the request.
 type noGetWrapper struct {
 	http.CookieJar
 }
 
 func (t noGetWrapper) Cookies(u *url.URL) []*http.Cookie { return nil }
+
+// HttpWithCookies implements Requester with
+// the default net/http Client. Also, a map
+// of cookie jars is utilized to choose
+// between and manipulate the behavior
+// of cookie handling.
+type HttpWithCookies struct {
+	client     *http.Client
+	cookieJars map[any]http.CookieJar
+}
 
 var _ Requester = (*HttpWithCookies)(nil)
 
@@ -59,6 +64,13 @@ func (t HttpWithCookies) Do(req *http.Request, opt Options) (*http.Response, err
 	return client.Do(req)
 }
 
+// getJar takes a cookiejar from the internal jar map
+// by the given key in the options or creates one
+// if no jar has already been created.
+//
+// The returned jar is wrapped by the noSetWrapper
+// and/or noGetWrapper depending on the passed
+// options.
 func (t HttpWithCookies) getJar(opt *Options) (jar http.CookieJar, err error) {
 	key := opt.CookieJar
 	if key == nil {

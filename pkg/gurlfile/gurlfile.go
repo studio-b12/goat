@@ -133,6 +133,8 @@ func (t Request) ParseWithParams(params any) (Request, error) {
 	return t, nil
 }
 
+// ToHttpRequest returns a *http.Request built from the
+// given Reuqest.
 func (t Request) ToHttpRequest() (*http.Request, error) {
 	uri, err := url.Parse(t.URI)
 	if err != nil {
