@@ -738,6 +738,76 @@ invalid = [1, 2
 	})
 }
 
+func TestParse_Comments(t *testing.T) {
+	t.Run("uri", func(t *testing.T) {
+		const raw = `
+// Some comment
+    // Some comment
+GET https://example.com //another comment
+// comment
+// heyo
+			`
+
+		p := stringParser(raw)
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t, "GET", res.Tests[0].Method)
+		assert.Equal(t, "https://example.com", res.Tests[0].URI)
+	})
+
+	t.Run("blocks", func(t *testing.T) {
+		const raw = `
+GET https://example.com
+
+// some comment
+[QueryParams] // block hader comment
+key1 = "value" // another comment
+key2 = 1.23 // comment
+// in betweeny
+arr = [ // comment
+	1, // comment
+	// another comment
+	2 // comment
+] // comment
+			`
+
+		p := stringParser(raw)
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t, map[string]any{
+			"key1": "value",
+			"key2": 1.23,
+			"arr":  []any{int64(1), int64(2)},
+		}, res.Tests[0].QueryParams)
+	})
+
+	t.Run("invlid-1", func(t *testing.T) {
+		const raw = `
+GET https://example.com
+
+ /
+			`
+
+		p := stringParser(raw)
+		_, err := p.Parse()
+
+		assert.ErrorIs(t, err, ErrInvalidToken)
+	})
+
+	t.Run("invlid", func(t *testing.T) {
+		const raw = `
+GET https://example.com / foo
+			`
+
+		p := stringParser(raw)
+		_, err := p.Parse()
+
+		assert.ErrorIs(t, err, ErrInvalidToken)
+	})
+}
+
 // --- Helpers --------------------------------------------
 
 func stringParser(raw string) *Parser {
