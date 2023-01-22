@@ -28,7 +28,9 @@ func applyTemplate(raw string, params any) (string, error) {
 		return "", fmt.Errorf("executing template failed: %s", err.Error())
 	}
 
-	return out.String(), nil
+	outStr := unescapeTemplateDelims(out.String())
+
+	return outStr, nil
 }
 
 // applyTemplateToArray executes applyTemplate
@@ -67,4 +69,13 @@ func extend(v string, ext string) string {
 // string to LF line endings and returns the result.
 func crlf2lf(v string) string {
 	return strings.ReplaceAll(v, "\r\n", "\n")
+}
+
+// unescapeTemplateDelims unescapes escaped
+// template delimiter characters.
+// For example, "\{\{.foo\}\}" becomes "{{.foo}}".
+func unescapeTemplateDelims(v string) string {
+	v = strings.ReplaceAll(v, "\\{", "{")
+	v = strings.ReplaceAll(v, "\\}", "}")
+	return v
 }
