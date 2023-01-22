@@ -3,7 +3,7 @@
 VERSION_FILE="internal/version/version.go"
 
 VERSION=$(git describe --tags --abbrev=0 2> /dev/null || echo "NA")
-COMMIT=$(cut -c-5 <<< "$(git rev-parse HEAD)")
+COMMIT=$(cut -c-8 <<< "$(git rev-parse HEAD)")
 BUILDDATE=$(TZ=UTC date +"%D %H:%M %Z")
 
 cat > $VERSION_FILE <<EOF
