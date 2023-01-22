@@ -80,3 +80,25 @@ Response {
 ```
 
 When the response body is JSON-parsable, `BodyJson` contains the parsed JSON as a JavaScript object. Otherwise, it will be `null`.
+
+
+## Parameters
+
+This implementation is using Go's template implementation for parsing parameters.
+
+[Here](https://pkg.go.dev/text/template) you can find the documentation how to use Go templates.
+
+As you can read in these Docs, you can also perform functions on parameters. As an example:
+```go
+{{ urlquery "Hello world!" }}
+// results in "Hello+world%21"
+```
+
+Gurl also provides some additional functions which are available in Gurlfiles.
+
+- `base64 <string>`: Returns the input strings as base64 encoded string.
+- `base64url <string>`: Returns the input strings as base64 URL encoded string.
+- `md5 <string>`: Returns the HEX encoded MD5 hash of the input string.
+- `sha1 <string>`: Returns the HEX encoded SHA1 hash of the input string.
+- `sha256 <string>`: Returns the HEX encoded SHA256 hash of the input string.
+- `sha512 <string>`: Returns the HEX encoded SHA512 hash of the input string.
