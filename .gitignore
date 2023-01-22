@@ -20,8 +20,11 @@
 # Go workspace file
 go.work
 
-params.yml
-*.gurl
-gurl
 
+*.gurl
+# include gurlfiles in the embed directory.
+!internal/embedded/embeds/**
+
+gurl
 .vscode/
+params.yml

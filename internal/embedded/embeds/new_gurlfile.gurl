@@ -1,0 +1,63 @@
+// You can use this file to get ready fast using gurl.
+// You can also import other gurlfiles using 'use <relative location>'.
+//
+// Here you can find the Gurlfile reference:
+// https://github.com/studio-b12/gurl/blob/main/docs/gurlfile-spec.md
+//
+// And here you can find more details about additional options
+// and available builtin functions as well as the documentation
+// what you can use in the [Script] section.
+// https://github.com/studio-b12/gurl/blob/main/docs/implementation.md
+//
+// If you encounter any issues, want to submit an improvement or
+// feature request or just want to ask a question, feel free to
+// open a issue on GitHub.
+// https://github.com/studio-b12/gurl/issues/new
+
+
+
+////////////////////////////////////////////////
+// Setup steps which will run at the 
+// start of the tests batch.
+
+### Setup
+
+POST {{.instance}}/api/v1/auth/login
+
+[Header]
+Content-Type: application/json
+
+[Body]
+{
+    "username": "{{.credentials.username}}",
+    "password": "{{.credentials.password}}"
+}
+
+[Script]
+assert(response.StatusCode == 200, `Status code was ${response.StatusCode}`);
+
+---
+
+
+////////////////////////////////////////////////
+// Teardown steps which will run at the 
+// end of the tests batch.
+
+### Teardown
+
+POST {{.instance}}/api/v1/auth/logout
+
+assert(response.StatusCode == 200, `Status code was ${response.StatusCode}`);
+
+---
+
+
+////////////////////////////////////////////////
+// Test steps to test your API.
+
+### Tests
+
+GET {{.instance}}/api/v1/test
+
+[Script]
+assert(response.StatusCode == 200, `Status code was ${response.StatusCode}`);
