@@ -3,13 +3,16 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"runtime"
 	"time"
 
 	"github.com/alexflint/go-arg"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/studio-b12/gurl/internal/embedded"
 	"github.com/studio-b12/gurl/internal/version"
 	"github.com/studio-b12/gurl/pkg/advancer"
 	"github.com/studio-b12/gurl/pkg/config"
@@ -19,25 +22,36 @@ import (
 )
 
 type Args struct {
-	Gurlfile string        `arg:"positional,required" help:"Gurlfile(s) location"`
-	LogLevel int           `arg:"-l,--loglevel" default:"1" help:"Logging level (see https://github.com/rs/zerolog#leveled-logging for reference)"`
-	Params   string        `arg:"-p,--params" help:"Params file location"`
-	Dry      bool          `arg:"--dry" help:"Only parse the gurlfile(s) without executing any requests"`
-	Skip     []string      `arg:"--skip" help:"Section(s) to be skipped during execution"`
-	Manual   bool          `arg:"--manual" help:"Advance the requests maually."`
+	Gurlfile string `arg:"positional" help:"Gurlfile(s) location"`
+
 	Delay    time.Duration `arg:"--delay" help:"Delay requests by the given duration."`
+	Dry      bool          `arg:"--dry" help:"Only parse the gurlfile(s) without executing any requests"`
+	LogLevel int           `arg:"-l,--loglevel" default:"1" help:"Logging level (see https://github.com/rs/zerolog#leveled-logging for reference)"`
+	Manual   bool          `arg:"--manual" help:"Advance the requests maually."`
+	New      bool          `arg:"--new" help:"Create a new base Gurlfile."`
+	Params   string        `arg:"-p,--params" help:"Params file location"`
+	Skip     []string      `arg:"--skip" help:"Section(s) to be skipped during execution"`
 }
 
 func main() {
 
 	var args Args
-	arg.MustParse(&args)
+	argParser := arg.MustParse(&args)
 
 	zerolog.SetGlobalLevel(zerolog.Level(args.LogLevel))
 	log.Logger = log.Output(zerolog.ConsoleWriter{
 		Out:        os.Stdout,
 		TimeFormat: time.RFC3339,
 	})
+
+	if args.New {
+		createNewGurlfile(args.Gurlfile)
+		return
+	}
+
+	if args.Gurlfile == "" {
+		argParser.Fail("Gurlfile must be specified.")
+	}
 
 	state, err := config.Parse[engine.State](args.Params, "GURL_")
 	if err != nil {
@@ -84,4 +98,36 @@ func advanceManually(a advancer.Advancer) {
 		scanner.Scan()
 		a.Advance()
 	}
+}
+
+func createNewGurlfile(name string) {
+	if name == "" {
+		name = "tests.gurl"
+	}
+
+	pathTo := filepath.Dir(name)
+	if pathTo != "" {
+		_, err := os.Stat(pathTo)
+		if os.IsNotExist(err) {
+			err = os.MkdirAll(pathTo, os.ModePerm)
+		}
+		if err != nil {
+			log.Fatal().
+				Err(err).
+				Str("at", name).
+				Msg("Failed creating new gurlfile: Failed creating directory")
+		}
+	}
+
+	err := os.WriteFile(name, embedded.NewGurlfile, fs.ModePerm)
+	if err != nil {
+		log.Fatal().
+			Err(err).
+			Str("at", name).
+			Msg("Failed creating new gurlfile")
+	}
+
+	log.Info().
+		Str("at", name).
+		Msg("Gurlfile created")
 }
