@@ -84,7 +84,7 @@ func (t *scanner) Scan() (tk token, lit string) {
 		t.unread()
 		return t.scanString()
 	case '-':
-		return t.scanDelimiter()
+		return t.scanDash()
 	case '#':
 		return t.scanSection()
 
@@ -193,6 +193,19 @@ func (t *scanner) scanComment() (tk token, lit string) {
 	t.skipToLF()
 
 	return COMMENT, ""
+}
+
+func (t *scanner) scanDash() (tk token, lit string) {
+	tk, lit = t.scanNumber()
+	if tk == INTEGER || tk == FLOAT {
+		lit = "-" + lit
+		return tk, lit
+	}
+
+	t.unread()
+	tk, lit = t.scanDelimiter()
+
+	return tk, lit
 }
 
 func (t *scanner) scanDelimiter() (tk token, lit string) {
@@ -315,6 +328,10 @@ func (t *scanner) scanNumber() (tk token, lit string) {
 		}
 
 		b.WriteRune(r)
+	}
+
+	if b.Len() == 0 {
+		return ILLEGAL, ""
 	}
 
 	return tk, b.String()

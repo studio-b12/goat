@@ -247,7 +247,9 @@ func (t *Parser) parseBlock(req *Request) error {
 		if err != nil {
 			return err
 		}
-		req.Body = []byte(raw)
+		if raw != "" {
+			req.Body = []byte(raw)
+		}
 
 	case "script":
 		raw, err := t.parseRaw()
@@ -346,6 +348,9 @@ func (t *Parser) parseRaw() (string, error) {
 	for {
 		r := t.s.read()
 		if r == eof {
+			if inEscape {
+				return "", ErrOpenEscapeBlock
+			}
 			t.s.unread()
 			break
 		}
@@ -407,6 +412,15 @@ func (t *Parser) parseValue() (any, error) {
 		return strconv.ParseFloat(lit, 64)
 	case STRING:
 		return lit, nil
+	case IDENT:
+		switch lit {
+		case "true":
+			return true, nil
+		case "false":
+			return false, nil
+		default:
+			return nil, newDetailedErr(ErrInvalidLiteral, "(boolean expression expected)")
+		}
 	case BLOCK_START:
 		return t.parseArray()
 	}
@@ -417,23 +431,32 @@ func (t *Parser) parseValue() (any, error) {
 func (t *Parser) parseArray() ([]any, error) {
 	var arr []any
 
+	// tok, _ := t.scanSkipWS()
+	// if tok == BLOCK_END {
+	// 	return arr, nil
+	// }
+
+	// t.unscan()
+
 loop:
 	for {
+		tok, _ := t.scanSkipWS()
+		switch tok {
+		case BLOCK_END:
+			break loop
+		case COMMA, LF:
+			continue loop
+			// default:
+			// 	return nil, newDetailedErr(ErrInvalidToken, "(value array)")
+		}
+
+		t.unscan()
+
 		val, err := t.parseValue()
 		if err != nil {
 			return nil, err
 		}
 		arr = append(arr, val)
-
-		tok, _ := t.scanSkipWS()
-		switch tok {
-		case BLOCK_END:
-			break loop
-		case COMMA:
-			continue loop
-		default:
-			return nil, newDetailedErr(ErrInvalidToken, "(value array)")
-		}
 	}
 
 	return arr, nil

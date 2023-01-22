@@ -15,12 +15,14 @@ var (
 	ErrInvalidRequestMethod        = errors.New("invalid request method")
 	ErrNoRequestURI                = errors.New("method must be followed by the request URI")
 	ErrInvalidToken                = errors.New("invalid token")
+	ErrInvalidLiteral              = errors.New("invalid literal")
 	ErrInvalidBlockHeader          = errors.New("invalid block header")
 	ErrInvalidBlockEntryAssignment = errors.New("block entry must start with an assignment")
 	ErrInvalidHeaderKey            = errors.New("header values must start with a key")
 	ErrInvalidHeaderSeparator      = errors.New("header key and value must be separated by a colon (:)")
 	ErrNoHeaderValue               = errors.New("no header value")
 	ErrFollowingImport             = errors.New("failed following import")
+	ErrOpenEscapeBlock             = errors.New("open escape block")
 )
 
 // InnerError wraps an inner error and
