@@ -1,5 +1,11 @@
 // You can use this file to get ready fast using gurl.
-// You can also import other gurlfiles using 'use <relative location>'.
+// You can also import other gurlfiles using "use <relative location>".
+//
+// This example contains parameter placeholders (for example "{{.instance}}").
+// You can pass variables into gurl either via environment variables prefixed
+// with "GURL_" (for example "GURL_INSTANCE=https://example.com") or via a
+// parameter file (can be either a YAML, JSON or TOML file).
+// Tip: You can also use a .env file for testing!
 //
 // Here you can find the Gurlfile reference:
 // https://github.com/studio-b12/gurl/blob/main/docs/gurlfile-spec.md
@@ -47,6 +53,7 @@ assert(response.StatusCode == 200, `Status code was ${response.StatusCode}`);
 
 POST {{.instance}}/api/v1/auth/logout
 
+[Script]
 assert(response.StatusCode == 200, `Status code was ${response.StatusCode}`);
 
 ---
