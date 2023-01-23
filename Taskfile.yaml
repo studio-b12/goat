@@ -8,16 +8,19 @@ tasks:
       - task: run
 
   build:
+    desc: "Build gurl binary"
     cmds:
       - bash scripts/version.sh
       - defer: git checkout internal/version/version.go
       - "{{.ENV}} go build -v -o bin/gurl{{.SUFFIX}} cmd/gurl/main.go"
 
   run:
+    desc: "Compiles and runs gurl"
     cmds:
       - go run -v cmd/gurl/main.go {{.CLI_ARGS}}
 
   release:
+    desc: "Build binaries for different architectures"
     cmds:
       - task: build
         vars:
@@ -45,5 +48,15 @@ tasks:
           ENV: "GOOS=windows GOARCH=arm64"
 
   test:
+    desc: "Run unit tests"
     cmds:
       - go test -v -cover ./...
+
+  bundle:
+    desc:
+      Builds binaries for different architectures and bundles the 
+      current directory into a gzipped tarball.
+    deps:
+      - release
+    cmds:
+      - tar -czvf gurl.tar.gz $(ls -a1 | grep -v "^\.\.$" | grep -v "^\.$")
