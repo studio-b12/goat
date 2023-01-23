@@ -33,6 +33,8 @@ assert(response.StatusCode == 200, `Status code was ${response.StatusCode}`);
 print(response.Body);
 ```
 
+This tool is very much inspired by [Hurl](https://hurl.dev). Feel free to give it a visit and evaluate what fits best for you.
+
 ## Getting Started
 
 ### Installation
