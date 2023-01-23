@@ -141,15 +141,19 @@ func (t Request) ToHttpRequest() (*http.Request, error) {
 		return nil, fmt.Errorf("failed parsing URI: %s", err.Error())
 	}
 
+	query := uri.Query()
+
 	for key, val := range t.Opts.QueryParams {
 		if arr, ok := val.([]any); ok {
 			for _, v := range arr {
-				uri.Query().Add(key, toString(v))
+				query.Add(key, toString(v))
 			}
 		} else {
-			uri.Query().Add(key, toString(val))
+			query.Add(key, toString(val))
 		}
 	}
+
+	uri.RawQuery = query.Encode()
 
 	var body io.Reader
 
