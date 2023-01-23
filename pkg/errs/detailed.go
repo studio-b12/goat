@@ -15,15 +15,31 @@ type ErrorWithDetails struct {
 	InnerError
 
 	Details any
+	prefix  bool
 }
 
-// newDetailedErr returns a new ErrorWithDetails
-// with the given inner error and details.
-func NewDetailedErr(inner error, details any) error {
+// WithSuffix returns a new ErrorWithDetails
+// with the given inner error and details appended
+// printed at the end of the error string.
+func WithSuffix(inner error, details any) error {
 	var t ErrorWithDetails
 
 	t.Inner = inner
 	t.Details = details
+	t.prefix = false
+
+	return t
+}
+
+// WithSuffix returns a new ErrorWithDetails
+// with the given inner error and details appended
+// printed at the start of the error string.
+func WithPrefix(details any, inner error) error {
+	var t ErrorWithDetails
+
+	t.Inner = inner
+	t.Details = details
+	t.prefix = true
 
 	return t
 }
@@ -31,20 +47,28 @@ func NewDetailedErr(inner error, details any) error {
 func (t ErrorWithDetails) Error() string {
 	msg := t.Inner.Error()
 
-	if t.Details != nil {
-		var detailsString string
+	if t.Details == nil {
+		return msg
+	}
 
-		if stringer, ok := t.Details.(interface{ String() string }); ok {
-			detailsString = stringer.String()
-		} else if err, ok := t.Details.(error); ok {
-			detailsString = err.Error()
-		} else {
-			detailsString = fmt.Sprintf("%v", t.Details)
-		}
+	var detailsString string
 
-		if detailsString != "" {
-			msg += " " + detailsString
-		}
+	if stringer, ok := t.Details.(interface{ String() string }); ok {
+		detailsString = stringer.String()
+	} else if err, ok := t.Details.(error); ok {
+		detailsString = err.Error()
+	} else {
+		detailsString = fmt.Sprintf("%v", t.Details)
+	}
+
+	if detailsString != "" {
+		return msg
+	}
+
+	if t.prefix {
+		msg = detailsString + " " + msg
+	} else {
+		msg += " " + detailsString
 	}
 
 	return msg

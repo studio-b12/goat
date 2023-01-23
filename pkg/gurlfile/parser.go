@@ -56,7 +56,7 @@ func (t *Parser) Parse() (gf Gurlfile, err error) {
 		case ILLEGAL:
 			return Gurlfile{}, ErrIllegalCharacter
 		default:
-			err = errs.NewDetailedErr(ErrUnexpected,
+			err = errs.WithSuffix(ErrUnexpected,
 				fmt.Sprintf("(%d '%s')", tok, lit))
 		}
 
@@ -207,7 +207,7 @@ loop:
 			break loop
 
 		default:
-			err = errs.NewDetailedErr(ErrInvalidToken, "(request)")
+			err = errs.WithSuffix(ErrInvalidToken, "(request)")
 		}
 
 		if err != nil {
@@ -235,7 +235,7 @@ func (t *Parser) parseBlock(req *Request) error {
 
 	tok, _ = t.scanSkipWS()
 	if tok != LF {
-		return errs.NewDetailedErr(ErrInvalidToken, "(block)")
+		return errs.WithSuffix(ErrInvalidToken, "(block)")
 	}
 
 	switch strings.ToLower(blockHeader) {
@@ -277,7 +277,7 @@ func (t *Parser) parseBlock(req *Request) error {
 		req.Options = data
 
 	default:
-		return errs.NewDetailedErr(ErrInvalidBlockHeader,
+		return errs.WithSuffix(ErrInvalidBlockHeader,
 			fmt.Sprintf("('%s')", blockHeader))
 	}
 
@@ -431,13 +431,13 @@ func (t *Parser) parseValue() (any, error) {
 		case "false":
 			return false, nil
 		default:
-			return nil, errs.NewDetailedErr(ErrInvalidLiteral, "(boolean expression expected)")
+			return nil, errs.WithSuffix(ErrInvalidLiteral, "(boolean expression expected)")
 		}
 	case BLOCK_START:
 		return t.parseArray()
 	}
 
-	return nil, errs.NewDetailedErr(ErrInvalidToken, "(value)")
+	return nil, errs.WithSuffix(ErrInvalidToken, "(value)")
 }
 
 func (t *Parser) parseArray() ([]any, error) {

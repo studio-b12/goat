@@ -158,7 +158,13 @@ func (t *Executor) ExecuteGurlfile(gf gurlfile.Gurlfile, initialParams engine.St
 		for _, req := range gf.Teardown {
 			err := t.executeRequest(eng, req)
 			if err != nil {
-				log.Error().Str("req", req.String()).Err(err).Msg("teardown step failed")
+				log.Error().Str("req", req.String()).Err(err).Msg("Teardown step failed")
+				// If the returned error comes from the params parsing step, don't
+				// cancel the teardown execution. See the following issue for more information.
+				// https://github.com/studio-b12/gurl/issues/9
+				if errs.IsOfType[ParamsParsingError](err) {
+					continue
+				}
 				break
 			}
 			log.Info().Str("req", req.String()).Msg("Teardown step completed")
@@ -197,6 +203,8 @@ func (t *Executor) ExecuteGurlfile(gf gurlfile.Gurlfile, initialParams engine.St
 
 func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlfile.Gurlfile) (err error) {
 	defer func() {
+		// Teardown-Each steps
+
 		if t.isSkip("teardown-each") {
 			log.Warn().Msg("skipping teardown-each steps")
 			return
@@ -205,12 +213,20 @@ func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlf
 		for _, postReq := range gf.TeardownEach {
 			err := t.executeRequest(eng, postReq)
 			if err != nil {
-				err = fmt.Errorf("post-setup-each step failed: %s", err.Error())
+				err = fmt.Errorf("Post-setup-each step failed: %s", err.Error())
+				// If the returned error comes from the params parsing step, don't
+				// cancel the teardown-each execution. See the following issue for more information.
+				// https://github.com/studio-b12/gurl/issues/9
+				if errs.IsOfType[ParamsParsingError](err) {
+					continue
+				}
 				break
 			}
 			log.Info().Str("req", req.String()).Msg("Teardown-Each step completed")
 		}
 	}()
+
+	// Setup-Each Steps
 
 	if t.isSkip("setup-each") {
 		log.Warn().Msg("skipping setup-each steps")
@@ -218,11 +234,13 @@ func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlf
 		for _, preReq := range gf.SetupEach {
 			err := t.executeRequest(eng, preReq)
 			if err != nil {
-				return fmt.Errorf("pre-setup-each step failed: %s", err.Error())
+				return fmt.Errorf("Pre-Setup-Each step failed: %s", err.Error())
 			}
 			log.Info().Str("req", req.String()).Msg("Setup-Each step completed")
 		}
 	}
+
+	// Actual Test Step
 
 	err = t.executeRequest(eng, req)
 	if err != nil {
@@ -239,7 +257,8 @@ func (t *Executor) executeRequest(eng engine.Engine, req gurlfile.Request) (err 
 	state := eng.State()
 	parsedReq, err := req.ParseWithParams(state)
 	if err != nil {
-		return fmt.Errorf("failed infusing request with parameters: %s", err.Error())
+		return errs.WithPrefix("failed infusing request with parameters:",
+			ParamsParsingError(err))
 	}
 
 	httpReq, err := parsedReq.ToHttpRequest()

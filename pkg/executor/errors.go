@@ -20,3 +20,5 @@ func (t BatchExecutionError) Error() string {
 func (t BatchExecutionError) Unwrap() error {
 	return t.Inner.Condense()
 }
+
+type ParamsParsingError error
