@@ -347,6 +347,25 @@ some more content
 			res.Tests[0].Body)
 	})
 
+	t.Run("unescaped-finaldelim", func(t *testing.T) {
+		const raw = `
+		
+GET https://example.com
+
+[Body]
+some body content
+some more content
+---`
+
+		p := stringParser(raw)
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t,
+			[]byte("some body content\nsome more content"),
+			res.Tests[0].Body)
+	})
+
 	t.Run("unescaped-section", func(t *testing.T) {
 		const raw = `
 		
@@ -355,7 +374,6 @@ GET https://example.com
 [Body]
 some body content
 some more content
-
 ### tests
 `
 
@@ -364,7 +382,7 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			[]byte("some body content\nsome more content\n"),
+			[]byte("some body content\nsome more content"),
 			res.Tests[0].Body)
 	})
 

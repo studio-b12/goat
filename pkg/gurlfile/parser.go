@@ -347,13 +347,6 @@ func (t *Parser) parseRaw() (string, error) {
 
 	for {
 		r := t.s.read()
-		if r == eof {
-			if inEscape {
-				return "", ErrOpenEscapeBlock
-			}
-			t.s.unread()
-			break
-		}
 
 		if !inEscape {
 			if out.Len() > 3 && string(out.Bytes()[out.Len()-4:]) == "\n---" {
@@ -378,6 +371,14 @@ func (t *Parser) parseRaw() (string, error) {
 				out.Truncate(out.Len() - 4)
 				break
 			}
+		}
+
+		if r == eof {
+			if inEscape {
+				return "", ErrOpenEscapeBlock
+			}
+			t.s.unread()
+			break
 		}
 
 		out.WriteRune(r)
