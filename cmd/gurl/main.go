@@ -74,7 +74,9 @@ func main() {
 		executor.Waiter = advancer.NewTicker(args.Delay)
 	}
 
-	err = executor.ExecuteFromDir(args.Gurlfile, state)
+	log.Debug().Interface("initialParams", state).Send()
+
+	err = executor.Execute(args.Gurlfile, state)
 	if err != nil {
 		log.Fatal().Err(err).Msg("execution failed")
 	}

@@ -7,8 +7,11 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/studio-b12/gurl/pkg/errs"
 )
 
+// Parser parses a Gurlfile.
 type Parser struct {
 	s   *scanner
 	buf struct {
@@ -18,10 +21,13 @@ type Parser struct {
 	}
 }
 
+// NewParser returns a new Parser scanning from
+// the given Reader.
 func NewParser(r io.Reader) *Parser {
 	return &Parser{s: newScanner(r)}
 }
 
+// Parse parses a Gurlfile from the specified source.
 func (t *Parser) Parse() (gf Gurlfile, err error) {
 	defer func() {
 		err = t.wrapErr(err)
@@ -50,7 +56,7 @@ func (t *Parser) Parse() (gf Gurlfile, err error) {
 		case ILLEGAL:
 			return Gurlfile{}, ErrIllegalCharacter
 		default:
-			err = newDetailedErr(ErrUnexpected,
+			err = errs.NewDetailedErr(ErrUnexpected,
 				fmt.Sprintf("(%d '%s')", tok, lit))
 		}
 
@@ -196,7 +202,7 @@ loop:
 			break loop
 
 		default:
-			err = newDetailedErr(ErrInvalidToken, "(request)")
+			err = errs.NewDetailedErr(ErrInvalidToken, "(request)")
 		}
 
 		if err != nil {
@@ -224,7 +230,7 @@ func (t *Parser) parseBlock(req *Request) error {
 
 	tok, _ = t.scanSkipWS()
 	if tok != LF {
-		return newDetailedErr(ErrInvalidToken, "(block)")
+		return errs.NewDetailedErr(ErrInvalidToken, "(block)")
 	}
 
 	switch strings.ToLower(blockHeader) {
@@ -266,7 +272,7 @@ func (t *Parser) parseBlock(req *Request) error {
 		req.Options = data
 
 	default:
-		return newDetailedErr(ErrInvalidBlockHeader,
+		return errs.NewDetailedErr(ErrInvalidBlockHeader,
 			fmt.Sprintf("('%s')", blockHeader))
 	}
 
@@ -420,24 +426,17 @@ func (t *Parser) parseValue() (any, error) {
 		case "false":
 			return false, nil
 		default:
-			return nil, newDetailedErr(ErrInvalidLiteral, "(boolean expression expected)")
+			return nil, errs.NewDetailedErr(ErrInvalidLiteral, "(boolean expression expected)")
 		}
 	case BLOCK_START:
 		return t.parseArray()
 	}
 
-	return nil, newDetailedErr(ErrInvalidToken, "(value)")
+	return nil, errs.NewDetailedErr(ErrInvalidToken, "(value)")
 }
 
 func (t *Parser) parseArray() ([]any, error) {
 	var arr []any
-
-	// tok, _ := t.scanSkipWS()
-	// if tok == BLOCK_END {
-	// 	return arr, nil
-	// }
-
-	// t.unscan()
 
 loop:
 	for {
@@ -447,8 +446,6 @@ loop:
 			break loop
 		case COMMA, LF:
 			continue loop
-			// default:
-			// 	return nil, newDetailedErr(ErrInvalidToken, "(value array)")
 		}
 
 		t.unscan()

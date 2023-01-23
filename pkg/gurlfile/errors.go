@@ -3,6 +3,8 @@ package gurlfile
 import (
 	"errors"
 	"fmt"
+
+	"github.com/studio-b12/gurl/pkg/errs"
 )
 
 var (
@@ -25,21 +27,10 @@ var (
 	ErrOpenEscapeBlock             = errors.New("open escape block")
 )
 
-// InnerError wraps an inner error and
-// implements the Unwrap() function to
-// unwrap the inner error.
-type InnerError struct {
-	Inner error
-}
-
-func (t InnerError) Unwrap() error {
-	return t.Inner
-}
-
 // ParseError wraps an inner error with
 // additional parsing context.
 type ParseError struct {
-	InnerError
+	errs.InnerError
 
 	Line    int
 	LinePos int
@@ -48,52 +39,4 @@ type ParseError struct {
 func (t ParseError) Error() string {
 	return fmt.Sprintf("%d:%d: %s",
 		t.Line+1, t.LinePos, t.Inner.Error())
-}
-
-// ErrorWithDetails wraps an inner error
-// with additional details attached on
-// calling Error().
-//
-// If the type of Details implements the
-// String() string function, it will be
-// used to stringify the attached details.
-// Otherwise, the value will be determined
-// via fmt.Sprintf("%v", ...).
-type ErrorWithDetails struct {
-	InnerError
-
-	Details any
-}
-
-// newDetailedErr returns a new ErrorWithDetails
-// with the given inner error and details.
-func newDetailedErr(inner error, details any) error {
-	var t ErrorWithDetails
-
-	t.Inner = inner
-	t.Details = details
-
-	return t
-}
-
-func (t ErrorWithDetails) Error() string {
-	msg := t.Inner.Error()
-
-	if t.Details != nil {
-		var detailsString string
-
-		if stringer, ok := t.Details.(interface{ String() string }); ok {
-			detailsString = stringer.String()
-		} else if err, ok := t.Details.(error); ok {
-			detailsString = err.Error()
-		} else {
-			detailsString = fmt.Sprintf("%v", t.Details)
-		}
-
-		if detailsString != "" {
-			msg += " " + detailsString
-		}
-	}
-
-	return msg
 }

@@ -1,7 +1,9 @@
 package executor
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -9,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/studio-b12/gurl/pkg/advancer"
 	"github.com/studio-b12/gurl/pkg/engine"
+	"github.com/studio-b12/gurl/pkg/errs"
 	"github.com/studio-b12/gurl/pkg/gurlfile"
 	"github.com/studio-b12/gurl/pkg/requester"
 )
@@ -38,41 +41,102 @@ func New(engineMaker func() engine.Engine, req requester.Requester) *Executor {
 	return &t
 }
 
-// ExecuteFromDir executes a single or multiple Gurlfiles
+// Execute executes a single or multiple Gurlfiles
 // from the given directory. The given initialParams are
 // used as initial state for the runtime engine.
-func (t *Executor) ExecuteFromDir(path string, initialParams engine.State) error {
-	log.Debug().Interface("initialParams", initialParams).Send()
-
+func (t *Executor) Execute(path string, initialParams engine.State) error {
 	stat, err := os.Stat(path)
 	if err != nil {
 		return fmt.Errorf("stat failed: %s", err.Error())
 	}
 
 	if stat.IsDir() {
-		return fmt.Errorf("Execution from directories is currently not implemented.")
+		return t.ExecuteFromDir(path, initialParams)
 	}
 
-	log.Debug().Str("from", path).Msg("Reading gurlfile ...")
-	data, err := os.ReadFile(path)
+	gf, err := t.ParseGurlfile(path)
 	if err != nil {
-		return fmt.Errorf("failed reading file: %s", err.Error())
-	}
-
-	log.Debug().Msg("Parsing gurlfile ...")
-	relCurrDir := filepath.Dir(path)
-	gf, err := gurlfile.Unmarshal(string(data), relCurrDir)
-	if err != nil {
-		return fmt.Errorf("failed parsing gurlfile: %s", err.Error())
+		return err
 	}
 
 	log.Debug().Msg("Executing gurlfile ...")
-	return t.Execute(gf, initialParams)
+	return t.ExecuteGurlfile(gf, initialParams)
 }
 
-// Execute runs the given parsed Gurlfile. The given initialParams are
+func (t *Executor) ExecuteFromDir(path string, initialParams engine.State) error {
+	var gurlfiles []gurlfile.Gurlfile
+
+	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
+		if d.IsDir() {
+			return nil
+		}
+
+		if filepath.Ext(d.Name()) != "."+gurlfile.FileExtension || strings.HasPrefix(d.Name(), "_") {
+			return nil
+		}
+
+		gf, err := t.ParseGurlfile(path)
+		if err != nil {
+			return err
+		}
+
+		gurlfiles = append(gurlfiles, gf)
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if len(gurlfiles) == 0 {
+		return errors.New("No Gurlfiles found to execute")
+	}
+
+	var errs errs.Errors
+
+	for _, gf := range gurlfiles {
+		log.Info().Str("path", gf.Path).Msg("Executing batch ...")
+		err = t.ExecuteGurlfile(gf, initialParams)
+		if err != nil {
+			log.Err(err).Msg("")
+			errs = append(errs, err)
+		} else {
+			log.Info().Str("path", gf.Path).Msg("Batch finished successfully")
+		}
+	}
+
+	if errs.HasSome() {
+		return BatchExecutionError{
+			Inner: errs,
+			Total: len(gurlfiles),
+		}
+	}
+
+	return nil
+}
+
+func (t *Executor) ParseGurlfile(path string) (gf gurlfile.Gurlfile, err error) {
+	log.Debug().Str("from", path).Msg("Parsing gurlfile ...")
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return gurlfile.Gurlfile{}, fmt.Errorf("failed reading file: %s", err.Error())
+	}
+
+	relCurrDir := filepath.Dir(path)
+	gf, err = gurlfile.Unmarshal(string(data), relCurrDir)
+	if err != nil {
+		return gurlfile.Gurlfile{}, fmt.Errorf("failed parsing gurlfile %s: %s", path, err.Error())
+	}
+
+	gf.Path = path
+
+	return gf, nil
+}
+
+// ExecuteGurlfile runs the given parsed Gurlfile. The given initialParams are
 // used as initial state for the runtime engine.
-func (t *Executor) Execute(gf gurlfile.Gurlfile, initialParams engine.State) (err error) {
+func (t *Executor) ExecuteGurlfile(gf gurlfile.Gurlfile, initialParams engine.State) (err error) {
 	log.Debug().Msg("Parsed Gurlfile\n" + gf.String())
 
 	if t.Dry {

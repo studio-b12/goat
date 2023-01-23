@@ -1,3 +1,9 @@
+// Package gurlfile provides functionalities to
+// unmarshal and parse a Gurlfile.
+//
+// Here you can find the Gurlfile specification
+// on which basis this parser in built on.
+// https://github.com/studio-b12/gurl/blob/main/docs/gurlfile-spec.md
 package gurlfile
 
 import (
@@ -31,6 +37,8 @@ type Gurlfile struct {
 	Tests        []Request
 	Teardown     []Request
 	TeardownEach []Request
+
+	Path string
 }
 
 // Merge appends all requests in all sections of with
@@ -43,6 +51,7 @@ func (t *Gurlfile) Merge(with Gurlfile) {
 	t.TeardownEach = append(t.TeardownEach, with.TeardownEach...)
 }
 
+// String returns the Gurlfile as JSON encoded string.
 func (t Gurlfile) String() string {
 	b, err := json.MarshalIndent(t, "", "  ")
 	if err != nil {
