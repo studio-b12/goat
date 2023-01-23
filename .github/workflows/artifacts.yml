@@ -1,11 +1,11 @@
 name: Build Artifacts
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - "*"
-    paths-ignore:
-      - "**.md"
+  # push:
+  #   branches:
+  #     - "*"
+  #   paths-ignore:
+  #     - "**.md"
 
 jobs:
   build_artifacts:
