@@ -826,6 +826,200 @@ GET https://example.com / foo
 	})
 }
 
+func TestParse_Sections(t *testing.T) {
+	t.Run("general", func(t *testing.T) {
+		const raw = `
+### Setup
+
+GET https://example1.com
+---
+GET https://example2.com
+
+########## Setup-Each
+GET https://example3.com
+---
+GET https://example4.com
+
+###   	tests
+
+GET https://example5.com
+
+---
+
+GET https://example6.com
+
+	### teardown
+
+GET https://example7.com
+---
+GET https://example8.com
+
+---
+
+### Teardown-Each
+
+GET https://example9.com
+---
+GET https://example10.com
+
+			`
+
+		p := stringParser(raw)
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+
+		assert.Equal(t, "https://example1.com", res.Setup[0].URI)
+		assert.Equal(t, "https://example2.com", res.Setup[1].URI)
+
+		assert.Equal(t, "https://example3.com", res.SetupEach[0].URI)
+		assert.Equal(t, "https://example4.com", res.SetupEach[1].URI)
+
+		assert.Equal(t, "https://example5.com", res.Tests[0].URI)
+		assert.Equal(t, "https://example6.com", res.Tests[1].URI)
+
+		assert.Equal(t, "https://example7.com", res.Teardown[0].URI)
+		assert.Equal(t, "https://example8.com", res.Teardown[1].URI)
+
+		assert.Equal(t, "https://example9.com", res.TeardownEach[0].URI)
+		assert.Equal(t, "https://example10.com", res.TeardownEach[1].URI)
+	})
+
+	t.Run("invalid-1", func(t *testing.T) {
+		const raw = `
+## Tests
+
+GET https://example.com
+			`
+
+		p := stringParser(raw)
+		_, err := p.Parse()
+
+		assert.ErrorIs(t, err, ErrIllegalCharacter, err)
+	})
+
+	t.Run("invalid-2", func(t *testing.T) {
+		const raw = `
+###
+
+GET https://example.com
+			`
+
+		p := stringParser(raw)
+		_, err := p.Parse()
+
+		assert.ErrorIs(t, err, ErrInvalidSection, err)
+	})
+
+	t.Run("invalid-3", func(t *testing.T) {
+		const raw = `
+### invalid-section
+
+GET https://example.com
+			`
+
+		p := stringParser(raw)
+		_, err := p.Parse()
+
+		assert.ErrorIs(t, err, ErrInvalidSection, err)
+	})
+
+	t.Run("invalid-4", func(t *testing.T) {
+		const raw = `
+### Tests Invalid
+
+GET https://example.com
+			`
+
+		p := stringParser(raw)
+		_, err := p.Parse()
+
+		assert.ErrorIs(t, err, ErrInvalidSection, err)
+	})
+}
+
+func TestParse_Use(t *testing.T) {
+	t.Run("general", func(t *testing.T) {
+		const raw = `
+use file1
+
+use file2
+use ../file3 // hey, a comment!
+
+use "some file"
+
+use 	  ../another/file
+		`
+
+		p := stringParser(raw)
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t, []string{
+			"file1",
+			"file2",
+			"../file3",
+			"some file",
+			"../another/file",
+		}, res.Imports)
+	})
+
+	t.Run("invalid-inclomplete", func(t *testing.T) {
+		const raw = `
+use
+		`
+
+		p := stringParser(raw)
+		_, err := p.Parse()
+
+		assert.ErrorIs(t, err, ErrInvalidStringLiteral, err)
+	})
+
+	t.Run("invalid-empty-1", func(t *testing.T) {
+		const raw = `
+use   
+		`
+
+		p := stringParser(raw)
+		_, err := p.Parse()
+
+		assert.ErrorIs(t, err, ErrEmptyUsePath, err)
+	})
+
+	t.Run("invalid-empty-2", func(t *testing.T) {
+		const raw = `
+use ""
+		`
+
+		p := stringParser(raw)
+		_, err := p.Parse()
+
+		assert.ErrorIs(t, err, ErrEmptyUsePath, err)
+	})
+
+	t.Run("invalid-openstring", func(t *testing.T) {
+		const raw = `
+use "
+		`
+
+		p := stringParser(raw)
+		_, err := p.Parse()
+
+		assert.ErrorIs(t, err, ErrInvalidStringLiteral, err)
+	})
+
+	t.Run("invalid-keyword", func(t *testing.T) {
+		const raw = `
+use"test"
+		`
+
+		p := stringParser(raw)
+		_, err := p.Parse()
+
+		assert.ErrorIs(t, err, ErrInvalidStringLiteral, err)
+	})
+}
+
 // --- Helpers --------------------------------------------
 
 func stringParser(raw string) *Parser {

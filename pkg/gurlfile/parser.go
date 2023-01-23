@@ -108,6 +108,11 @@ func (t *Parser) wrapErr(err error) error {
 }
 
 func (t *Parser) parseUse(gf *Gurlfile) error {
+	tk, _ := t.scan()
+	if tk != WS {
+		return ErrInvalidStringLiteral
+	}
+
 	tk, lit := t.s.scanString()
 	if tk == ILLEGAL {
 		return ErrInvalidStringLiteral

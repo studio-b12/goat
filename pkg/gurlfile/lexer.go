@@ -284,6 +284,15 @@ func (t *scanner) scanSection() (tk token, lit string) {
 		}
 	}
 
+	for {
+		r := t.read()
+		if r != '#' {
+			break
+		}
+	}
+
+	t.unread()
+
 	return SECTION, ""
 }
 
