@@ -4,9 +4,6 @@
 
 ### `Options`
 
-> **Warning**  
-> This is not implemented yet.
-
 Additional options that control the request and response behavior.
 
 Available parameters are:
@@ -15,7 +12,7 @@ Name | Type | Default | Description
 -|-|-|-
 `cookiejar` | `string` or `number` | `"default"` | The cookie jar to be used.
 `storecookies` | `boolean` | `true` | Whether or not to store response cookies to the cookiejar.
-`sendcookies` | `boolesn` | `true` | Whether or not to send stored cookies with the request.
+`sendcookies` | `boolean` | `true` | Whether or not to send stored cookies with the request.
 
 ## Script Implementation
 

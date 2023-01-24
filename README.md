@@ -33,7 +33,18 @@ assert(response.StatusCode == 200, `Status code was ${response.StatusCode}`);
 print(response.Body);
 ```
 
-This tool is very much inspired by [Hurl](https://hurl.dev). Feel free to give it a visit and evaluate what fits best for you.
+This tool is very much inspired by [Hurl](https://hurl.dev). Please give them a visit and evaluate what fits best for you.
+
+## But why?
+
+gurl has some advantages versus common tools like Postman or Insomnia.
+
+- Write your API tests in easy to read and write, simple text files.
+- Build easy to reproduce end to end tests which you can directly commit with your source code.
+- Build for being used headlessly in CI/CD systems.
+- Easy to install due to being one single, self contained binary.
+- Gurlfiles can be read, written and understood using any type of text editor.
+- High level of flexibility due to the usage of a micro script engine (JavaScript) for assertions. 
 
 ## Getting Started
 
