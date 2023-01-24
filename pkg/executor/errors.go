@@ -21,4 +21,7 @@ func (t BatchExecutionError) Unwrap() error {
 	return t.Inner.Condense()
 }
 
+// ParamsParsingError is an alias for error
+// to identify that an error originates from
+// the parameter parsing step.
 type ParamsParsingError error

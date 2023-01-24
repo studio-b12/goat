@@ -52,87 +52,16 @@ func (t *Executor) Execute(path string, initialParams engine.State) error {
 	}
 
 	if stat.IsDir() {
-		return t.ExecuteFromDir(path, initialParams)
+		return t.executeFromDir(path, initialParams)
 	}
 
-	gf, err := t.ParseGurlfile(path)
+	gf, err := t.parseGurlfile(path)
 	if err != nil {
 		return err
 	}
 
 	log.Debug().Msg("Executing gurlfile ...")
 	return t.ExecuteGurlfile(gf, initialParams)
-}
-
-func (t *Executor) ExecuteFromDir(path string, initialParams engine.State) error {
-	var gurlfiles []gurlfile.Gurlfile
-
-	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
-		if d.IsDir() {
-			return nil
-		}
-
-		if filepath.Ext(d.Name()) != "."+gurlfile.FileExtension || strings.HasPrefix(d.Name(), "_") {
-			return nil
-		}
-
-		gf, err := t.ParseGurlfile(path)
-		if err != nil {
-			return err
-		}
-
-		gurlfiles = append(gurlfiles, gf)
-		return nil
-	})
-
-	if err != nil {
-		return err
-	}
-
-	if len(gurlfiles) == 0 {
-		return errors.New("No Gurlfiles found to execute")
-	}
-
-	var errs errs.Errors
-
-	for _, gf := range gurlfiles {
-		log.Info().Str("path", gf.Path).Msg("Executing batch ...")
-		err = t.ExecuteGurlfile(gf, initialParams)
-		if err != nil {
-			log.Err(err).Msg("Batch execution failed")
-			errs = errs.Append(err)
-		} else {
-			log.Info().Str("path", gf.Path).Msg("Batch finished successfully")
-		}
-	}
-
-	if errs.HasSome() {
-		return BatchExecutionError{
-			Inner: errs,
-			Total: len(gurlfiles),
-		}
-	}
-
-	return nil
-}
-
-func (t *Executor) ParseGurlfile(path string) (gf gurlfile.Gurlfile, err error) {
-	log.Debug().Str("from", path).Msg("Parsing gurlfile ...")
-
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return gurlfile.Gurlfile{}, fmt.Errorf("failed reading file: %s", err.Error())
-	}
-
-	relCurrDir := filepath.Dir(path)
-	gf, err = gurlfile.Unmarshal(string(data), relCurrDir)
-	if err != nil {
-		return gurlfile.Gurlfile{}, fmt.Errorf("failed parsing gurlfile %s: %s", path, err.Error())
-	}
-
-	gf.Path = path
-
-	return gf, nil
 }
 
 // ExecuteGurlfile runs the given parsed Gurlfile. The given initialParams are
@@ -222,6 +151,77 @@ func (t *Executor) ExecuteGurlfile(gf gurlfile.Gurlfile, initialParams engine.St
 	return errsNoAbort.Condense()
 }
 
+func (t *Executor) executeFromDir(path string, initialParams engine.State) error {
+	var gurlfiles []gurlfile.Gurlfile
+
+	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
+		if d.IsDir() ||
+			filepath.Ext(d.Name()) != "."+gurlfile.FileExtension ||
+			strings.HasPrefix(d.Name(), "_") {
+			return nil
+		}
+
+		gf, err := t.parseGurlfile(path)
+		if err != nil {
+			return err
+		}
+
+		gurlfiles = append(gurlfiles, gf)
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if len(gurlfiles) == 0 {
+		return errors.New("No Gurlfiles found to execute")
+	}
+
+	var errs errs.Errors
+
+	for _, gf := range gurlfiles {
+		log.Info().Str("path", gf.Path).Msg("Executing batch ...")
+
+		err = t.ExecuteGurlfile(gf, initialParams)
+		if err != nil {
+			log.Err(err).Msg("Batch execution failed")
+			errs = errs.Append(err)
+			continue
+		}
+
+		log.Info().Str("path", gf.Path).Msg("Batch finished successfully")
+	}
+
+	if errs.HasSome() {
+		return BatchExecutionError{
+			Inner: errs,
+			Total: len(gurlfiles),
+		}
+	}
+
+	return nil
+}
+
+func (t *Executor) parseGurlfile(path string) (gf gurlfile.Gurlfile, err error) {
+	log.Debug().Str("from", path).Msg("Parsing gurlfile ...")
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return gurlfile.Gurlfile{}, fmt.Errorf("failed reading file: %s", err.Error())
+	}
+
+	relCurrDir := filepath.Dir(path)
+	gf, err = gurlfile.Unmarshal(string(data), relCurrDir)
+	if err != nil {
+		return gurlfile.Gurlfile{}, fmt.Errorf("failed parsing gurlfile %s: %s", path, err.Error())
+	}
+
+	gf.Path = path
+
+	return gf, nil
+}
+
 func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlfile.Gurlfile) (err error) {
 	var errsNoAbort errs.Errors
 
@@ -236,9 +236,9 @@ func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlf
 		for _, postReq := range gf.TeardownEach {
 			err := t.executeRequest(eng, postReq)
 			if err != nil {
-				err = fmt.Errorf("Post-setup-each step failed: %s", err.Error())
-
 				log.Err(err).Str("req", req.String()).Msg("Post-Each step failed")
+
+				err = fmt.Errorf("Post-setup-each step failed: %s", err.Error())
 
 				// If the returned error comes from the params parsing step, don't
 				// cancel the teardown-each execution. See the following issue for more information.
@@ -267,12 +267,11 @@ func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlf
 		for _, preReq := range gf.SetupEach {
 			err := t.executeRequest(eng, preReq)
 			if err != nil {
-				err = fmt.Errorf("Setup-Each step failed: %s", err.Error())
-
 				log.Err(err).Str("req", req.String()).Msg("Setup-Each step failed")
 
+				err = fmt.Errorf("Setup-Each step failed: %s", err.Error())
+
 				if !t.isAbortOnError(preReq) {
-					log.Err(err).Msg("No-Abort")
 					errsNoAbort = errsNoAbort.Append(err)
 					continue
 				}
@@ -289,13 +288,15 @@ func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlf
 	err = t.executeRequest(eng, req)
 	if err != nil {
 		log.Err(err).Str("req", req.String()).Msg("Test step failed")
-		if !t.isAbortOnError(req) {
-			return errsNoAbort.Append(err)
-		}
-		return err
-	}
 
-	log.Info().Str("req", req.String()).Msg("Test completed")
+		if t.isAbortOnError(req) {
+			return err
+		}
+
+		errsNoAbort = errsNoAbort.Append(err)
+	} else {
+		log.Info().Str("req", req.String()).Msg("Test completed")
+	}
 
 	return errsNoAbort.Condense()
 }
@@ -316,7 +317,6 @@ func (t *Executor) executeRequest(eng engine.Engine, req gurlfile.Request) (err 
 	}
 
 	reqOpts := requester.OptionsFromMap(parsedReq.Options)
-
 	httpResp, err := t.req.Do(httpReq, reqOpts)
 	if err != nil {
 		return fmt.Errorf("http request failed: %s", err.Error())
