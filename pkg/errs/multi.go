@@ -48,3 +48,14 @@ func (t Errors) Condense() error {
 	}
 	return nil
 }
+
+func (t Errors) Append(err error) Errors {
+	if errs, ok := err.(Errors); ok {
+		for _, e := range errs {
+			t = t.Append(e)
+		}
+		return t
+	}
+
+	return append(t, err)
+}

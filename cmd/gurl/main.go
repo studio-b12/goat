@@ -29,6 +29,7 @@ type Args struct {
 	LogLevel int           `arg:"-l,--loglevel" default:"1" help:"Logging level (see https://github.com/rs/zerolog#leveled-logging for reference)"`
 	Manual   bool          `arg:"--manual" help:"Advance the requests maually"`
 	New      bool          `arg:"--new" help:"Create a new base Gurlfile"`
+	NoAbort  bool          `arg:"--no-abort" help:"Do not abort batch execution on error."`
 	Params   string        `arg:"-p,--params" help:"Params file location"`
 	Skip     []string      `arg:"--skip" help:"Section(s) to be skipped during execution"`
 }
@@ -64,6 +65,7 @@ func main() {
 	executor := executor.New(engineMaker, req)
 	executor.Dry = args.Dry
 	executor.Skip = args.Skip
+	executor.NoAbort = args.NoAbort
 
 	if args.Manual {
 		ad := make(advancer.Channel)

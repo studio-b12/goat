@@ -21,9 +21,10 @@ type Executor struct {
 	engineMaker func() engine.Engine
 	req         requester.Requester
 
-	Dry    bool
-	Skip   []string
-	Waiter advancer.Waiter
+	Dry     bool
+	NoAbort bool
+	Skip    []string
+	Waiter  advancer.Waiter
 }
 
 // New initializes a new instance of Executor using
@@ -98,8 +99,8 @@ func (t *Executor) ExecuteFromDir(path string, initialParams engine.State) error
 		log.Info().Str("path", gf.Path).Msg("Executing batch ...")
 		err = t.ExecuteGurlfile(gf, initialParams)
 		if err != nil {
-			log.Err(err).Msg("")
-			errs = append(errs, err)
+			log.Err(err).Msg("Batch execution failed")
+			errs = errs.Append(err)
 		} else {
 			log.Info().Str("path", gf.Path).Msg("Batch finished successfully")
 		}
@@ -144,6 +145,8 @@ func (t *Executor) ExecuteGurlfile(gf gurlfile.Gurlfile, initialParams engine.St
 		return nil
 	}
 
+	var errsNoAbort errs.Errors
+
 	eng := t.engineMaker()
 	eng.SetState(initialParams)
 
@@ -158,15 +161,23 @@ func (t *Executor) ExecuteGurlfile(gf gurlfile.Gurlfile, initialParams engine.St
 		for _, req := range gf.Teardown {
 			err := t.executeRequest(eng, req)
 			if err != nil {
-				log.Error().Str("req", req.String()).Err(err).Msg("Teardown step failed")
+				log.Err(err).Str("req", req.String()).Msg("Teardown step failed")
+
 				// If the returned error comes from the params parsing step, don't
 				// cancel the teardown execution. See the following issue for more information.
 				// https://github.com/studio-b12/gurl/issues/9
 				if errs.IsOfType[ParamsParsingError](err) {
 					continue
 				}
+
+				if !t.isAbortOnError(req) {
+					errsNoAbort = errsNoAbort.Append(err)
+					continue
+				}
+
 				break
 			}
+
 			log.Info().Str("req", req.String()).Msg("Teardown step completed")
 		}
 	}()
@@ -179,8 +190,14 @@ func (t *Executor) ExecuteGurlfile(gf gurlfile.Gurlfile, initialParams engine.St
 		for _, req := range gf.Setup {
 			err := t.executeRequest(eng, req)
 			if err != nil {
+				log.Err(err).Str("req", req.String()).Msg("Setup step failed")
+				if !t.isAbortOnError(req) {
+					errsNoAbort = errsNoAbort.Append(err)
+					continue
+				}
 				return err
 			}
+
 			log.Info().Str("req", req.String()).Msg("Setup step completed")
 		}
 	}
@@ -193,15 +210,21 @@ func (t *Executor) ExecuteGurlfile(gf gurlfile.Gurlfile, initialParams engine.St
 		for _, req := range gf.Tests {
 			err := t.executeTest(req, eng, gf)
 			if err != nil {
+				if !t.isAbortOnError(req) {
+					errsNoAbort = errsNoAbort.Append(err)
+					continue
+				}
 				return err
 			}
 		}
 	}
 
-	return nil
+	return errsNoAbort.Condense()
 }
 
 func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlfile.Gurlfile) (err error) {
+	var errsNoAbort errs.Errors
+
 	defer func() {
 		// Teardown-Each steps
 
@@ -214,14 +237,24 @@ func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlf
 			err := t.executeRequest(eng, postReq)
 			if err != nil {
 				err = fmt.Errorf("Post-setup-each step failed: %s", err.Error())
+
+				log.Err(err).Str("req", req.String()).Msg("Post-Each step failed")
+
 				// If the returned error comes from the params parsing step, don't
 				// cancel the teardown-each execution. See the following issue for more information.
 				// https://github.com/studio-b12/gurl/issues/9
 				if errs.IsOfType[ParamsParsingError](err) {
 					continue
 				}
-				break
+
+				if t.isAbortOnError(postReq) {
+					break
+				}
+
+				errsNoAbort = errsNoAbort.Append(err)
+				continue
 			}
+
 			log.Info().Str("req", req.String()).Msg("Teardown-Each step completed")
 		}
 	}()
@@ -234,8 +267,19 @@ func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlf
 		for _, preReq := range gf.SetupEach {
 			err := t.executeRequest(eng, preReq)
 			if err != nil {
-				return fmt.Errorf("Pre-Setup-Each step failed: %s", err.Error())
+				err = fmt.Errorf("Setup-Each step failed: %s", err.Error())
+
+				log.Err(err).Str("req", req.String()).Msg("Setup-Each step failed")
+
+				if !t.isAbortOnError(preReq) {
+					log.Err(err).Msg("No-Abort")
+					errsNoAbort = errsNoAbort.Append(err)
+					continue
+				}
+
+				return err
 			}
+
 			log.Info().Str("req", req.String()).Msg("Setup-Each step completed")
 		}
 	}
@@ -244,11 +288,16 @@ func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlf
 
 	err = t.executeRequest(eng, req)
 	if err != nil {
+		log.Err(err).Str("req", req.String()).Msg("Test step failed")
+		if !t.isAbortOnError(req) {
+			return errsNoAbort.Append(err)
+		}
 		return err
 	}
+
 	log.Info().Str("req", req.String()).Msg("Test completed")
 
-	return nil
+	return errsNoAbort.Condense()
 }
 
 func (t *Executor) executeRequest(eng engine.Engine, req gurlfile.Request) (err error) {
@@ -266,8 +315,9 @@ func (t *Executor) executeRequest(eng engine.Engine, req gurlfile.Request) (err 
 		return fmt.Errorf("failed transforming to http request: %s", err.Error())
 	}
 
-	opts := requester.OptionsFromMap(parsedReq.Options)
-	httpResp, err := t.req.Do(httpReq, opts)
+	reqOpts := requester.OptionsFromMap(parsedReq.Options)
+
+	httpResp, err := t.req.Do(httpReq, reqOpts)
 	if err != nil {
 		return fmt.Errorf("http request failed: %s", err.Error())
 	}
@@ -295,4 +345,18 @@ func (t *Executor) isSkip(section string) bool {
 		}
 	}
 	return false
+}
+
+func (t *Executor) isAbortOnError(req gurlfile.Request) bool {
+	opts := AbortOptionsFromMap(req.Options)
+
+	if opts.AlwaysAbort {
+		return true
+	}
+
+	if opts.NoAbort || t.NoAbort {
+		return false
+	}
+
+	return true
 }
