@@ -24,7 +24,7 @@ import (
 type Args struct {
 	Gurlfile string `arg:"positional" help:"Gurlfile(s) location"`
 
-	Delay    time.Duration `arg:"-d--delay" help:"Delay requests by the given duration"`
+	Delay    time.Duration `arg:"-d,--delay" help:"Delay requests by the given duration"`
 	Dry      bool          `arg:"--dry" help:"Only parse the gurlfile(s) without executing any requests"`
 	LogLevel int           `arg:"-l,--loglevel" default:"1" help:"Logging level (see https://github.com/rs/zerolog#leveled-logging for reference)"`
 	Manual   bool          `arg:"-m,--manual" help:"Advance the requests maually"`

@@ -63,6 +63,27 @@ func applyTemplateToArray(arr []any, params any) (err error) {
 	return nil
 }
 
+func applyTemplateToMap(m map[string]any, params any) (err error) {
+	for k, v := range m {
+		switch vt := v.(type) {
+		case ParameterValue:
+			m[k], err = vt.ApplyTemplate(params)
+		case string:
+			m[k], err = applyTemplate(vt, params)
+		case []any:
+			err = applyTemplateToArray(vt, params)
+		default:
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // extend takes a file path and adds the given extension
 // to it if the path does not end with any file extension.
 func extend(v string, ext string) string {

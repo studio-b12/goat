@@ -124,20 +124,8 @@ func (t Request) ParseWithParams(params any) (Request, error) {
 		return Request{}, err
 	}
 
-	for k, v := range t.QueryParams {
-		switch vt := v.(type) {
-		case string:
-			t.QueryParams[k], err = applyTemplate(vt, params)
-		case []any:
-			err = applyTemplateToArray(vt, params)
-		default:
-			continue
-		}
-
-		if err != nil {
-			return Request{}, err
-		}
-	}
+	applyTemplateToMap(t.QueryParams, params)
+	applyTemplateToMap(t.Options, params)
 
 	return t, nil
 }
