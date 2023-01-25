@@ -52,6 +52,14 @@ tasks:
     cmds:
       - go test -v -cover ./...
 
+  lint:
+    desc: "Run staticcheck linter"
+    preconditions:
+      - sh: which staticcheck
+        msg: staticcheck is not installed!
+    cmds:
+      - staticcheck -checks all,-ST1000,-ST1022,-ST1003 ./...
+      
   bundle:
     desc:
       Builds binaries for different architectures and bundles the 
