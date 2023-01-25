@@ -1,4 +1,4 @@
-name: Unit Tests
+name: Linting
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   unit_tests:
-    name: Unit Tests
+    name: Linting
     runs-on: ubuntu-latest
     steps:
       - name: Install Task
@@ -19,7 +19,9 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: "^1.19"
+      - name: Install staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
       - name: Check out code into the Go module directory
         uses: actions/checkout@v3
-      - name: Run Unit Tests
-        run: task test
+      - name: Run Linting
+        run: task lint
