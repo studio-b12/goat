@@ -13,6 +13,8 @@ Name | Type | Default | Description
 `cookiejar` | `string` or `number` | `"default"` | The cookie jar to be used.
 `storecookies` | `boolean` | `true` | Whether or not to store response cookies to the cookiejar.
 `sendcookies` | `boolean` | `true` | Whether or not to send stored cookies with the request.
+`noabort` | `boolean` | `false` | When set to true, the batch execution will not be arborted when the request fails.
+`alwaysabort` | `boolean` | `false` | Forces the batch to abort when the request fails, even when the `--no-abort` flag is set.
 `condition` | `boolean` | `true` | Whether or not to execute the request.
 
 ## Script Implementation
