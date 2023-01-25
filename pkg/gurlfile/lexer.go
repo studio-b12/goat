@@ -20,6 +20,7 @@ const (
 
 	// Literals
 	IDENT
+	PARAMETER
 
 	// Control Characters
 	COMMENT
@@ -87,6 +88,8 @@ func (t *scanner) Scan() (tk token, lit string) {
 		return t.scanDash()
 	case '#':
 		return t.scanSection()
+	case '{':
+		return t.scanCurlyBrace()
 
 	case '[':
 		return BLOCK_START, ""
@@ -318,6 +321,65 @@ func (t *scanner) scanIdent() (tk token, lit string) {
 	}
 
 	return IDENT, str
+}
+
+func (t *scanner) scanCurlyBrace() (tk token, lit string) {
+	r := t.read()
+	if r == '{' {
+		return t.scanParameter()
+	}
+
+	t.unread()
+
+	return ILLEGAL, ""
+}
+
+func (t *scanner) scanParameter() (tk token, lit string) {
+	var b bytes.Buffer
+
+	inStr := false
+	strDelim := rune(0)
+	level := 0
+
+	for {
+		r := t.read()
+
+		if r == eof {
+			return ILLEGAL, ""
+		}
+
+		if !inStr && r == '{' {
+			if rn := t.read(); rn == '{' {
+				level++
+			}
+			t.unread()
+		}
+
+		if !inStr && r == '}' {
+			if rn := t.read(); rn == '}' {
+				if level == 0 {
+					break
+				}
+				level--
+			}
+			t.unread()
+		}
+
+		if r == '"' || r == '`' {
+			if inStr {
+				if r == strDelim {
+					inStr = false
+				}
+			} else {
+				inStr = true
+				strDelim = r
+			}
+		}
+
+		b.WriteRune(r)
+	}
+
+	return PARAMETER, b.String()
 }
 
 func (t *scanner) scanNumber() (tk token, lit string) {

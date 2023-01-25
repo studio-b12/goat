@@ -8,28 +8,36 @@ import (
 	"text/template"
 )
 
+func applyTemplateBuf(raw string, params any) (*bytes.Buffer, error) {
+	tmpl, err := template.New("").
+		Funcs(builtinFuncsMap).
+		Option("missingkey=error").
+		Parse(raw)
+	if err != nil {
+		return nil, fmt.Errorf("parsing template failed: %s", err.Error())
+	}
+
+	var out bytes.Buffer
+	err = tmpl.Execute(&out, params)
+	if err != nil {
+		return nil, fmt.Errorf("executing template failed: %s", err.Error())
+	}
+
+	return &out, err
+}
+
 // applyTemplate parses the given raw string as a template
 // and applies the given values in params onto it.
 //
 // If a key in the template is not present in the params,
 // an error will be returned.
 func applyTemplate(raw string, params any) (string, error) {
-	tmpl, err := template.New("").
-		Funcs(builtinFuncsMap).
-		Option("missingkey=error").
-		Parse(raw)
+	out, err := applyTemplateBuf(raw, params)
 	if err != nil {
-		return "", fmt.Errorf("parsing template failed: %s", err.Error())
-	}
-
-	var out bytes.Buffer
-	err = tmpl.Execute(&out, params)
-	if err != nil {
-		return "", fmt.Errorf("executing template failed: %s", err.Error())
+		return "", err
 	}
 
 	outStr := unescapeTemplateDelims(out.String())
-
 	return outStr, nil
 }
 

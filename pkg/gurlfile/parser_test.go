@@ -1020,6 +1020,100 @@ use"test"
 	})
 }
 
+// --- Special Tests --------------------------------------
+
+func TestParse_BlockTemplateValues(t *testing.T) {
+	t.Run("variable-1", func(t *testing.T) {
+		const raw = `
+GET https://example.com
+
+[Options]
+someoption = {{.param}}
+		`
+
+		p := stringParser(raw)
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t, ParameterValue(".param"), res.Tests[0].Options["someoption"])
+	})
+
+	t.Run("variable-2", func(t *testing.T) {
+		const raw = `
+GET https://example.com
+
+[Options]
+someoption = {{ .param }}
+		`
+
+		p := stringParser(raw)
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t, ParameterValue(" .param "), res.Tests[0].Options["someoption"])
+	})
+
+	t.Run("wrapped", func(t *testing.T) {
+		const raw = `
+GET https://example.com
+
+[Options]
+someoption = {{ print {{.param1}} {{.param2}} }}
+		`
+
+		p := stringParser(raw)
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t, ParameterValue(" print {{.param1}} {{.param2}} "), res.Tests[0].Options["someoption"])
+	})
+
+	t.Run("instring-1", func(t *testing.T) {
+		const raw = `
+GET https://example.com
+
+[Options]
+someoption = {{ print "}}" }}
+		`
+
+		p := stringParser(raw)
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t, ParameterValue(` print "}}" `), res.Tests[0].Options["someoption"])
+	})
+
+	t.Run("instring-2", func(t *testing.T) {
+		const raw = `
+GET https://example.com
+
+[Options]
+someoption = {{ print ´}}´ }}
+		`
+
+		p := stringParser(swapTicks(raw))
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t, ParameterValue(" print `}}` "), res.Tests[0].Options["someoption"])
+	})
+
+	t.Run("instring-wrapped", func(t *testing.T) {
+		const raw = `
+GET https://example.com
+
+[Options]
+someoption = {{ print {{ "}}" }} }}
+		`
+
+		p := stringParser(swapTicks(raw))
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t, ParameterValue(` print {{ "}}" }} `), res.Tests[0].Options["someoption"])
+	})
+}
+
 // --- Helpers --------------------------------------------
 
 func stringParser(raw string) *Parser {

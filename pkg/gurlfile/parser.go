@@ -435,6 +435,8 @@ func (t *Parser) parseValue() (any, error) {
 		}
 	case BLOCK_START:
 		return t.parseArray()
+	case PARAMETER:
+		return ParameterValue(lit), nil
 	}
 
 	return nil, errs.WithSuffix(ErrInvalidToken, "(value)")
