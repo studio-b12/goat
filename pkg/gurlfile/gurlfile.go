@@ -18,13 +18,19 @@ import (
 const (
 	sectionNameSetup        = "setup"
 	sectionNameSetupEach    = "setup-each"
-	sectionnameTests        = "tests"
+	sectionNameTests        = "tests"
 	sectionNameTeardown     = "teardown"
 	sectionNameTeardownEach = "teardown-each"
 )
 
 const (
 	optionNameQueryParams = "queryparams"
+	optionNameHeader      = "header"
+	optionNameHeaders     = "headers"
+	optionNameBody        = "body"
+	optionNameScript      = "script"
+	optionNameOptions     = "options"
+	abc                   = "asd"
 )
 
 // Gurlfile holds all sections and

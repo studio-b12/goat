@@ -72,7 +72,7 @@ func (t *Parser) scan() (tok token, lit string) {
 		return t.buf.tok, t.buf.lit
 	}
 
-	t.buf.tok, t.buf.lit = t.s.Scan()
+	t.buf.tok, t.buf.lit = t.s.scan()
 	if t.buf.tok == COMMENT {
 		t.buf.tok = LF
 		t.buf.lit = ""
@@ -133,15 +133,15 @@ func (t *Parser) parseSection(gf *Gurlfile) error {
 	var r *[]Request
 
 	switch strings.ToLower(name) {
-	case "setup":
+	case sectionNameSetup:
 		r = &gf.Setup
-	case "setup-each":
+	case sectionNameSetupEach:
 		r = &gf.SetupEach
-	case "tests":
+	case sectionNameTests:
 		r = &gf.Tests
-	case "teardown":
+	case sectionNameTeardown:
 		r = &gf.Teardown
-	case "teardown-each":
+	case sectionNameTeardownEach:
 		r = &gf.TeardownEach
 	default:
 		return ErrInvalidSection
@@ -179,7 +179,7 @@ func (t *Parser) parseRequest(section *[]Request) (err error) {
 	}
 	req.Method = lit
 
-	tok, lit = t.scan()
+	tok, _ = t.scan()
 	if tok != WS && tok != LF {
 		return ErrNoRequestURI
 	}
@@ -192,7 +192,7 @@ func (t *Parser) parseRequest(section *[]Request) (err error) {
 
 loop:
 	for {
-		tok, lit = t.scan()
+		tok, _ = t.scan()
 
 		switch tok {
 		case BLOCK_START:
@@ -240,20 +240,20 @@ func (t *Parser) parseBlock(req *Request) error {
 
 	switch strings.ToLower(blockHeader) {
 
-	case "queryparams":
+	case optionNameQueryParams:
 		data, err := t.parseBlockEntries()
 		if err != nil {
 			return err
 		}
 		req.QueryParams = data
 
-	case "header", "headers":
+	case optionNameHeader, optionNameHeaders:
 		err := t.parseHeaders(req.Header)
 		if err != nil {
 			return err
 		}
 
-	case "body":
+	case optionNameBody:
 		raw, err := t.parseRaw()
 		if err != nil {
 			return err
@@ -262,14 +262,14 @@ func (t *Parser) parseBlock(req *Request) error {
 			req.Body = []byte(raw)
 		}
 
-	case "script":
+	case optionNameScript:
 		raw, err := t.parseRaw()
 		if err != nil {
 			return err
 		}
 		req.Script = raw
 
-	case "options":
+	case optionNameOptions:
 		data, err := t.parseBlockEntries()
 		if err != nil {
 			return err
@@ -303,7 +303,7 @@ func (t *Parser) parseBlockEntries() (map[string]any, error) {
 
 		key := lit
 
-		tok, lit = t.scanSkipWS()
+		tok, _ = t.scanSkipWS()
 		if tok != ASSIGNMENT {
 			return nil, ErrInvalidBlockEntryAssignment
 		}

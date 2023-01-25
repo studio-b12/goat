@@ -49,6 +49,10 @@ func (t Errors) Condense() error {
 	return nil
 }
 
+// Append adds the given error to the errors
+// array. If the passed error is an Errors
+// array, the errors contained are added one
+// by one to the list of errors.
 func (t Errors) Append(err error) Errors {
 	if errs, ok := err.(Errors); ok {
 		for _, e := range errs {

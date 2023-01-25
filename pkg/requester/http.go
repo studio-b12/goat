@@ -12,7 +12,7 @@ type noSetWrapper struct {
 	http.CookieJar
 }
 
-func (t noSetWrapper) SetCookies(u *url.URL, cookies []*http.Cookie) { return }
+func (t noSetWrapper) SetCookies(u *url.URL, cookies []*http.Cookie) {}
 
 // noGetWrapper wraps a cookiejar where no
 // cookies will be sent with the request.

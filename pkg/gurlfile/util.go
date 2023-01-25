@@ -8,6 +8,12 @@ import (
 	"text/template"
 )
 
+// applyTemplateBuf parses the given raw string as a template
+// and applies the given values in params onto it returning
+// the result as bytes buffer.
+//
+// If a key in the template is not present in the params,
+// an error will be returned.
 func applyTemplateBuf(raw string, params any) (*bytes.Buffer, error) {
 	tmpl, err := template.New("").
 		Funcs(builtinFuncsMap).
@@ -27,7 +33,8 @@ func applyTemplateBuf(raw string, params any) (*bytes.Buffer, error) {
 }
 
 // applyTemplate parses the given raw string as a template
-// and applies the given values in params onto it.
+// and applies the given values in params onto it returning
+// the result as string.
 //
 // If a key in the template is not present in the params,
 // an error will be returned.
@@ -63,6 +70,8 @@ func applyTemplateToArray(arr []any, params any) (err error) {
 	return nil
 }
 
+// applyTemplateToMap executes applyTemplate
+// on all values in the given map.
 func applyTemplateToMap(m map[string]any, params any) (err error) {
 	for k, v := range m {
 		switch vt := v.(type) {

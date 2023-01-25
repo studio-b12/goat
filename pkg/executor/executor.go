@@ -154,7 +154,7 @@ func (t *Executor) ExecuteGurlfile(gf gurlfile.Gurlfile, initialParams engine.St
 func (t *Executor) executeFromDir(path string, initialParams engine.State) error {
 	var gurlfiles []gurlfile.Gurlfile
 
-	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, _ error) error {
 		if d.IsDir() ||
 			filepath.Ext(d.Name()) != "."+gurlfile.FileExtension ||
 			strings.HasPrefix(d.Name(), "_") {
@@ -175,7 +175,7 @@ func (t *Executor) executeFromDir(path string, initialParams engine.State) error
 	}
 
 	if len(gurlfiles) == 0 {
-		return errors.New("No Gurlfiles found to execute")
+		return errors.New("no Gurlfiles found to execute")
 	}
 
 	var errs errs.Errors
@@ -238,7 +238,7 @@ func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlf
 			if err != nil {
 				log.Err(err).Str("req", req.String()).Msg("Post-Each step failed")
 
-				err = fmt.Errorf("Post-setup-each step failed: %s", err.Error())
+				err = fmt.Errorf("post-setup-each step failed: %s", err.Error())
 
 				// If the returned error comes from the params parsing step, don't
 				// cancel the teardown-each execution. See the following issue for more information.

@@ -31,7 +31,7 @@ func WithSuffix(inner error, details any) error {
 	return t
 }
 
-// WithSuffix returns a new ErrorWithDetails
+// WithPrefix returns a new ErrorWithDetails
 // with the given inner error and details appended
 // printed at the start of the error string.
 func WithPrefix(details any, inner error) error {

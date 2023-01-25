@@ -60,7 +60,7 @@ func newScanner(r io.Reader) *scanner {
 	}
 }
 
-func (t *scanner) Scan() (tk token, lit string) {
+func (t *scanner) scan() (tk token, lit string) {
 	r := t.read()
 
 	if isWhitespace(r) {
