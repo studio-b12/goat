@@ -13,6 +13,7 @@ Name | Type | Default | Description
 `cookiejar` | `string` or `number` | `"default"` | The cookie jar to be used.
 `storecookies` | `boolean` | `true` | Whether or not to store response cookies to the cookiejar.
 `sendcookies` | `boolean` | `true` | Whether or not to send stored cookies with the request.
+`condition` | `boolean` | `true` | Whether or not to execute the request.
 
 ## Script Implementation
 

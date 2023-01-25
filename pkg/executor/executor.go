@@ -302,7 +302,6 @@ func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlf
 }
 
 func (t *Executor) executeRequest(eng engine.Engine, req gurlfile.Request) (err error) {
-	t.Waiter.Wait()
 
 	state := eng.State()
 	parsedReq, err := req.ParseWithParams(state)
@@ -310,6 +309,14 @@ func (t *Executor) executeRequest(eng engine.Engine, req gurlfile.Request) (err 
 		return errs.WithPrefix("failed infusing request with parameters:",
 			ParamsParsingError(err))
 	}
+
+	execOpts := ExecOptionsFromMap(parsedReq.Options)
+	if !execOpts.Condition {
+		log.Warn().Str("req", req.String()).Msg("Skipped due to condition")
+		return nil
+	}
+
+	t.Waiter.Wait()
 
 	httpReq, err := parsedReq.ToHttpRequest()
 	if err != nil {
