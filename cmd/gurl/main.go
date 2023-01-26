@@ -26,8 +26,8 @@ type Args struct {
 
 	Delay    time.Duration `arg:"-d,--delay" help:"Delay requests by the given duration"`
 	Dry      bool          `arg:"--dry" help:"Only parse the gurlfile(s) without executing any requests"`
+	Gradual  bool          `arg:"-g,--gradual" help:"Advance the requests maually"`
 	LogLevel int           `arg:"-l,--loglevel" default:"1" help:"Logging level (see https://github.com/rs/zerolog#leveled-logging for reference)"`
-	Manual   bool          `arg:"-m,--manual" help:"Advance the requests maually"`
 	New      bool          `arg:"--new" help:"Create a new base Gurlfile"`
 	NoAbort  bool          `arg:"--no-abort" help:"Do not abort batch execution on error."`
 	Params   string        `arg:"-p,--params" help:"Params file location"`
@@ -67,7 +67,7 @@ func main() {
 	executor.Skip = args.Skip
 	executor.NoAbort = args.NoAbort
 
-	if args.Manual {
+	if args.Gradual {
 		ad := make(advancer.Channel)
 		executor.Waiter = ad
 		go advanceManually(ad)
