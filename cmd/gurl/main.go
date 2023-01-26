@@ -91,7 +91,7 @@ func (Args) Description() string {
 }
 
 func (Args) Version() string {
-	return fmt.Sprintf("gurl v%s (%s %s %s)",
+	return fmt.Sprintf("gurl %s (%s %s %s)",
 		version.Version, version.CommitHash, version.BuildDate, runtime.Version())
 }
 
