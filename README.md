@@ -79,7 +79,7 @@ If you want to contribute to the project, just [create a fork](https://github.co
 
 ---
 
-© 2023 Studio B12 GmbH / B12-Touch GmbH  
-https://studio-b12.de / https://b12-touch.de
+© 2023 B12-Touch GmbH  
+https://b12-touch.de
 
 Covered by the MIT License.
