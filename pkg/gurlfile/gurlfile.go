@@ -96,44 +96,42 @@ func newRequest() (r Request) {
 // ParseWithParams takes the given parameters
 // and replaces placeholders within the request
 // with values from the given params.
-//
-// Returns the new parsed request.
-func (t Request) ParseWithParams(params any) (Request, error) {
+func (t *Request) ParseWithParams(params any) error {
 	if t.parsed {
-		return Request{}, ErrTemplateAlreadyParsed
+		return ErrTemplateAlreadyParsed
 	}
 
 	var err error
 
 	t.URI, err = applyTemplate(t.URI, params)
 	if err != nil {
-		return Request{}, err
+		return err
 	}
 
 	for _, vals := range t.Header {
 		for i, v := range vals {
 			vals[i], err = applyTemplate(v, params)
 			if err != nil {
-				return Request{}, err
+				return err
 			}
 		}
 	}
 
 	bodyStr, err := applyTemplate(string(t.Body), params)
 	if err != nil {
-		return Request{}, err
+		return err
 	}
 	t.Body = []byte(bodyStr)
 
 	t.Script, err = applyTemplate(t.Script, params)
 	if err != nil {
-		return Request{}, err
+		return err
 	}
 
 	applyTemplateToMap(t.QueryParams, params)
 	applyTemplateToMap(t.Options, params)
 
-	return t, nil
+	return nil
 }
 
 // ToHttpRequest returns a *http.Request built from the

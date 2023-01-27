@@ -307,13 +307,13 @@ func (t *Executor) executeTest(req gurlfile.Request, eng engine.Engine, gf gurlf
 func (t *Executor) executeRequest(eng engine.Engine, req gurlfile.Request) (err error) {
 
 	state := eng.State()
-	parsedReq, err := req.ParseWithParams(state)
+	err = req.ParseWithParams(state)
 	if err != nil {
 		return errs.WithPrefix("failed infusing request with parameters:",
 			ParamsParsingError(err))
 	}
 
-	execOpts := ExecOptionsFromMap(parsedReq.Options)
+	execOpts := ExecOptionsFromMap(req.Options)
 	if !execOpts.Condition {
 		log.Warn().Str("req", req.String()).Msg("Skipped due to condition")
 		return nil
@@ -321,12 +321,12 @@ func (t *Executor) executeRequest(eng engine.Engine, req gurlfile.Request) (err 
 
 	t.Waiter.Wait()
 
-	httpReq, err := parsedReq.ToHttpRequest()
+	httpReq, err := req.ToHttpRequest()
 	if err != nil {
 		return fmt.Errorf("failed transforming to http request: %s", err.Error())
 	}
 
-	reqOpts := requester.OptionsFromMap(parsedReq.Options)
+	reqOpts := requester.OptionsFromMap(req.Options)
 	httpResp, err := t.req.Do(httpReq, reqOpts)
 	if err != nil {
 		return fmt.Errorf("http request failed: %s", err.Error())
@@ -340,7 +340,7 @@ func (t *Executor) executeRequest(eng engine.Engine, req gurlfile.Request) (err 
 	state.Merge(engine.State{"response": resp})
 	eng.SetState(state)
 
-	err = eng.Run(parsedReq.Script)
+	err = eng.Run(req.Script)
 	if err != nil {
 		return fmt.Errorf("script failed: %s", err.Error())
 	}
