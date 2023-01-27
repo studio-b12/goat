@@ -5,15 +5,31 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/rs/zerolog/log"
+	"github.com/studio-b12/gurl/pkg/set"
 )
 
 // Unmarshal takes a raw string of a Gurlfile and tries
 // to parse it. Returns the parsed Gurlfile.
 func Unmarshal(raw string, currDir string) (gf Gurlfile, err error) {
+	return unmarshal(raw, currDir, set.Set[string]{})
+}
+
+func unmarshal(raw string, currDir string, visited set.Set[string]) (gf Gurlfile, err error) {
+
+	log.Trace().Str("currDir", currDir).Msg("Unmarshalling Gurlfile ...")
 
 	raw = crlf2lf(raw)
 
 	gf, err = NewParser(strings.NewReader(raw)).Parse()
+	if err != nil {
+		return Gurlfile{}, err
+	}
+
+	if !visited.Add(gf.String()) {
+		return Gurlfile{}, ErrMultiImport
+	}
 
 	var imports Gurlfile
 	for _, path := range gf.Imports {
@@ -26,7 +42,7 @@ func Unmarshal(raw string, currDir string) (gf Gurlfile, err error) {
 		}
 
 		relativeCurrDir := filepath.Dir(fullPath)
-		importGf, err := Unmarshal(string(raw), relativeCurrDir)
+		importGf, err := unmarshal(string(raw), relativeCurrDir, visited)
 		if err != nil {
 			return Gurlfile{}, fmt.Errorf("failed parsing imported file %s: %s",
 				fullPath, err.Error())

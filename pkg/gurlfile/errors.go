@@ -26,6 +26,7 @@ var (
 	ErrFollowingImport             = errors.New("failed following import")
 	ErrOpenEscapeBlock             = errors.New("open escape block")
 	ErrBlockOutOfRequest           = errors.New("blocks must follow after a request head")
+	ErrMultiImport                 = errors.New("the impoted resource has already been imported")
 )
 
 // ParseError wraps an inner error with
