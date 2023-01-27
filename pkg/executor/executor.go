@@ -214,6 +214,9 @@ func (t *Executor) parseGurlfile(path string) (gf gurlfile.Gurlfile, err error) 
 	relCurrDir := filepath.Dir(path)
 	gf, err = gurlfile.Unmarshal(string(data), relCurrDir)
 	if err != nil {
+		if errs.IsOfType[gurlfile.ParseError](err) {
+			return gurlfile.Gurlfile{}, fmt.Errorf("failed parsing gurlfile at %s:%s", path, err.Error())
+		}
 		return gurlfile.Gurlfile{}, fmt.Errorf("failed parsing gurlfile %s: %s", path, err.Error())
 	}
 
