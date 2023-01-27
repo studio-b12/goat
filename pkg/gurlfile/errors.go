@@ -25,6 +25,7 @@ var (
 	ErrNoHeaderValue               = errors.New("no header value")
 	ErrFollowingImport             = errors.New("failed following import")
 	ErrOpenEscapeBlock             = errors.New("open escape block")
+	ErrBlockOutOfRequest           = errors.New("blocks must follow after a request head")
 )
 
 // ParseError wraps an inner error with
@@ -38,5 +39,5 @@ type ParseError struct {
 
 func (t ParseError) Error() string {
 	return fmt.Sprintf("%d:%d: %s",
-		t.Line+1, t.LinePos, t.Inner.Error())
+		t.Line+1, t.LinePos+1, t.Inner.Error())
 }

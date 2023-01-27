@@ -13,8 +13,9 @@ import (
 
 // Parser parses a Gurlfile.
 type Parser struct {
-	s   *scanner
-	buf struct {
+	s       *scanner
+	prevPos readerPos
+	buf     struct {
 		tok token  // last read token
 		lit string // last read literal
 		n   int    // buffer size
@@ -53,11 +54,11 @@ func (t *Parser) Parse() (gf Gurlfile, err error) {
 		case tokEOF:
 			return gf, nil
 
-		case tokILLEGAL:
-			return Gurlfile{}, ErrIllegalCharacter
+		case tokBLOCKSTART:
+			return Gurlfile{}, ErrBlockOutOfRequest
+
 		default:
-			err = errs.WithSuffix(ErrUnexpected,
-				fmt.Sprintf("(%d '%s')", tok, lit))
+			return Gurlfile{}, ErrIllegalCharacter
 		}
 
 		if err != nil {
@@ -72,6 +73,8 @@ func (t *Parser) scan() (tok token, lit string) {
 		return t.buf.tok, t.buf.lit
 	}
 
+	t.prevPos = t.s.readerPos
+
 	t.buf.tok, t.buf.lit = t.s.scan()
 	if t.buf.tok == tokCOMMENT {
 		t.buf.tok = tokLF
@@ -79,6 +82,10 @@ func (t *Parser) scan() (tok token, lit string) {
 	}
 
 	return t.buf.tok, t.buf.lit
+}
+
+func (t *Parser) unscan() {
+	t.buf.n = 1
 }
 
 func (t *Parser) scanSkipWS() (tok token, lit string) {
@@ -90,10 +97,6 @@ func (t *Parser) scanSkipWS() (tok token, lit string) {
 	return tok, lit
 }
 
-func (t *Parser) unscan() {
-	t.buf.n = 1
-}
-
 func (t *Parser) wrapErr(err error) error {
 	if err == nil {
 		return nil
@@ -101,8 +104,8 @@ func (t *Parser) wrapErr(err error) error {
 
 	pErr := ParseError{}
 	pErr.Inner = err
-	pErr.Line = t.s.line
-	pErr.LinePos = t.s.linepos
+	pErr.Line = t.prevPos.line
+	pErr.LinePos = t.prevPos.linepos
 
 	return pErr
 }

@@ -42,12 +42,16 @@ const (
 	tokUSE
 )
 
-type scanner struct {
-	r           *bufio.Reader
+type readerPos struct {
 	line        int
 	lastlinepos int
 	linepos     int
 	pos         int
+}
+
+type scanner struct {
+	readerPos
+	r *bufio.Reader
 }
 
 func newScanner(r io.Reader) *scanner {
