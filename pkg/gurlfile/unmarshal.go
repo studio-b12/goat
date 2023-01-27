@@ -32,10 +32,10 @@ func Unmarshal(raw string, currDir string) (gf Gurlfile, err error) {
 				fullPath, err.Error())
 		}
 
-		(&imports).Merge(importGf)
+		imports.Merge(importGf)
 	}
 
-	(&imports).Merge(gf)
+	imports.Merge(gf)
 
 	return imports, err
 }
