@@ -61,7 +61,7 @@ func (t ErrorWithDetails) Error() string {
 		detailsString = fmt.Sprintf("%v", t.Details)
 	}
 
-	if detailsString != "" {
+	if detailsString == "" {
 		return msg
 	}
 

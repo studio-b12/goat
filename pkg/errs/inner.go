@@ -10,3 +10,7 @@ type InnerError struct {
 func (t InnerError) Unwrap() error {
 	return t.Inner
 }
+
+func (t InnerError) Error() string {
+	return t.Inner.Error()
+}

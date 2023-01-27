@@ -20,5 +20,5 @@ func IsOfType[T any](err error) bool {
 		return IsOfType[T](err)
 	}
 
-	return ok
+	return false
 }
