@@ -518,6 +518,29 @@ some body content
 
 		assert.ErrorIs(t, err, ErrOpenEscapeBlock, err)
 	})
+
+	t.Run("script general", func(t *testing.T) {
+		const raw = `
+		
+GET https://example.com
+
+[Script]
+assert(response.StatusCode == 200, "invalid status code");
+var id = response.BodyJson.id;
+
+---
+
+`
+
+		p := stringParser(raw)
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t,
+			`assert(response.StatusCode == 200, "invalid status code");`+
+				"\nvar id = response.BodyJson.id;\n",
+			res.Tests[0].Script)
+	})
 }
 
 func TestParse_BlockValues(t *testing.T) {
