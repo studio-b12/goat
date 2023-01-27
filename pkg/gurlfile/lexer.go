@@ -13,39 +13,37 @@ const eof = rune(0)
 
 const (
 	// Special tokens
-	ILLEGAL token = iota
-	EOF
-	WS
-	LF
+	tokILLEGAL token = iota
+	tokEOF
+	tokWS
+	tokLF
 
 	// Literals
-	IDENT
-	PARAMETER
+	tokIDENT
+	tokPARAMETER
 
 	// Control Characters
-	COMMENT
-	ESCAPE
-	SECTION
-	DELIMITER
-	BLOCK_START
-	BLOCK_END
-	COLON
-	COMMA
-	ASSIGNMENT
+	tokCOMMENT
+	tokESCAPE
+	tokSECTION
+	tokDELIMITER
+	tokBLOCKSTART
+	tokBLOCKEND
+	tokCOLON
+	tokCOMMA
+	tokASSIGNMENT
 
 	// Types
-	STRING
-	INTEGER
-	FLOAT
+	tokSTRING
+	tokINTEGER
+	tokFLOAT
 
 	// Keywords
-	USE
+	tokUSE
 )
 
 type scanner struct {
 	r           *bufio.Reader
-	linebuf     *bytes.Buffer
-	lastline    *bytes.Buffer
 	line        int
 	lastlinepos int
 	linepos     int
@@ -54,10 +52,37 @@ type scanner struct {
 
 func newScanner(r io.Reader) *scanner {
 	return &scanner{
-		r:        bufio.NewReader(r),
-		linebuf:  &bytes.Buffer{},
-		lastline: &bytes.Buffer{},
+		r: bufio.NewReader(r),
 	}
+}
+
+func (t *scanner) read() rune {
+	t.pos++
+	t.linepos++
+
+	r, _, err := t.r.ReadRune()
+	if err != nil {
+		return eof
+	}
+
+	if r == '\n' {
+		t.line++
+		t.lastlinepos = t.linepos - 1
+		t.linepos = 0
+	}
+
+	return r
+}
+
+func (t *scanner) unread() {
+	t.pos--
+	if t.linepos == 0 {
+		t.linepos = t.lastlinepos
+		t.line--
+	} else {
+		t.linepos--
+	}
+	t.r.UnreadRune()
 }
 
 func (t *scanner) scan() (tk token, lit string) {
@@ -92,59 +117,22 @@ func (t *scanner) scan() (tk token, lit string) {
 		return t.scanCurlyBrace()
 
 	case '[':
-		return BLOCK_START, ""
+		return tokBLOCKSTART, ""
 	case ']':
-		return BLOCK_END, ""
+		return tokBLOCKEND, ""
 	case ':':
-		return COLON, ""
+		return tokCOLON, ""
 	case ',':
-		return COMMA, ""
+		return tokCOMMA, ""
 	case '=':
-		return ASSIGNMENT, ""
+		return tokASSIGNMENT, ""
 	case '\n':
-		return LF, ""
+		return tokLF, ""
 	case eof:
-		return EOF, ""
+		return tokEOF, ""
 	}
 
-	return ILLEGAL, string(r)
-}
-
-func (t *scanner) read() rune {
-	t.pos++
-	t.linepos++
-
-	r, _, err := t.r.ReadRune()
-	if err != nil {
-		return eof
-	}
-	t.linebuf.WriteRune(r)
-
-	if r == '\n' {
-		t.line++
-		t.lastlinepos = t.linepos - 1
-		t.linepos = 0
-
-		t.lastline.Reset()
-		io.Copy(t.lastline, t.linebuf)
-		t.linebuf.Reset()
-	}
-
-	return r
-}
-
-func (t *scanner) unread() {
-	t.pos--
-	if t.linepos == 0 {
-		t.linepos = t.lastlinepos
-		t.line--
-	} else {
-		t.linepos--
-	}
-	t.r.UnreadRune()
-	if ln := t.linebuf.Len(); ln > 0 {
-		t.linebuf.Truncate(t.linebuf.Len() - 1)
-	}
+	return tokILLEGAL, string(r)
 }
 
 func (t *scanner) readToLF() string {
@@ -176,7 +164,7 @@ func (t *scanner) scanWhitespace() (tk token, lit string) {
 		}
 	}
 
-	return WS, b.String()
+	return tokWS, b.String()
 }
 
 func (t *scanner) skipToLF() {
@@ -190,17 +178,17 @@ func (t *scanner) skipToLF() {
 
 func (t *scanner) scanComment() (tk token, lit string) {
 	if t.read() != '/' {
-		return ILLEGAL, ""
+		return tokILLEGAL, ""
 	}
 
 	t.skipToLF()
 
-	return COMMENT, ""
+	return tokCOMMENT, ""
 }
 
 func (t *scanner) scanDash() (tk token, lit string) {
 	tk, lit = t.scanNumber()
-	if tk == INTEGER || tk == FLOAT {
+	if tk == tokINTEGER || tk == tokFLOAT {
 		lit = "-" + lit
 		return tk, lit
 	}
@@ -214,13 +202,13 @@ func (t *scanner) scanDash() (tk token, lit string) {
 func (t *scanner) scanDelimiter() (tk token, lit string) {
 	for i := 0; i < 2; i++ {
 		if t.read() != '-' {
-			return ILLEGAL, ""
+			return tokILLEGAL, ""
 		}
 	}
 
 	t.skipToLF()
 
-	return DELIMITER, ""
+	return tokDELIMITER, ""
 }
 
 func (t *scanner) scanString() (tk token, lit string) {
@@ -233,7 +221,7 @@ func (t *scanner) scanString() (tk token, lit string) {
 
 		if r == eof || r == '\n' {
 			if inString && wrapper != 0 {
-				return ILLEGAL, ""
+				return tokILLEGAL, ""
 			}
 			break
 		}
@@ -259,7 +247,7 @@ func (t *scanner) scanString() (tk token, lit string) {
 		}
 	}
 
-	return STRING, b.String()
+	return tokSTRING, b.String()
 }
 
 func (t *scanner) scanUntilLF() string {
@@ -283,7 +271,7 @@ func (t *scanner) scanUntilLF() string {
 func (t *scanner) scanSection() (tk token, lit string) {
 	for i := 0; i < 2; i++ {
 		if t.read() != '#' {
-			return ILLEGAL, ""
+			return tokILLEGAL, ""
 		}
 	}
 
@@ -296,7 +284,7 @@ func (t *scanner) scanSection() (tk token, lit string) {
 
 	t.unread()
 
-	return SECTION, ""
+	return tokSECTION, ""
 }
 
 func (t *scanner) scanIdent() (tk token, lit string) {
@@ -317,10 +305,10 @@ func (t *scanner) scanIdent() (tk token, lit string) {
 	str := b.String()
 	switch strings.ToLower(str) {
 	case "use":
-		return USE, ""
+		return tokUSE, ""
 	}
 
-	return IDENT, str
+	return tokIDENT, str
 }
 
 func (t *scanner) scanCurlyBrace() (tk token, lit string) {
@@ -331,7 +319,7 @@ func (t *scanner) scanCurlyBrace() (tk token, lit string) {
 
 	t.unread()
 
-	return ILLEGAL, ""
+	return tokILLEGAL, ""
 }
 
 func (t *scanner) scanParameter() (tk token, lit string) {
@@ -345,7 +333,7 @@ func (t *scanner) scanParameter() (tk token, lit string) {
 		r := t.read()
 
 		if r == eof {
-			return ILLEGAL, ""
+			return tokILLEGAL, ""
 		}
 
 		if !inStr && r == '{' {
@@ -379,18 +367,18 @@ func (t *scanner) scanParameter() (tk token, lit string) {
 		b.WriteRune(r)
 	}
 
-	return PARAMETER, b.String()
+	return tokPARAMETER, b.String()
 }
 
 func (t *scanner) scanNumber() (tk token, lit string) {
 	var b bytes.Buffer
-	tk = INTEGER
+	tk = tokINTEGER
 
 	for {
 		r := t.read()
 
 		if r == '.' {
-			tk = FLOAT
+			tk = tokFLOAT
 		} else if r == '_' {
 			continue
 		} else if !isDigit(r) {
@@ -402,7 +390,7 @@ func (t *scanner) scanNumber() (tk token, lit string) {
 	}
 
 	if b.Len() == 0 {
-		return ILLEGAL, ""
+		return tokILLEGAL, ""
 	}
 
 	return tk, b.String()

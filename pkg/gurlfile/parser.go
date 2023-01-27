@@ -38,22 +38,22 @@ func (t *Parser) Parse() (gf Gurlfile, err error) {
 		_ = lit
 
 		switch tok {
-		case COMMENT, WS, LF:
+		case tokCOMMENT, tokWS, tokLF:
 			continue
 
-		case IDENT, STRING:
+		case tokIDENT, tokSTRING:
 			t.unscan()
 			err = t.parseRequest(&gf.Tests)
 
-		case USE:
+		case tokUSE:
 			err = t.parseUse(&gf)
 
-		case SECTION:
+		case tokSECTION:
 			err = t.parseSection(&gf)
-		case EOF:
+		case tokEOF:
 			return gf, nil
 
-		case ILLEGAL:
+		case tokILLEGAL:
 			return Gurlfile{}, ErrIllegalCharacter
 		default:
 			err = errs.WithSuffix(ErrUnexpected,
@@ -73,8 +73,8 @@ func (t *Parser) scan() (tok token, lit string) {
 	}
 
 	t.buf.tok, t.buf.lit = t.s.scan()
-	if t.buf.tok == COMMENT {
-		t.buf.tok = LF
+	if t.buf.tok == tokCOMMENT {
+		t.buf.tok = tokLF
 		t.buf.lit = ""
 	}
 
@@ -83,7 +83,7 @@ func (t *Parser) scan() (tok token, lit string) {
 
 func (t *Parser) scanSkipWS() (tok token, lit string) {
 	tok, lit = t.scan()
-	if tok == WS {
+	if tok == tokWS {
 		return t.scan()
 	}
 
@@ -109,12 +109,12 @@ func (t *Parser) wrapErr(err error) error {
 
 func (t *Parser) parseUse(gf *Gurlfile) error {
 	tk, _ := t.scan()
-	if tk != WS {
+	if tk != tokWS {
 		return ErrInvalidStringLiteral
 	}
 
 	tk, lit := t.s.scanString()
-	if tk == ILLEGAL {
+	if tk == tokILLEGAL {
 		return ErrInvalidStringLiteral
 	}
 
@@ -149,11 +149,11 @@ func (t *Parser) parseSection(gf *Gurlfile) error {
 
 	for {
 		tok, _ := t.scan()
-		if tok == LF || tok == WS {
+		if tok == tokLF || tok == tokWS {
 			continue
 		}
 
-		if tok == EOF || tok == SECTION {
+		if tok == tokEOF || tok == tokSECTION {
 			t.unscan()
 			break
 		}
@@ -174,18 +174,18 @@ func (t *Parser) parseRequest(section *[]Request) (err error) {
 	// parse header
 
 	tok, lit := t.scan()
-	if tok != IDENT && tok != STRING || lit == "" {
+	if tok != tokIDENT && tok != tokSTRING || lit == "" {
 		return ErrInvalidRequestMethod
 	}
 	req.Method = lit
 
 	tok, _ = t.scan()
-	if tok != WS && tok != LF {
+	if tok != tokWS && tok != tokLF {
 		return ErrNoRequestURI
 	}
 
 	tok, lit = t.s.scanString()
-	if tok != STRING || lit == "" {
+	if tok != tokSTRING || lit == "" {
 		return ErrNoRequestURI
 	}
 	req.URI = lit
@@ -195,15 +195,15 @@ loop:
 		tok, _ = t.scan()
 
 		switch tok {
-		case BLOCK_START:
+		case tokBLOCKSTART:
 			err = t.parseBlock(&req)
 
-		case WS, LF:
+		case tokWS, tokLF:
 			continue loop
-		case EOF, SECTION:
+		case tokEOF, tokSECTION:
 			t.unscan()
 			break loop
-		case DELIMITER:
+		case tokDELIMITER:
 			break loop
 
 		default:
@@ -223,18 +223,18 @@ func (t *Parser) parseBlock(req *Request) error {
 	var blockHeader string
 
 	tok, lit := t.scanSkipWS()
-	if tok != IDENT || lit == "" {
+	if tok != tokIDENT || lit == "" {
 		return ErrInvalidBlockHeader
 	}
 	blockHeader = lit
 
 	tok, _ = t.scan()
-	if tok != BLOCK_END {
+	if tok != tokBLOCKEND {
 		return ErrInvalidBlockHeader
 	}
 
 	tok, _ = t.scanSkipWS()
-	if tok != LF {
+	if tok != tokLF {
 		return errs.WithSuffix(ErrInvalidToken, "(block)")
 	}
 
@@ -289,22 +289,22 @@ func (t *Parser) parseBlockEntries() (map[string]any, error) {
 
 	for {
 		tok, lit := t.scanSkipWS()
-		if tok == LF {
+		if tok == tokLF {
 			continue
 		}
-		if tok == DELIMITER || tok == EOF || tok == BLOCK_START || tok == SECTION {
+		if tok == tokDELIMITER || tok == tokEOF || tok == tokBLOCKSTART || tok == tokSECTION {
 			t.unscan()
 			break
 		}
 
-		if tok != IDENT {
+		if tok != tokIDENT {
 			return nil, ErrInvalidBlockEntryAssignment
 		}
 
 		key := lit
 
 		tok, _ = t.scanSkipWS()
-		if tok != ASSIGNMENT {
+		if tok != tokASSIGNMENT {
 			return nil, ErrInvalidBlockEntryAssignment
 		}
 
@@ -322,21 +322,21 @@ func (t *Parser) parseBlockEntries() (map[string]any, error) {
 func (t *Parser) parseHeaders(header http.Header) error {
 	for {
 		tok, lit := t.scanSkipWS()
-		if tok == LF {
+		if tok == tokLF {
 			continue
 		}
-		if tok == DELIMITER || tok == EOF || tok == BLOCK_START || tok == SECTION {
+		if tok == tokDELIMITER || tok == tokEOF || tok == tokBLOCKSTART || tok == tokSECTION {
 			t.unscan()
 			break
 		}
 
-		if tok != IDENT {
+		if tok != tokIDENT {
 			return ErrInvalidHeaderKey
 		}
 		key := lit
 
 		tok, _ = t.scanSkipWS()
-		if tok != COLON {
+		if tok != tokCOLON {
 			return ErrInvalidHeaderSeparator
 		}
 
@@ -361,14 +361,14 @@ func (t *Parser) parseRaw() (string, error) {
 
 		if !inEscape {
 			if out.Len() > 3 && string(out.Bytes()[out.Len()-4:]) == "\n---" {
-				t.buf.tok = DELIMITER
+				t.buf.tok = tokDELIMITER
 				t.buf.lit = ""
 				t.unscan()
 				out.Truncate(out.Len() - 4)
 				break
 			}
 			if out.Len() > 1 && string(out.Bytes()[out.Len()-2:]) == "\n[" {
-				t.buf.tok = BLOCK_START
+				t.buf.tok = tokBLOCKSTART
 				t.buf.lit = ""
 				t.s.unread()
 				t.unscan()
@@ -376,7 +376,7 @@ func (t *Parser) parseRaw() (string, error) {
 				break
 			}
 			if out.Len() > 3 && string(out.Bytes()[out.Len()-4:]) == "\n###" {
-				t.buf.tok = SECTION
+				t.buf.tok = tokSECTION
 				t.buf.lit = ""
 				t.unscan()
 				out.Truncate(out.Len() - 4)
@@ -418,13 +418,13 @@ func (t *Parser) parseValue() (any, error) {
 	tok, lit := t.scanSkipWS()
 
 	switch tok {
-	case INTEGER:
+	case tokINTEGER:
 		return strconv.ParseInt(lit, 10, 64)
-	case FLOAT:
+	case tokFLOAT:
 		return strconv.ParseFloat(lit, 64)
-	case STRING:
+	case tokSTRING:
 		return lit, nil
-	case IDENT:
+	case tokIDENT:
 		switch lit {
 		case "true":
 			return true, nil
@@ -433,9 +433,9 @@ func (t *Parser) parseValue() (any, error) {
 		default:
 			return nil, errs.WithSuffix(ErrInvalidLiteral, "(boolean expression expected)")
 		}
-	case BLOCK_START:
+	case tokBLOCKSTART:
 		return t.parseArray()
-	case PARAMETER:
+	case tokPARAMETER:
 		return ParameterValue(lit), nil
 	}
 
@@ -449,9 +449,9 @@ loop:
 	for {
 		tok, _ := t.scanSkipWS()
 		switch tok {
-		case BLOCK_END:
+		case tokBLOCKEND:
 			break loop
-		case COMMA, LF:
+		case tokCOMMA, tokLF:
 			continue loop
 		}
 
