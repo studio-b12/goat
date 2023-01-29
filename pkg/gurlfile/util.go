@@ -81,6 +81,8 @@ func applyTemplateToMap(m map[string]any, params any) (err error) {
 			m[k], err = applyTemplate(vt, params)
 		case []any:
 			err = applyTemplateToArray(vt, params)
+		case map[string]any:
+			err = applyTemplateToMap(vt, params)
 		default:
 			continue
 		}
