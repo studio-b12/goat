@@ -2,6 +2,7 @@ package gurlfile
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,10 +14,10 @@ import (
 // Unmarshal takes a raw string of a Gurlfile and tries
 // to parse it. Returns the parsed Gurlfile.
 func Unmarshal(raw string, currDir string) (gf Gurlfile, err error) {
-	return unmarshal(raw, currDir, set.Set[string]{})
+	return unmarshal(os.DirFS("."), raw, currDir, set.Set[string]{})
 }
 
-func unmarshal(raw string, currDir string, visited set.Set[string]) (gf Gurlfile, err error) {
+func unmarshal(fSys fs.FS, raw string, currDir string, visited set.Set[string]) (gf Gurlfile, err error) {
 
 	log.Trace().Str("currDir", currDir).Msg("Unmarshalling Gurlfile ...")
 
@@ -35,14 +36,14 @@ func unmarshal(raw string, currDir string, visited set.Set[string]) (gf Gurlfile
 	for _, path := range gf.Imports {
 		fullPath := extend(filepath.Join(currDir, path), FileExtension)
 
-		raw, err := os.ReadFile(fullPath)
+		raw, err := fs.ReadFile(fSys, fullPath)
 		if err != nil {
 			return Gurlfile{}, fmt.Errorf("failed following import %s: %s",
 				fullPath, err.Error())
 		}
 
 		relativeCurrDir := filepath.Dir(fullPath)
-		importGf, err := unmarshal(string(raw), relativeCurrDir, visited)
+		importGf, err := unmarshal(fSys, string(raw), relativeCurrDir, visited)
 		if err != nil {
 			return Gurlfile{}, fmt.Errorf("failed parsing imported file %s: %s",
 				fullPath, err.Error())

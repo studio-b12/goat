@@ -20,6 +20,7 @@
 # Go workspace file
 go.work
 
+mocks/
 
 *.gurl
 # include gurlfiles in the embed directory.
