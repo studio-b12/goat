@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"github.com/studio-b12/gurl/pkg/errs"
 	"github.com/studio-b12/gurl/pkg/set"
 )
 
@@ -38,15 +39,15 @@ func unmarshal(fSys fs.FS, raw string, currDir string, visited set.Set[string]) 
 
 		raw, err := fs.ReadFile(fSys, fullPath)
 		if err != nil {
-			return Gurlfile{}, fmt.Errorf("failed following import %s: %s",
-				fullPath, err.Error())
+			return Gurlfile{}, errs.WithPrefix(
+				fmt.Sprintf("failed following import %s:", fullPath), err)
 		}
 
 		relativeCurrDir := filepath.Dir(fullPath)
 		importGf, err := unmarshal(fSys, string(raw), relativeCurrDir, visited)
 		if err != nil {
-			return Gurlfile{}, fmt.Errorf("failed parsing imported file %s: %s",
-				fullPath, err.Error())
+			return Gurlfile{}, errs.WithPrefix(
+				fmt.Sprintf("failed parsing imported file %s:", fullPath), err)
 		}
 
 		imports.Merge(importGf)
