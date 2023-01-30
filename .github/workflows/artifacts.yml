@@ -44,3 +44,4 @@ jobs:
         with:
           name: ${{ matrix.goos }}-${{ matrix.goarch }}
           path: ./bin/
+          retention-days: 5
