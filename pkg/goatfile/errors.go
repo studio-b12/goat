@@ -1,10 +1,10 @@
-package gurlfile
+package goatfile
 
 import (
 	"errors"
 	"fmt"
 
-	"github.com/studio-b12/gurl/pkg/errs"
+	"github.com/studio-b12/goat/pkg/errs"
 )
 
 var (

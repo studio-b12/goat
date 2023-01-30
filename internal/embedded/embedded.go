@@ -5,6 +5,6 @@ import (
 )
 
 var (
-	//go:embed embeds/new_gurlfile.gurl
-	NewGurlfile []byte
+	//go:embed embeds/new_goatfile.goat
+	NewGoatfile []byte
 )

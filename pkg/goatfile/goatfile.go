@@ -1,10 +1,10 @@
-// Package gurlfile provides functionalities to
-// unmarshal and parse a Gurlfile.
+// Package goatfile provides functionalities to
+// unmarshal and parse a Goatfile.
 //
-// Here you can find the Gurlfile specification
+// Here you can find the Goatfile specification
 // on which basis this parser in built on.
-// https://github.com/studio-b12/gurl/blob/main/docs/gurlfile-spec.md
-package gurlfile
+// https://github.com/studio-b12/goat/blob/main/docs/goatfile-spec.md
+package goatfile
 
 import (
 	"bytes"
@@ -33,9 +33,9 @@ const (
 	abc                   = "asd"
 )
 
-// Gurlfile holds all sections and
+// Goatfile holds all sections and
 // their requests.
-type Gurlfile struct {
+type Goatfile struct {
 	Imports []string
 
 	Setup        []Request
@@ -48,8 +48,8 @@ type Gurlfile struct {
 }
 
 // Merge appends all requests in all sections of with
-// to the current Gurlfile.
-func (t *Gurlfile) Merge(with Gurlfile) {
+// to the current Goatfile.
+func (t *Goatfile) Merge(with Goatfile) {
 	t.Setup = append(t.Setup, with.Setup...)
 	t.SetupEach = append(t.SetupEach, with.SetupEach...)
 	t.Tests = append(t.Tests, with.Tests...)
@@ -57,8 +57,8 @@ func (t *Gurlfile) Merge(with Gurlfile) {
 	t.TeardownEach = append(t.TeardownEach, with.TeardownEach...)
 }
 
-// String returns the Gurlfile as JSON encoded string.
-func (t Gurlfile) String() string {
+// String returns the Goatfile as JSON encoded string.
+func (t Goatfile) String() string {
 	b, err := json.MarshalIndent(t, "", "  ")
 	if err != nil {
 		return fmt.Sprintf("error: %s", err.Error())

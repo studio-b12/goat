@@ -1,4 +1,4 @@
-package gurlfile
+package goatfile
 
 import (
 	"bytes"
@@ -8,8 +8,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"github.com/studio-b12/gurl/mocks"
-	"github.com/studio-b12/gurl/pkg/set"
+	"github.com/studio-b12/goat/mocks"
+	"github.com/studio-b12/goat/pkg/set"
 )
 
 func TestUnmarshal(t *testing.T) {
@@ -22,7 +22,7 @@ use b/b
 GET https://example1.com
 	`
 	mockFileB := fileMock(mockCtl, `
-use ../c.gurl
+use ../c.goat
 
 GET https://example2.com
 	`)
@@ -30,12 +30,12 @@ GET https://example2.com
 GET https://example3.com
 	`)
 
-	mockFs.EXPECT().Open("test/b/b.gurl").Return(mockFileB, nil)
-	mockFs.EXPECT().Open("test/c.gurl").Return(mockFileC, nil)
+	mockFs.EXPECT().Open("test/b/b.goat").Return(mockFileB, nil)
+	mockFs.EXPECT().Open("test/c.goat").Return(mockFileC, nil)
 
 	gf, err := unmarshal(mockFs, contentA, "test", set.Set[string]{})
 	assert.Nil(t, err)
-	assert.Equal(t, Gurlfile{
+	assert.Equal(t, Goatfile{
 		Tests: []Request{
 			testRequest("GET", "https://example3.com"),
 			testRequest("GET", "https://example2.com"),
@@ -55,15 +55,15 @@ use b/b
 GET https://example1.com
 	`
 		mockFileB := fileMock(mockCtl, `
-use ../c.gurl
+use ../c.goat
 
 GET https://example2.com
 	`)
 
 		errNotFound := errors.New("err not found")
 
-		mockFs.EXPECT().Open("test/b/b.gurl").Return(mockFileB, nil)
-		mockFs.EXPECT().Open("test/c.gurl").Return(nil, errNotFound)
+		mockFs.EXPECT().Open("test/b/b.goat").Return(mockFileB, nil)
+		mockFs.EXPECT().Open("test/c.goat").Return(nil, errNotFound)
 
 		_, err := unmarshal(mockFs, contentA, "test", set.Set[string]{})
 		assert.ErrorIs(t, err, errNotFound, err)
@@ -81,14 +81,14 @@ use b/b
 GET https://example1.com
 	`
 		mockFileB := fileMock(mockCtl, `
-use ../c.gurl
+use ../c.goat
 
 GET https://example2.com
 	`)
 		mockFileC := fileMockErr(mockCtl, errReadError)
 
-		mockFs.EXPECT().Open("test/b/b.gurl").Return(mockFileB, nil)
-		mockFs.EXPECT().Open("test/c.gurl").Return(mockFileC, nil)
+		mockFs.EXPECT().Open("test/b/b.goat").Return(mockFileB, nil)
+		mockFs.EXPECT().Open("test/c.goat").Return(mockFileC, nil)
 
 		_, err := unmarshal(mockFs, contentA, "test", set.Set[string]{})
 		assert.ErrorIs(t, err, errReadError, err)
@@ -106,7 +106,7 @@ GET https://example1.com
 	`
 	mockFileA := fileMock(mockCtl, contentA)
 	mockFileB := fileMock(mockCtl, `
-use ../c.gurl
+use ../c.goat
 
 GET https://example2.com
 	`)
@@ -116,9 +116,9 @@ use a
 GET https://example3.com
 	`)
 
-	mockFs.EXPECT().Open("test/a.gurl").Return(mockFileA, nil)
-	mockFs.EXPECT().Open("test/b/b.gurl").Return(mockFileB, nil)
-	mockFs.EXPECT().Open("test/c.gurl").Return(mockFileC, nil)
+	mockFs.EXPECT().Open("test/a.goat").Return(mockFileA, nil)
+	mockFs.EXPECT().Open("test/b/b.goat").Return(mockFileB, nil)
+	mockFs.EXPECT().Open("test/c.goat").Return(mockFileC, nil)
 
 	_, err := unmarshal(mockFs, contentA, "test", set.Set[string]{})
 	assert.ErrorIs(t, err, ErrMultiImport)

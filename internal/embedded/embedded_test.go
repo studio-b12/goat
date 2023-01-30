@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/studio-b12/gurl/pkg/gurlfile"
+	"github.com/studio-b12/goat/pkg/goatfile"
 )
 
-func TestNewGurlfile(t *testing.T) {
-	_, err := gurlfile.Unmarshal(string(NewGurlfile), "")
+func TestNewGoatfile(t *testing.T) {
+	_, err := goatfile.Unmarshal(string(NewGoatfile), "")
 	assert.Nil(t, err)
 }

@@ -1,4 +1,4 @@
-module github.com/studio-b12/gurl
+module github.com/studio-b12/goat
 
 go 1.19
 

@@ -3,7 +3,7 @@ package executor
 import (
 	"fmt"
 
-	"github.com/studio-b12/gurl/pkg/errs"
+	"github.com/studio-b12/goat/pkg/errs"
 )
 
 // BatchExecutionError holds and array of errors

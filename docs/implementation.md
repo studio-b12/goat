@@ -94,7 +94,7 @@ As you can read in these Docs, you can also perform functions on parameters. As 
 // results in "Hello+world%21"
 ```
 
-Gurl also provides some additional functions which are available in Gurlfiles.
+Goat also provides some additional functions which are available in Goatfiles.
 
 - `base64 <string>`: Returns the input strings as base64 encoded string.
 - `base64url <string>`: Returns the input strings as base64 URL encoded string.

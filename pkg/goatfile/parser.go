@@ -1,4 +1,4 @@
-package gurlfile
+package goatfile
 
 import (
 	"bytes"
@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/studio-b12/gurl/pkg/errs"
+	"github.com/studio-b12/goat/pkg/errs"
 )
 
-// Parser parses a Gurlfile.
+// Parser parses a Goatfile.
 type Parser struct {
 	s       *scanner
 	prevPos readerPos
@@ -28,8 +28,8 @@ func NewParser(r io.Reader) *Parser {
 	return &Parser{s: newScanner(r)}
 }
 
-// Parse parses a Gurlfile from the specified source.
-func (t *Parser) Parse() (gf Gurlfile, err error) {
+// Parse parses a Goatfile from the specified source.
+func (t *Parser) Parse() (gf Goatfile, err error) {
 	defer func() {
 		err = t.wrapErr(err)
 	}()
@@ -55,14 +55,14 @@ func (t *Parser) Parse() (gf Gurlfile, err error) {
 			return gf, nil
 
 		case tokBLOCKSTART:
-			return Gurlfile{}, ErrBlockOutOfRequest
+			return Goatfile{}, ErrBlockOutOfRequest
 
 		default:
-			return Gurlfile{}, ErrIllegalCharacter
+			return Goatfile{}, ErrIllegalCharacter
 		}
 
 		if err != nil {
-			return Gurlfile{}, err
+			return Goatfile{}, err
 		}
 	}
 }
@@ -110,7 +110,7 @@ func (t *Parser) wrapErr(err error) error {
 	return pErr
 }
 
-func (t *Parser) parseUse(gf *Gurlfile) error {
+func (t *Parser) parseUse(gf *Goatfile) error {
 	tk, _ := t.scan()
 	if tk != tokWS {
 		return ErrInvalidStringLiteral
@@ -130,7 +130,7 @@ func (t *Parser) parseUse(gf *Gurlfile) error {
 	return nil
 }
 
-func (t *Parser) parseSection(gf *Gurlfile) error {
+func (t *Parser) parseSection(gf *Goatfile) error {
 	name := strings.TrimSpace(t.s.readToLF())
 
 	var r *[]Request

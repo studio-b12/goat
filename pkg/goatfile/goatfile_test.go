@@ -1,4 +1,4 @@
-package gurlfile
+package goatfile
 
 import (
 	"net/http"
@@ -30,8 +30,8 @@ func TestToHttpRequest(t *testing.T) {
 }
 
 func TestMerge(t *testing.T) {
-	getA := func() Gurlfile {
-		return Gurlfile{
+	getA := func() Goatfile {
+		return Goatfile{
 			Setup: []Request{
 				testRequest("A", "1"),
 				testRequest("A", "2"),
@@ -45,8 +45,8 @@ func TestMerge(t *testing.T) {
 		}
 	}
 
-	getB := func() Gurlfile {
-		return Gurlfile{
+	getB := func() Goatfile {
+		return Goatfile{
 			Setup: []Request{
 				testRequest("B", "1"),
 				testRequest("B", "2"),
@@ -72,7 +72,7 @@ func TestMerge(t *testing.T) {
 		a.Merge(b)
 
 		assert.Equal(t, getB(), b)
-		assert.Equal(t, Gurlfile{
+		assert.Equal(t, Goatfile{
 			Setup: []Request{
 				testRequest("A", "1"),
 				testRequest("A", "2"),
@@ -104,7 +104,7 @@ func TestMerge(t *testing.T) {
 		b.Merge(a)
 
 		assert.Equal(t, getA(), a)
-		assert.Equal(t, Gurlfile{
+		assert.Equal(t, Goatfile{
 			Setup: []Request{
 				testRequest("B", "1"),
 				testRequest("B", "2"),

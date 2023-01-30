@@ -1,24 +1,24 @@
-// You can use this file to get ready fast using gurl.
-// You can also import other gurlfiles using "use <relative location>".
+// You can use this file to get ready fast using goat.
+// You can also import other goatfiles using "use <relative location>".
 //
 // This example contains parameter placeholders (for example "{{.instance}}").
-// You can pass variables into gurl either via environment variables prefixed
-// with "GURL_" (for example "GURL_INSTANCE=https://example.com") or via a
+// You can pass variables into goat either via environment variables prefixed
+// with "Goat_" (for example "Goat_INSTANCE=https://example.com") or via a
 // parameter file (can be either a YAML, JSON or TOML file).
 // Tip: You can also use a .env file for testing!
 //
-// Here you can find the Gurlfile reference:
-// https://github.com/studio-b12/gurl/blob/main/docs/gurlfile-spec.md
+// Here you can find the Goatfile reference:
+// https://github.com/studio-b12/goat/blob/main/docs/goatfile-spec.md
 //
 // And here you can find more details about additional options
 // and available builtin functions as well as the documentation
 // what you can use in the [Script] section.
-// https://github.com/studio-b12/gurl/blob/main/docs/implementation.md
+// https://github.com/studio-b12/goat/blob/main/docs/implementation.md
 //
 // If you encounter any issues, want to submit an improvement or
 // feature request or just want to ask a question, feel free to
 // open a issue on GitHub.
-// https://github.com/studio-b12/gurl/issues/new
+// https://github.com/studio-b12/goat/issues/new
 
 
 

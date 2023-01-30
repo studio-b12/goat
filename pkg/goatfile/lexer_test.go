@@ -1,4 +1,4 @@
-package gurlfile
+package goatfile
 
 import (
 	"strings"

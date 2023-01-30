@@ -33,11 +33,11 @@ jobs:
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
-        run: go build -v -o ./bin/gurl-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/gurl/main.go
+        run: go build -v -o ./bin/goat-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/goat/main.go
       - name: Rename Windows Binary
         if: ${{ matrix.goos == 'windows' }}
         env:
-          FNAME: ./bin/gurl-${{ matrix.goos }}-${{ matrix.goarch }}
+          FNAME: ./bin/goat-${{ matrix.goos }}-${{ matrix.goarch }}
         run: mv ${{ env.FNAME }} ${{ env.FNAME }}.exe
       - name: Upload Artifcats
         uses: actions/upload-artifact@v3

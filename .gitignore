@@ -22,10 +22,10 @@ go.work
 
 mocks/
 
-*.gurl
-# include gurlfiles in the embed directory.
+*.goat
+# include goatfiles in the embed directory.
 !internal/embedded/embeds/**
 
-gurl
+goat
 .vscode/
 params.yml
