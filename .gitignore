@@ -26,6 +26,7 @@ mocks/
 # include goatfiles in the embed directory.
 !internal/embedded/embeds/**
 
-goat
 .vscode/
 params.yml
+
+bin/
