@@ -24,15 +24,15 @@ import (
 type Args struct {
 	Goatfile string `arg:"positional" help:"Goatfile(s) location"`
 
-	Arg      []string      `arg:"-a,--args" help:"Pass params as key value arguments into the execution (format: key=value)"`
+	Arg      []string      `arg:"-a,--args,separate" help:"Pass params as key value arguments into the execution (format: key=value)"`
 	Delay    time.Duration `arg:"-d,--delay" help:"Delay requests by the given duration"`
 	Dry      bool          `arg:"--dry" help:"Only parse the goatfile(s) without executing any requests"`
 	Gradual  bool          `arg:"-g,--gradual" help:"Advance the requests maually"`
 	LogLevel int           `arg:"-l,--loglevel" default:"1" help:"Logging level (see https://github.com/rs/zerolog#leveled-logging for reference)"`
 	New      bool          `arg:"--new" help:"Create a new base Goatfile"`
 	NoAbort  bool          `arg:"--no-abort" help:"Do not abort batch execution on error."`
-	Params   []string      `arg:"-p,--params" help:"Params file location(s)"`
-	Skip     []string      `arg:"--skip" help:"Section(s) to be skipped during execution"`
+	Params   []string      `arg:"-p,--params,separate" help:"Params file location(s)"`
+	Skip     []string      `arg:"--skip,separate" help:"Section(s) to be skipped during execution"`
 }
 
 func main() {
