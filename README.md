@@ -71,6 +71,8 @@ goat --new
 
 There, you can define your setup, teardown and test requests as you desire.
 
+Take a look into the more detailed [Usage Manual](docs/usage.md) to find out more.
+
 ## Contribute
 
 If you find any issues, want to submit a suggestion for a new feature or improvement of an existing one or just want to ask a question, feel free to [create an Issue](https://github.com/studio-b12/goat/issues/new).
