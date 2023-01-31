@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 // Response is the model passed into the engine
@@ -51,4 +52,29 @@ func FromHttpResponse(resp *http.Response) (Response, error) {
 	}
 
 	return r, nil
+}
+
+func (t Response) String() string {
+	var sb strings.Builder
+
+	fmt.Fprintf(&sb, "%s\n", t.Status)
+	for key, vals := range t.Header {
+		for _, val := range vals {
+			fmt.Fprintf(&sb, "%s: %s\n", key, val)
+		}
+	}
+
+	if t.BodyJson != nil {
+		fmt.Fprintln(&sb)
+		enc := json.NewEncoder(&sb)
+		enc.SetIndent("", "  ")
+		// This shouldn't error because it was decoded by
+		// via json.Unmarshal before.
+		enc.Encode(t.BodyJson)
+	} else if len(t.Body) != 0 {
+		fmt.Fprintln(&sb)
+		sb.WriteString(t.Body)
+	}
+
+	return sb.String()
 }
