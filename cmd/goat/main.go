@@ -31,7 +31,7 @@ type Args struct {
 	LogLevel int           `arg:"-l,--loglevel" default:"1" help:"Logging level (see https://github.com/rs/zerolog#leveled-logging for reference)"`
 	New      bool          `arg:"--new" help:"Create a new base Goatfile"`
 	NoAbort  bool          `arg:"--no-abort" help:"Do not abort batch execution on error."`
-	Params   string        `arg:"-p,--params" help:"Params file location"`
+	Params   []string      `arg:"-p,--params" help:"Params file location(s)"`
 	Skip     []string      `arg:"--skip" help:"Section(s) to be skipped during execution"`
 }
 
