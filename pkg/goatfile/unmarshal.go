@@ -15,6 +15,7 @@ import (
 // Unmarshal takes a raw string of a Goatfile and tries
 // to parse it. Returns the parsed Goatfile.
 func Unmarshal(raw string, currDir string) (gf Goatfile, err error) {
+	currDir = strings.ReplaceAll(currDir, "\\", "/")
 	return unmarshal(os.DirFS("."), raw, currDir, set.Set[string]{})
 }
 

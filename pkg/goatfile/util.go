@@ -3,7 +3,7 @@ package goatfile
 import (
 	"bytes"
 	"fmt"
-	"path/filepath"
+	"path"
 	"strings"
 	"text/template"
 )
@@ -98,7 +98,7 @@ func applyTemplateToMap(m map[string]any, params any) (err error) {
 // extend takes a file path and adds the given extension
 // to it if the path does not end with any file extension.
 func extend(v string, ext string) string {
-	if filepath.Ext(v) == "" {
+	if path.Ext(v) == "" {
 		return v + "." + ext
 	}
 
