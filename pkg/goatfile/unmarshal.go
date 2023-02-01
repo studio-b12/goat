@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"path/filepath"
+	"path"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -34,8 +34,10 @@ func unmarshal(fSys fs.FS, raw string, currDir string, visited set.Set[string]) 
 	}
 
 	var imports Goatfile
-	for _, path := range gf.Imports {
-		fullPath := extend(filepath.Join(currDir, path), FileExtension)
+	for _, pth := range gf.Imports {
+		fullPath := extend(path.Join(currDir, pth), FileExtension)
+
+		log.Trace().Str("fullPath", fullPath).Msg("Reading import file ...")
 
 		raw, err := fs.ReadFile(fSys, fullPath)
 		if err != nil {
@@ -43,7 +45,7 @@ func unmarshal(fSys fs.FS, raw string, currDir string, visited set.Set[string]) 
 				fmt.Sprintf("failed following import %s:", fullPath), err)
 		}
 
-		relativeCurrDir := filepath.Dir(fullPath)
+		relativeCurrDir := path.Dir(fullPath)
 		importGf, err := unmarshal(fSys, string(raw), relativeCurrDir, visited)
 		if err != nil {
 			return Goatfile{}, errs.WithPrefix(
