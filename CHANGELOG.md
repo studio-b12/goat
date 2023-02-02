@@ -1,8 +1,5 @@
 [VERSION]
 
-- Renamed the project to `goat`.
-- Added argument `--arg` to set params in the initial execution state.
-- Re-importing already imported files now results in an error.
-- Fixed a bug where prefixes and suffixes of DetailedError were not shown.
-- Parsing errors are now printed to the console so that it is a valid file link in editors like VSCode.
-- Fixed position in parsing errors.
+- The `response` object now implements `String()`, which allows proper string printing in the `[Script]` part.
+- The argument `--params` can now be passed multiple times to pass multiple parameter files which will then be merged into one initial state for the execution.
+- Fixeded import path joining on Windows systems.
