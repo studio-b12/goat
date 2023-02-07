@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -368,7 +369,10 @@ func (t *Parser) parseRaw() (Data, error) {
 		if tk != tokSTRING {
 			return NoData{}, ErrInvalidFileDescriptor
 		}
-		return FileData(path.Join(t.currDir, file)), nil
+		if !filepath.IsAbs(file) {
+			file = path.Join(t.currDir, file)
+		}
+		return FileData(file), nil
 	}
 
 	t.s.unread()
