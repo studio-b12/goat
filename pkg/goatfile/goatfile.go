@@ -7,12 +7,13 @@
 package goatfile
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+
+	"github.com/studio-b12/goat/pkg/errs"
 )
 
 const (
@@ -82,14 +83,16 @@ type Request struct {
 	Method string
 	URI    string
 	Header http.Header
-	Body   []byte
-	Script string
+	Body   Data
+	Script Data
 
 	parsed bool
 }
 
 func newRequest() (r Request) {
 	r.Header = http.Header{}
+	r.Body = NoData{}
+	r.Script = NoData{}
 	return r
 }
 
@@ -117,16 +120,29 @@ func (t *Request) ParseWithParams(params any) error {
 		}
 	}
 
-	bodyStr, err := applyTemplate(string(t.Body), params)
-	if err != nil {
-		return err
+	if strData, ok := t.Body.(StringData); ok {
+		bodyStr, err := applyTemplate(string(strData), params)
+		if err != nil {
+			return err
+		}
+		t.Body = StringData(bodyStr)
 	}
-	t.Body = []byte(bodyStr)
 
-	t.Script, err = applyTemplate(t.Script, params)
+	scriptReader, err := t.Script.Reader()
+	if err != nil {
+		return errs.WithPrefix("failed reading string data:", err)
+	}
+
+	scriptData, err := io.ReadAll(scriptReader)
+	if err != nil {
+		return errs.WithPrefix("failed reading string data:", err)
+	}
+
+	scriptStr, err := applyTemplate(string(scriptData), params)
 	if err != nil {
 		return err
 	}
+	t.Script = StringData(scriptStr)
 
 	applyTemplateToMap(t.QueryParams, params)
 	applyTemplateToMap(t.Options, params)
@@ -139,7 +155,7 @@ func (t *Request) ParseWithParams(params any) error {
 func (t Request) ToHttpRequest() (*http.Request, error) {
 	uri, err := url.Parse(t.URI)
 	if err != nil {
-		return nil, fmt.Errorf("failed parsing URI: %s", err.Error())
+		return nil, errs.WithPrefix("failed parsing URI:", err)
 	}
 
 	query := uri.Query()
@@ -158,8 +174,13 @@ func (t Request) ToHttpRequest() (*http.Request, error) {
 
 	var body io.Reader
 
-	if len(t.Body) > 0 {
-		body = bytes.NewBuffer(t.Body)
+	bodyReader, err := t.Body.Reader()
+	if err != nil {
+		return nil, errs.WithPrefix("failed reading body data:", err)
+	}
+
+	if bodyReader != nil {
+		body = bodyReader
 	}
 
 	req, err := http.NewRequest(t.Method, uri.String(), body)

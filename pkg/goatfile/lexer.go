@@ -32,6 +32,7 @@ const (
 	tokCOLON
 	tokCOMMA
 	tokASSIGNMENT
+	tokFILEDESC
 
 	// Types
 	tokSTRING
@@ -130,6 +131,8 @@ func (t *scanner) scan() (tk token, lit string) {
 		return tokCOMMA, ""
 	case '=':
 		return tokASSIGNMENT, ""
+	case '@':
+		return tokFILEDESC, ""
 	case '\n':
 		return tokLF, ""
 	case eof:

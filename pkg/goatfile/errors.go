@@ -27,6 +27,7 @@ var (
 	ErrOpenEscapeBlock             = errors.New("open escape block")
 	ErrBlockOutOfRequest           = errors.New("blocks must follow after a request head")
 	ErrMultiImport                 = errors.New("the impoted resource has already been imported")
+	ErrInvalidFileDescriptor       = errors.New("invalid file descriptor")
 )
 
 // ParseError wraps an inner error with

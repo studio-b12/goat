@@ -3,6 +3,7 @@ package executor
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -340,7 +341,12 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request) (err 
 	state.Merge(engine.State{"response": resp})
 	eng.SetState(state)
 
-	err = eng.Run(req.Script)
+	script, err := readReader(req.Script.Reader())
+	if err != nil {
+		return errs.WithPrefix("reading script failed:", err)
+	}
+
+	err = eng.Run(script)
 	if err != nil {
 		return fmt.Errorf("script failed: %s", err.Error())
 	}
@@ -369,4 +375,17 @@ func (t *Executor) isAbortOnError(req goatfile.Request) bool {
 	}
 
 	return true
+}
+
+func readReader(r io.Reader, err error) (string, error) {
+	if err != nil {
+		return "", err
+	}
+
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
 }

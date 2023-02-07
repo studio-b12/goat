@@ -25,7 +25,7 @@ func unmarshal(fSys fs.FS, raw string, currDir string, visited set.Set[string]) 
 
 	raw = crlf2lf(raw)
 
-	gf, err = NewParser(strings.NewReader(raw)).Parse()
+	gf, err = NewParser(strings.NewReader(raw), currDir).Parse()
 	if err != nil {
 		return Goatfile{}, err
 	}

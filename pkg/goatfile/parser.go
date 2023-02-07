@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path"
 	"strconv"
 	"strings"
 
@@ -13,6 +14,7 @@ import (
 
 // Parser parses a Goatfile.
 type Parser struct {
+	currDir string
 	s       *scanner
 	prevPos readerPos
 	buf     struct {
@@ -24,8 +26,11 @@ type Parser struct {
 
 // NewParser returns a new Parser scanning from
 // the given Reader.
-func NewParser(r io.Reader) *Parser {
-	return &Parser{s: newScanner(r)}
+func NewParser(r io.Reader, currDir string) *Parser {
+	return &Parser{
+		currDir: currDir,
+		s:       newScanner(r),
+	}
 }
 
 // Parse parses a Goatfile from the specified source.
@@ -261,9 +266,7 @@ func (t *Parser) parseBlock(req *Request) error {
 		if err != nil {
 			return err
 		}
-		if raw != "" {
-			req.Body = []byte(raw)
-		}
+		req.Body = raw
 
 	case optionNameScript:
 		raw, err := t.parseRaw()
@@ -354,10 +357,21 @@ func (t *Parser) parseHeaders(header http.Header) error {
 	return nil
 }
 
-func (t *Parser) parseRaw() (string, error) {
+func (t *Parser) parseRaw() (Data, error) {
 	var out bytes.Buffer
 
 	inEscape := false
+
+	r := t.s.read()
+	if r == '@' {
+		tk, file := t.s.scanString()
+		if tk != tokSTRING {
+			return NoData{}, ErrInvalidFileDescriptor
+		}
+		return FileData(path.Join(t.currDir, file)), nil
+	}
+
+	t.s.unread()
 
 	for {
 		r := t.s.read()
@@ -389,7 +403,7 @@ func (t *Parser) parseRaw() (string, error) {
 
 		if r == eof {
 			if inEscape {
-				return "", ErrOpenEscapeBlock
+				return NoData{}, ErrOpenEscapeBlock
 			}
 			t.s.unread()
 			break
@@ -414,7 +428,12 @@ func (t *Parser) parseRaw() (string, error) {
 
 	}
 
-	return out.String(), nil
+	outStr := out.String()
+	if outStr == "" {
+		return NoData{}, nil
+	}
+
+	return StringData(outStr), nil
 }
 
 func (t *Parser) parseValue() (any, error) {
