@@ -49,7 +49,7 @@ func New(engineMaker func() engine.Engine, req requester.Requester) *Executor {
 func (t *Executor) Execute(path string, initialParams engine.State) error {
 	stat, err := os.Stat(path)
 	if err != nil {
-		return fmt.Errorf("stat failed: %s", err.Error())
+		return errs.WithPrefix("stat failed:", err)
 	}
 
 	if stat.IsDir() {
@@ -209,7 +209,7 @@ func (t *Executor) parseGoatfile(path string) (gf goatfile.Goatfile, err error) 
 
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return goatfile.Goatfile{}, fmt.Errorf("failed reading file: %s", err.Error())
+		return goatfile.Goatfile{}, errs.WithPrefix("failed reading file:", err)
 	}
 
 	relCurrDir := filepath.Dir(path)
@@ -242,7 +242,7 @@ func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatf
 			if err != nil {
 				log.Err(err).Str("req", req.String()).Msg("Post-Each step failed")
 
-				err = fmt.Errorf("post-setup-each step failed: %s", err.Error())
+				err = errs.WithPrefix("post-setup-each step failed:", err)
 
 				// If the returned error comes from the params parsing step, don't
 				// cancel the teardown-each execution. See the following issue for more information.
@@ -273,7 +273,7 @@ func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatf
 			if err != nil {
 				log.Err(err).Str("req", req.String()).Msg("Setup-Each step failed")
 
-				err = fmt.Errorf("Setup-Each step failed: %s", err.Error())
+				err = errs.WithPrefix("Setup-Each step failed:", err)
 
 				if !t.isAbortOnError(preReq) {
 					errsNoAbort = errsNoAbort.Append(err)
@@ -324,18 +324,18 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request) (err 
 
 	httpReq, err := req.ToHttpRequest()
 	if err != nil {
-		return fmt.Errorf("failed transforming to http request: %s", err.Error())
+		return errs.WithPrefix("failed transforming to http request:", err)
 	}
 
 	reqOpts := requester.OptionsFromMap(req.Options)
 	httpResp, err := t.req.Do(httpReq, reqOpts)
 	if err != nil {
-		return fmt.Errorf("http request failed: %s", err.Error())
+		return errs.WithPrefix("http request failed:", err)
 	}
 
 	resp, err := FromHttpResponse(httpResp)
 	if err != nil {
-		return fmt.Errorf("response interpretation failed: %s", err.Error())
+		return errs.WithPrefix("response interpretation failed:", err)
 	}
 
 	state.Merge(engine.State{"response": resp})
@@ -348,7 +348,7 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request) (err 
 
 	err = eng.Run(script)
 	if err != nil {
-		return fmt.Errorf("script failed: %s", err.Error())
+		return errs.WithPrefix("script failed:", err)
 	}
 
 	return nil

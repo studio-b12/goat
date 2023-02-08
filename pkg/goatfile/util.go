@@ -2,10 +2,11 @@ package goatfile
 
 import (
 	"bytes"
-	"fmt"
 	"path"
 	"strings"
 	"text/template"
+
+	"github.com/studio-b12/goat/pkg/errs"
 )
 
 // applyTemplateBuf parses the given raw string as a template
@@ -20,13 +21,13 @@ func applyTemplateBuf(raw string, params any) (*bytes.Buffer, error) {
 		Option("missingkey=error").
 		Parse(raw)
 	if err != nil {
-		return nil, fmt.Errorf("parsing template failed: %s", err.Error())
+		return nil, errs.WithPrefix("parsing template failed:", err)
 	}
 
 	var out bytes.Buffer
 	err = tmpl.Execute(&out, params)
 	if err != nil {
-		return nil, fmt.Errorf("executing template failed: %s", err.Error())
+		return nil, errs.WithPrefix("executing template failed:", err)
 	}
 
 	return &out, err

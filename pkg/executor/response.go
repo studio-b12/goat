@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/studio-b12/goat/pkg/errs"
 )
 
 // Response is the model passed into the engine
@@ -38,7 +40,7 @@ func FromHttpResponse(resp *http.Response) (Response, error) {
 	d, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return Response{},
-			fmt.Errorf("failed reading response body: %s", err.Error())
+			errs.WithPrefix("failed reading response body:", err)
 	}
 
 	if len(d) > 0 {
