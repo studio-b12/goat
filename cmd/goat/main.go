@@ -55,7 +55,7 @@ func main() {
 		argParser.Fail("Goatfile must be specified.")
 	}
 
-	state, err := config.Parse(args.Params, "Goat_", engine.State{})
+	state, err := config.Parse(args.Params, "GOAT_", engine.State{})
 	if err != nil {
 		log.Fatal().Err(err).Msg("parameter parsing failed")
 	}
