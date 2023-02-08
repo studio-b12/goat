@@ -4,6 +4,12 @@ import (
 	"bytes"
 	"io"
 	"os"
+	"os/user"
+	"path"
+	"path/filepath"
+	"strings"
+
+	"github.com/studio-b12/goat/pkg/errs"
 )
 
 type Data interface {
@@ -22,9 +28,25 @@ func (t StringData) Reader() (io.Reader, error) {
 	return bytes.NewBufferString(string(t)), nil
 }
 
-type FileData string
+type FileData struct {
+	filePath string
+	currDir  string
+}
 
 func (t FileData) Reader() (r io.Reader, err error) {
-	r, err = os.Open(string(t))
+	pth := t.filePath
+
+	if strings.HasPrefix(pth, "~/") {
+		currentUser, err := user.Current()
+		if err != nil {
+			return nil, errs.WithPrefix(
+				"failed resolving current user for relative path resolution:", err)
+		}
+		pth = path.Join(currentUser.HomeDir, pth[2:])
+	} else if !filepath.IsAbs(pth) {
+		pth = path.Join(t.currDir, pth)
+	}
+
+	r, err = os.Open(pth)
 	return r, err
 }
