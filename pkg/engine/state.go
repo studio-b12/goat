@@ -1,5 +1,9 @@
 package engine
 
+import (
+	"github.com/studio-b12/goat/pkg/util"
+)
+
 // State holds a key-value definition of globally
 // availabe variables in a runtime.
 type State map[string]any
@@ -11,4 +15,8 @@ func (t State) Merge(with State) {
 	for k, v := range with {
 		t[k] = v
 	}
+}
+
+func (t State) String() string {
+	return util.MustJsonMarshalIndent(t)
 }

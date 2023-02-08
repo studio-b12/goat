@@ -79,7 +79,7 @@ func main() {
 		executor.Waiter = advancer.NewTicker(args.Delay)
 	}
 
-	log.Debug().Interface("initialParams", state).Send()
+	log.Debug().Msgf("Initial Params\n%s", state)
 
 	err = executor.Execute(args.Goatfile, state)
 	if err != nil {

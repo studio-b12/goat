@@ -7,13 +7,13 @@
 package goatfile
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 
 	"github.com/studio-b12/goat/pkg/errs"
+	"github.com/studio-b12/goat/pkg/util"
 )
 
 const (
@@ -60,11 +60,7 @@ func (t *Goatfile) Merge(with Goatfile) {
 
 // String returns the Goatfile as JSON encoded string.
 func (t Goatfile) String() string {
-	b, err := json.MarshalIndent(t, "", "  ")
-	if err != nil {
-		return fmt.Sprintf("error: %s", err.Error())
-	}
-	return string(b)
+	return util.MustJsonMarshalIndent(t)
 }
 
 // Opts holds the specific request
