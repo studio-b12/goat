@@ -120,6 +120,23 @@ Everything following under this block header is considered to be the content unt
 ```
 ````
 
+It is also possible to import a file as request body. Simply specify the path to the file with a leading `@` to import the file by a relative path from the current Goatfile or an absolute path. The past must be specified in Unix style. Template placeholders in imported body data **will not** be infused on execution!
+
+*Example:*
+```
+[Body]
+@../data/image.png
+```
+
+If the path contains spaces, you can wrap the path in quotes.
+
+*Example:*
+```
+[Body]
+@"../body data/image.png"
+```
+
+
 #### `QueryParams`
 
 Allows to specify query parameters in a more human readable way.
@@ -170,6 +187,22 @@ The script parts is getting passed builtin functions as well as the response con
 assert(response.StatusCode == 200);
 info(response.Body);
 var uid = response.BodyJson.Uid;
+```
+
+It is also possible to import a file as script. Simply specify the path to the file with a leading `@` to import the file by a relative path from the current Goatfile or an absolute path. The past must be specified in Unix style. Template placeholders in imported body data **will** be infused on execution!
+
+*Example:*
+```
+[Script]
+@../scripts/check.js
+```
+
+If the path contains spaces, you can wrap the path in quotes.
+
+*Example:*
+```
+[Body]
+@"../additional scripts/check.js"
 ```
 
 ### Parameters
