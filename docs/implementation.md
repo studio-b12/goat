@@ -102,3 +102,6 @@ Goat also provides some additional functions which are available in Goatfiles.
 - `sha1 <string>`: Returns the HEX encoded SHA1 hash of the input string.
 - `sha256 <string>`: Returns the HEX encoded SHA256 hash of the input string.
 - `sha512 <string>`: Returns the HEX encoded SHA512 hash of the input string.
+- `randomString <integer?>`: Returns a random string with the given length. If no length is passed, the default length is 8 characters.
+- `randomInt <integer?>`: Returns a random integer in the range [0, n) where n is given as parameter. If no parameter is passed, n is the max int value.
+- `timestamp <format?>`: Returns the current timestamp in the given format. If no format is specified, the timestamp is returned as Unix Seconds string.

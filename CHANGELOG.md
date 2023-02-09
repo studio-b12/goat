@@ -1,5 +1,6 @@
 [VERSION]
 
-- It is now possible to import external files in the `[Body]` and `[Script]` part. See the sections [Body](https://github.com/studio-b12/goat/blob/main/docs/goatfile-spec.md#body) and [Script](https://github.com/studio-b12/goat/blob/main/docs/goatfile-spec.md#script) in the Goatfile specification.
-- Fixed environment variable recognition.
-- The print out of the initial parameter state when setting the log leven to `0` (debug) or less is now better readable.
+- Fixed runtime panic when executing a request which has no `[Script]` section.
+- Fixed a bug where headers could not be analyzed in scripts.
+- Added template functions `randomString` and `randomInt`. [Here](https://github.com/studio-b12/goat/blob/main/docs/implementation.md#parameters) you can find more details. [#15]
+- Added template function `timestamp`. [Here](https://github.com/studio-b12/goat/blob/main/docs/implementation.md#parameters) you can find more details. [#16]
