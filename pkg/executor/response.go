@@ -18,7 +18,7 @@ type Response struct {
 	Proto         string
 	ProtoMajor    int
 	ProtoMinor    int
-	Header        http.Header
+	Header        map[string][]string
 	ContentLength int64
 	Body          string
 	BodyJson      any
