@@ -1,7 +1,9 @@
 package goatfile
 
 import (
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -272,6 +274,31 @@ func TestApplyTemplate_Builtins(t *testing.T) {
 
 		_, err := applyTemplate(raw, nil)
 		assert.Nil(t, err)
+	})
+
+	t.Run("template-builtin-timestamp", func(t *testing.T) {
+		const raw = `{{timestamp}}`
+
+		now := time.Now().Unix()
+		res, err := applyTemplate(raw, nil)
+		assert.Nil(t, err)
+
+		resInt, err := strconv.Atoi(res)
+		assert.Nil(t, err)
+		assert.InDelta(t, now, resInt, 1)
+	})
+
+	t.Run("template-builtin-timestamp-parameterized", func(t *testing.T) {
+		const raw = `{{timestamp "2006-01-02T15:04:05Z07:00"}}`
+
+		now := time.Now().Unix()
+		res, err := applyTemplate(raw, nil)
+		assert.Nil(t, err)
+
+		resTime, err := time.Parse(time.RFC3339, res)
+		assert.Nil(t, err)
+
+		assert.InDelta(t, now, resTime.Unix(), 1)
 	})
 }
 

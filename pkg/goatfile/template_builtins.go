@@ -10,6 +10,7 @@ import (
 	"hash"
 	"io"
 	"math/rand"
+	"strconv"
 	"text/template"
 	"time"
 )
@@ -25,6 +26,7 @@ var builtinFuncsMap = template.FuncMap{
 	"sha512":       builtin_hasher(sha512.New()),
 	"randomString": builtin_randomString,
 	"randomInt":    builtin_randomInt,
+	"timestamp":    builtin_timestamp,
 }
 
 func builtin_base64(v string) string {
@@ -66,4 +68,14 @@ func builtin_randomInt(nOpt ...int) int {
 	}
 
 	return rng.Int()
+}
+
+func builtin_timestamp(formatOpt ...string) string {
+	now := time.Now()
+
+	if len(formatOpt) != 0 {
+		return now.Format(formatOpt[0])
+	}
+
+	return strconv.Itoa(int(now.Unix()))
 }
