@@ -124,17 +124,12 @@ func (t *Request) ParseWithParams(params any) error {
 		t.Body = StringData(bodyStr)
 	}
 
-	scriptReader, err := t.Script.Reader()
+	scriptStr, err := util.ReadReaderToString(t.Script.Reader())
 	if err != nil {
-		return errs.WithPrefix("failed reading string data:", err)
+		return errs.WithPrefix("reading script failed:", err)
 	}
 
-	scriptData, err := io.ReadAll(scriptReader)
-	if err != nil {
-		return errs.WithPrefix("failed reading string data:", err)
-	}
-
-	scriptStr, err := applyTemplate(string(scriptData), params)
+	scriptStr, err = applyTemplate(scriptStr, params)
 	if err != nil {
 		return err
 	}

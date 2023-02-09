@@ -3,7 +3,6 @@ package executor
 import (
 	"errors"
 	"fmt"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -15,6 +14,7 @@ import (
 	"github.com/studio-b12/goat/pkg/errs"
 	"github.com/studio-b12/goat/pkg/goatfile"
 	"github.com/studio-b12/goat/pkg/requester"
+	"github.com/studio-b12/goat/pkg/util"
 )
 
 // Executor parses a Goatfile and executes it.
@@ -341,7 +341,7 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request) (err 
 	state.Merge(engine.State{"response": resp})
 	eng.SetState(state)
 
-	script, err := readReader(req.Script.Reader())
+	script, err := util.ReadReaderToString(req.Script.Reader())
 	if err != nil {
 		return errs.WithPrefix("reading script failed:", err)
 	}
@@ -375,17 +375,4 @@ func (t *Executor) isAbortOnError(req goatfile.Request) bool {
 	}
 
 	return true
-}
-
-func readReader(r io.Reader, err error) (string, error) {
-	if err != nil {
-		return "", err
-	}
-
-	data, err := io.ReadAll(r)
-	if err != nil {
-		return "", err
-	}
-
-	return string(data), nil
 }
