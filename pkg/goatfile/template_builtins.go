@@ -9,16 +9,22 @@ import (
 	"fmt"
 	"hash"
 	"io"
+	"math/rand"
 	"text/template"
+	"time"
 )
 
+var rng = rand.New(rand.NewSource(time.Now().UnixNano()))
+
 var builtinFuncsMap = template.FuncMap{
-	"base64":    builtin_base64,
-	"base64url": builtin_base64Url,
-	"md5":       builtin_hasher(md5.New()),
-	"sha1":      builtin_hasher(sha1.New()),
-	"sha256":    builtin_hasher(sha256.New()),
-	"sha512":    builtin_hasher(sha512.New()),
+	"base64":       builtin_base64,
+	"base64url":    builtin_base64Url,
+	"md5":          builtin_hasher(md5.New()),
+	"sha1":         builtin_hasher(sha1.New()),
+	"sha256":       builtin_hasher(sha256.New()),
+	"sha512":       builtin_hasher(sha512.New()),
+	"randomString": builtin_randomString,
+	"randomInt":    builtin_randomInt,
 }
 
 func builtin_base64(v string) string {
@@ -35,4 +41,29 @@ func builtin_hasher(hsh hash.Hash) func(string) string {
 		defer hsh.Reset()
 		return fmt.Sprintf("%x", hsh.Sum(nil))
 	}
+}
+
+func builtin_randomString(lnOpt ...int) string {
+	const defaultLen = 8
+	const charSet = "abcdefhijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+
+	ln := defaultLen
+	if len(lnOpt) != 0 {
+		ln = lnOpt[0]
+	}
+
+	buf := make([]byte, ln)
+	for i := 0; i < ln; i++ {
+		buf[i] = charSet[rng.Intn(len(charSet))]
+	}
+
+	return string(buf)
+}
+
+func builtin_randomInt(nOpt ...int) int {
+	if len(nOpt) != 0 {
+		return rng.Intn(nOpt[0])
+	}
+
+	return rng.Int()
 }
