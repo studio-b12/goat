@@ -14,6 +14,13 @@ tasks:
       - defer: git checkout internal/version/version.go
       - "{{.ENV}} go build -v -o bin/goat{{.SUFFIX}} cmd/goat/main.go"
 
+  install:
+    desc: "Build goat binary"
+    cmds:
+      - bash scripts/version.sh
+      - defer: git checkout internal/version/version.go
+      - go build -v -o $GOBIN/goat cmd/goat/main.go
+
   run:
     desc: "Compiles and runs goat"
     cmds:

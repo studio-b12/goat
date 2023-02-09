@@ -22,7 +22,6 @@ go.work
 
 mocks/
 
-*.goat
 # include goatfiles in the embed directory.
 !internal/embedded/embeds/**
 
