@@ -15,6 +15,7 @@ import (
 	"github.com/studio-b12/goat/internal/embedded"
 	"github.com/studio-b12/goat/internal/version"
 	"github.com/studio-b12/goat/pkg/advancer"
+	"github.com/studio-b12/goat/pkg/clr"
 	"github.com/studio-b12/goat/pkg/config"
 	"github.com/studio-b12/goat/pkg/engine"
 	"github.com/studio-b12/goat/pkg/executor"
@@ -48,6 +49,7 @@ func main() {
 			TimeFormat: time.RFC3339,
 		})
 	}
+	clr.SetEnable(!args.Json)
 
 	if args.New {
 		createNewGoatfile(args.Goatfile)
@@ -86,10 +88,10 @@ func main() {
 
 	err = executor.Execute(args.Goatfile, state)
 	if err != nil {
-		log.Fatal().Err(err).Msg("execution failed")
+		log.Fatal().Err(err).Msg(clr.Print(clr.Format("execution failed", clr.ColorFGRed, clr.FormatBold)))
 	}
 
-	log.Info().Msg("Execution finished successfully")
+	log.Info().Msg(clr.Print(clr.Format("Execution finished successfully", clr.ColorFGGreen, clr.FormatBold)))
 }
 
 func (Args) Description() string {

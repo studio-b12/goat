@@ -10,6 +10,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/studio-b12/goat/pkg/advancer"
+	"github.com/studio-b12/goat/pkg/clr"
 	"github.com/studio-b12/goat/pkg/engine"
 	"github.com/studio-b12/goat/pkg/errs"
 	"github.com/studio-b12/goat/pkg/goatfile"
@@ -182,16 +183,16 @@ func (t *Executor) executeFromDir(path string, initialParams engine.State) error
 	var errs errs.Errors
 
 	for _, gf := range goatfiles {
-		log.Info().Str("path", gf.Path).Msg("Executing batch ...")
+		log.Info().Str("path", gf.Path).Msg(clr.Print(clr.Format("Executing batch ...", clr.ColorFGPurple, clr.FormatBold)))
 
 		err = t.ExecuteGoatfile(gf, initialParams)
 		if err != nil {
-			log.Err(err).Msg("Batch execution failed")
+			log.Err(err).Msg(clr.Print(clr.Format("Batch execution failed", clr.ColorFGRed, clr.FormatBold)))
 			errs = errs.Append(err)
 			continue
 		}
 
-		log.Info().Str("path", gf.Path).Msg("Batch finished successfully")
+		log.Info().Str("path", gf.Path).Msg(clr.Print(clr.Format("Batch finished successfully", clr.ColorFGPurple, clr.FormatBold)))
 	}
 
 	if errs.HasSome() {
