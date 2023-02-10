@@ -28,6 +28,7 @@ type Args struct {
 	Delay    time.Duration `arg:"-d,--delay" help:"Delay requests by the given duration"`
 	Dry      bool          `arg:"--dry" help:"Only parse the goatfile(s) without executing any requests"`
 	Gradual  bool          `arg:"-g,--gradual" help:"Advance the requests maually"`
+	Json     bool          `arg:"--json" help:"Use JSON format instead of pretty console format for logging"`
 	LogLevel int           `arg:"-l,--loglevel" default:"1" help:"Logging level (see https://github.com/rs/zerolog#leveled-logging for reference)"`
 	New      bool          `arg:"--new" help:"Create a new base Goatfile"`
 	NoAbort  bool          `arg:"--no-abort" help:"Do not abort batch execution on error."`
@@ -41,10 +42,12 @@ func main() {
 	argParser := arg.MustParse(&args)
 
 	zerolog.SetGlobalLevel(zerolog.Level(args.LogLevel))
-	log.Logger = log.Output(zerolog.ConsoleWriter{
-		Out:        os.Stdout,
-		TimeFormat: time.RFC3339,
-	})
+	if !args.Json {
+		log.Logger = log.Output(zerolog.ConsoleWriter{
+			Out:        os.Stdout,
+			TimeFormat: time.RFC3339,
+		})
+	}
 
 	if args.New {
 		createNewGoatfile(args.Goatfile)
