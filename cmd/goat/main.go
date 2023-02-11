@@ -32,7 +32,8 @@ type Args struct {
 	Json     bool          `arg:"--json" help:"Use JSON format instead of pretty console format for logging"`
 	LogLevel int           `arg:"-l,--loglevel" default:"1" help:"Logging level (see https://github.com/rs/zerolog#leveled-logging for reference)"`
 	New      bool          `arg:"--new" help:"Create a new base Goatfile"`
-	NoAbort  bool          `arg:"--no-abort" help:"Do not abort batch execution on error."`
+	NoAbort  bool          `arg:"--no-abort" help:"Do not abort batch execution on error"`
+	NoColor  bool          `arg:"--no-color" help:"Supress colored log output"`
 	Params   []string      `arg:"-p,--params,separate" help:"Params file location(s)"`
 	Skip     []string      `arg:"--skip,separate" help:"Section(s) to be skipped during execution"`
 }
@@ -47,9 +48,11 @@ func main() {
 		log.Logger = log.Output(zerolog.ConsoleWriter{
 			Out:        os.Stdout,
 			TimeFormat: time.RFC3339,
+			NoColor:    args.NoColor,
 		})
 	}
-	clr.SetEnable(!args.Json)
+
+	clr.SetEnable(!args.Json && !args.NoColor)
 
 	if args.New {
 		createNewGoatfile(args.Goatfile)
