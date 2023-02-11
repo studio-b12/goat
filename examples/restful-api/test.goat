@@ -1,0 +1,95 @@
+### Setup
+
+// Create an entry for Cyberpunk 2077.
+
+POST https://api.restful-api.dev/objects
+
+[Header]
+Content-Type: application/json
+
+[Body]
+{
+    "name": "Cyberpunk 2077",
+    "data": {
+        "publisher": "CD PROJECT RED",
+        "developer": "CD PROJECT RED",
+        "released": "2020-12-10T00:00:00Z",
+        "tags": ["Cyberpunk", "Open World", "RPG", "Sci-fi"],
+        "age_rating": "18"
+    }
+}
+
+[Script]
+debug(response);
+assert(response.StatusCode === 200, `Invalid response code: ${response.StatusCode}`);
+var game1Id = response.BodyJson.id;
+
+---
+
+// Create an entry for Cult of the Lamb.
+
+POST https://api.restful-api.dev/objects
+
+[Header]
+Content-Type: application/json
+
+[Body]
+{
+    "name": "Cult of the Lamb",
+    "data": {
+        "publisher": "Devolver Digital",
+        "developer": "Massive Monster",
+        "released": "2022-08-11T00:00:00Z",
+        "tags": ["Base Building", "Roguelite", "Character Customization"],
+        "age_rating": "0"
+    }
+}
+
+[Script]
+debug(response);
+assert(response.StatusCode === 200, `Invalid response code: ${response.StatusCode}`);
+var game2Id = response.BodyJson.id;
+
+---
+
+### Teardown
+
+// Delete first created game.
+
+DELETE https://api.restful-api.dev/objects/{{.game1Id}}
+
+[Script]
+assert(response.StatusCode === 200, `Invalid response code: ${response.StatusCode}`);
+
+---
+
+// Delete first created game.
+
+DELETE https://api.restful-api.dev/objects/{{.game2Id}}
+
+[Script]
+assert(response.StatusCode === 200, `Invalid response code: ${response.StatusCode}`);
+
+---
+
+### Tests
+
+GET https://api.restful-api.dev/objects
+
+[QueryParams]
+id = ["{{.game1Id}}", "{{.game2Id}}"]
+
+[Script]
+debug(response);
+assert(response.StatusCode === 200, `Invalid response code: ${response.StatusCode}`);
+
+var game1 = response.BodyJson[0];
+assert(game1.name === "Cyberpunk 2077", "game1: Invalid name");
+assert(game1.data.developer === "CD PROJECT RED", "game1: Invalid developer");
+assert(game1.data.released === "2020-12-10T00:00:00Z", "game1: Invalid publishing date");
+
+var game2 = response.BodyJson[1];
+assert(game2.name === "Cult of the Lamb", "game2: Invalid name");
+assert(game2.data.developer === "Massive Monster", "game2: Invalid developer");
+assert(game2.data.tags.includes("Base Building"), "game2: Tags do not include 'Base Building'");
+assert(game2.data.tags.includes("Roguelite"), "game2: Tags do not include 'Roguelite'");

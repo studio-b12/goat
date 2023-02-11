@@ -1,0 +1,15 @@
+### Tests
+
+GET https://api.github.com/repos/{{.repo}}
+
+[Script]
+assert(response.StatusCode === 200, `Invalid response code: ${response.StatusCode}`);
+assert(response.BodyJson.language === "Go");
+
+---
+
+GET https://api.github.com/repos/{{.repo}}/languages
+
+[Script]
+info('Languages:\n' + JSON.stringify(response.BodyJson, null, 2));
+assert(response.StatusCode === 200, `Invalid response code: ${response.StatusCode}`);
