@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"github.com/studio-b12/goat/pkg/advancer"
@@ -92,7 +93,7 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 		for _, req := range gf.Teardown {
 			err := t.executeRequest(eng, req)
 			if err != nil {
-				log.Err(err).Str("req", req.String()).Msg("Teardown step failed")
+				log.Err(err).Stringer("req", req).Msg("Teardown step failed")
 
 				// If the returned error comes from the params parsing step, don't
 				// cancel the teardown execution. See the following issue for more information.
@@ -109,7 +110,7 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 				break
 			}
 
-			log.Info().Str("req", req.String()).Msg("Teardown step completed")
+			log.Info().Stringer("req", req).Msg("Teardown step completed")
 		}
 	}()
 
@@ -121,7 +122,7 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 		for _, req := range gf.Setup {
 			err := t.executeRequest(eng, req)
 			if err != nil {
-				log.Err(err).Str("req", req.String()).Msg("Setup step failed")
+				log.Err(err).Stringer("req", req).Msg("Setup step failed")
 				if !t.isAbortOnError(req) {
 					errsNoAbort = errsNoAbort.Append(err)
 					continue
@@ -129,7 +130,7 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 				return err
 			}
 
-			log.Info().Str("req", req.String()).Msg("Setup step completed")
+			log.Info().Stringer("req", req).Msg("Setup step completed")
 		}
 	}
 
@@ -241,7 +242,7 @@ func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatf
 		for _, postReq := range gf.TeardownEach {
 			err := t.executeRequest(eng, postReq)
 			if err != nil {
-				log.Err(err).Str("req", req.String()).Msg("Post-Each step failed")
+				log.Err(err).Stringer("req", req).Msg("Post-Each step failed")
 
 				err = errs.WithPrefix("post-setup-each step failed:", err)
 
@@ -260,7 +261,7 @@ func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatf
 				continue
 			}
 
-			log.Info().Str("req", req.String()).Msg("Teardown-Each step completed")
+			log.Info().Stringer("req", req).Msg("Teardown-Each step completed")
 		}
 	}()
 
@@ -272,7 +273,7 @@ func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatf
 		for _, preReq := range gf.SetupEach {
 			err := t.executeRequest(eng, preReq)
 			if err != nil {
-				log.Err(err).Str("req", req.String()).Msg("Setup-Each step failed")
+				log.Err(err).Stringer("req", req).Msg("Setup-Each step failed")
 
 				err = errs.WithPrefix("Setup-Each step failed:", err)
 
@@ -284,7 +285,7 @@ func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatf
 				return err
 			}
 
-			log.Info().Str("req", req.String()).Msg("Setup-Each step completed")
+			log.Info().Stringer("req", req).Msg("Setup-Each step completed")
 		}
 	}
 
@@ -292,7 +293,7 @@ func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatf
 
 	err = t.executeRequest(eng, req)
 	if err != nil {
-		log.Err(err).Str("req", req.String()).Msg("Test step failed")
+		log.Err(err).Stringer("req", req).Msg("Test step failed")
 
 		if t.isAbortOnError(req) {
 			return err
@@ -300,7 +301,7 @@ func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatf
 
 		errsNoAbort = errsNoAbort.Append(err)
 	} else {
-		log.Info().Str("req", req.String()).Msg("Test completed")
+		log.Info().Stringer("req", req).Msg("Test completed")
 	}
 
 	return errsNoAbort.Condense()
@@ -317,8 +318,16 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request) (err 
 
 	execOpts := ExecOptionsFromMap(req.Options)
 	if !execOpts.Condition {
-		log.Warn().Str("req", req.String()).Msg("Skipped due to condition")
+		log.Warn().Stringer("req", req).Msg("Skipped due to condition")
 		return nil
+	}
+
+	if execOpts.Delay > 0 {
+		log.Info().
+			Stringer("req", req).
+			Stringer("delay", execOpts.Delay).
+			Msg(clr.Print(clr.Format("Awaiting delay ...", clr.ColorFGBlack)))
+		time.Sleep(execOpts.Delay)
 	}
 
 	t.Waiter.Wait()

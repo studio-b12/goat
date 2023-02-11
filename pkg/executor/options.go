@@ -1,5 +1,7 @@
 package executor
 
+import "time"
+
 // AbortOptions wraps options that control the
 // abort behavior of an execution batch.
 type AbortOptions struct {
@@ -30,6 +32,7 @@ func AbortOptionsFromMap(m map[string]any) AbortOptions {
 // execution of a request.
 type ExecOptions struct {
 	Condition bool
+	Delay     time.Duration
 }
 
 // ExecOptionsFromMap returns a new instance of
@@ -41,6 +44,16 @@ func ExecOptionsFromMap(m map[string]any) ExecOptions {
 
 	if v, ok := m["condition"].(bool); ok {
 		opt.Condition = v
+	}
+
+	v, ok := m["delay"]
+	if ok {
+		switch vt := v.(type) {
+		case int:
+			opt.Delay = time.Duration(vt) * time.Millisecond
+		case string:
+			opt.Delay, _ = time.ParseDuration(vt)
+		}
 	}
 
 	return opt
