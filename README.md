@@ -2,6 +2,8 @@
 
 goat *(**Go** **A**PI **T**ester)*, a CLI tool to simplify and automate integration testing of HTTP APIs by using script files.
 
+![](.github/media/demo.png)
+
 > Example Goatfile
 ```
 use util/login
