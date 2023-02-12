@@ -16,6 +16,7 @@ Name | Type | Default | Description
 `noabort` | `boolean` | `false` | When set to true, the batch execution will not be arborted when the request fails.
 `alwaysabort` | `boolean` | `false` | Forces the batch to abort when the request fails, even when the `--no-abort` flag is set.
 `condition` | `boolean` | `true` | Whether or not to execute the request.
+`delay` | `string` | `0` | A duration which is awaited before the request is executed. The duration must be formatted in compatibility to Go's [ParseDuration](https://pkg.go.dev/time#ParseDuration) function.
 
 ## Script Implementation
 
