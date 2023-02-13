@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/alexflint/go-arg"
@@ -108,9 +109,24 @@ func (Args) Version() string {
 
 func advanceManually(a advancer.Advancer) {
 	scanner := bufio.NewScanner(os.Stdin)
-	log.Info().Msg("Manual mode: Press [enter] to advance requests")
+	log.Info().Msg(
+		"Gradual mode: Press [enter] to advance requests, " +
+			"enter 'quit' / 'q' to quit the execution or " +
+			"enter 'continue' / 'cont' / 'c' to stop gradual advancement.")
+
+	var skip bool
 	for {
-		scanner.Scan()
+		if !skip {
+			scanner.Scan()
+			txt := scanner.Text()
+			switch strings.ToLower(txt) {
+			case "quit", "q":
+				log.Warn().Msg("Aborted.")
+				os.Exit(1)
+			case "continue", "cont", "c":
+				skip = true
+			}
+		}
 		a.Advance()
 	}
 }
