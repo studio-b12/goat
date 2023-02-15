@@ -45,6 +45,15 @@ func (t *Goja) Register(name string, v any) error {
 
 func (t *Goja) Run(script string) error {
 	_, err := t.rt.RunString(script)
+	if gojaException, ok := err.(*goja.Exception); ok {
+		var ex Exception
+		ex.Inner = gojaException
+		val := gojaException.Value()
+		if val != nil {
+			ex.Msg = val.String()
+		}
+		return ex
+	}
 	return err
 }
 
