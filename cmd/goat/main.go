@@ -36,6 +36,7 @@ type Args struct {
 	NoAbort  bool          `arg:"--no-abort" help:"Do not abort batch execution on error"`
 	NoColor  bool          `arg:"--no-color" help:"Supress colored log output"`
 	Params   []string      `arg:"-p,--params,separate" help:"Params file location(s)"`
+	Silent   bool          `arg:"-s,--silent" help:"Disables all logging output"`
 	Skip     []string      `arg:"--skip,separate" help:"Section(s) to be skipped during execution"`
 }
 
@@ -44,7 +45,11 @@ func main() {
 	var args Args
 	argParser := arg.MustParse(&args)
 
-	zerolog.SetGlobalLevel(zerolog.Level(args.LogLevel))
+	if args.Silent {
+		zerolog.SetGlobalLevel(zerolog.Level(100))
+	} else {
+		zerolog.SetGlobalLevel(zerolog.Level(args.LogLevel))
+	}
 	if !args.Json {
 		log.Logger = log.Output(zerolog.ConsoleWriter{
 			Out:        os.Stdout,
