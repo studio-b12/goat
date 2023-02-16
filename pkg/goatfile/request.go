@@ -27,8 +27,8 @@ type Request struct {
 
 func newRequest() (r Request) {
 	r.Header = http.Header{}
-	r.Body = NoData{}
-	r.Script = NoData{}
+	r.Body = NoContent{}
+	r.Script = NoContent{}
 	return r
 }
 
@@ -56,12 +56,12 @@ func (t *Request) ParseWithParams(params any) error {
 		}
 	}
 
-	if strData, ok := t.Body.(StringData); ok {
+	if strData, ok := t.Body.(StringContent); ok {
 		bodyStr, err := applyTemplate(string(strData), params)
 		if err != nil {
 			return err
 		}
-		t.Body = StringData(bodyStr)
+		t.Body = StringContent(bodyStr)
 	}
 
 	scriptStr, err := util.ReadReaderToString(t.Script.Reader())
@@ -73,7 +73,7 @@ func (t *Request) ParseWithParams(params any) error {
 	if err != nil {
 		return err
 	}
-	t.Script = StringData(scriptStr)
+	t.Script = StringContent(scriptStr)
 
 	applyTemplateToMap(t.QueryParams, params)
 	applyTemplateToMap(t.Options, params)

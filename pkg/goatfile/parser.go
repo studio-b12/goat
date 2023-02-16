@@ -365,9 +365,9 @@ func (t *Parser) parseRaw() (Data, error) {
 	if r == '@' {
 		tk, file := t.s.scanString()
 		if tk != tokSTRING {
-			return NoData{}, ErrInvalidFileDescriptor
+			return NoContent{}, ErrInvalidFileDescriptor
 		}
-		return FileData{filePath: file, currDir: t.currDir}, nil
+		return FileContent{filePath: file, currDir: t.currDir}, nil
 	}
 
 	t.s.unread()
@@ -402,7 +402,7 @@ func (t *Parser) parseRaw() (Data, error) {
 
 		if r == eof {
 			if inEscape {
-				return NoData{}, ErrOpenEscapeBlock
+				return NoContent{}, ErrOpenEscapeBlock
 			}
 			t.s.unread()
 			break
@@ -429,10 +429,10 @@ func (t *Parser) parseRaw() (Data, error) {
 
 	outStr := out.String()
 	if outStr == "" {
-		return NoData{}, nil
+		return NoContent{}, nil
 	}
 
-	return StringData(outStr), nil
+	return StringContent(outStr), nil
 }
 
 func (t *Parser) parseValue() (any, error) {

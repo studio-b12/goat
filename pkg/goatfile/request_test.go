@@ -38,8 +38,8 @@ func TestParseWithParams(t *testing.T) {
 		r.Header.Set("Authorization", "bearer {{.token}}")
 		r.QueryParams = map[string]any{"page": "{{.page}}"}
 		r.Options = map[string]any{"condition": "{{.condition}}"}
-		r.Body = StringData(`{"username": "{{.creds.username}}", "password": "{{.creds.password}}"}`)
-		r.Script = StringData(`var foo = "{{.foo}}"`)
+		r.Body = StringContent(`{"username": "{{.creds.username}}", "password": "{{.creds.password}}"}`)
+		r.Script = StringContent(`var foo = "{{.foo}}"`)
 		return r
 	}
 

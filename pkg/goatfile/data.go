@@ -12,28 +12,38 @@ import (
 	"github.com/studio-b12/goat/pkg/errs"
 )
 
+// Data provides a getter to receive
+// a reader to internal data.
 type Data interface {
+	// Reader returns a reader to ther internal
+	// data or an error. The returned reader
+	// might be nil.
 	Reader() (io.Reader, error)
 }
 
-type NoData struct{}
+// NoContent implements Data containing no content.
+type NoContent struct{}
 
-func (t NoData) Reader() (io.Reader, error) {
+func (t NoContent) Reader() (io.Reader, error) {
 	return nil, nil
 }
 
-type StringData string
+// StringContent stores data as a string.
+type StringContent string
 
-func (t StringData) Reader() (io.Reader, error) {
+func (t StringContent) Reader() (io.Reader, error) {
 	return bytes.NewBufferString(string(t)), nil
 }
 
-type FileData struct {
+// FileContent provides a getter which opens
+// a file with the stored path and returns
+// it as reader.
+type FileContent struct {
 	filePath string
 	currDir  string
 }
 
-func (t FileData) Reader() (r io.Reader, err error) {
+func (t FileContent) Reader() (r io.Reader, err error) {
 	pth := t.filePath
 
 	if strings.HasPrefix(pth, "~/") {

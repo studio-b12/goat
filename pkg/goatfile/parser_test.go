@@ -115,7 +115,7 @@ keyString = "some string"
 			"Key-1": []string{"value 1"},
 			"Key-2": []string{"value 2"},
 		}, res.Tests[0].Header)
-		assert.Equal(t, StringData("some\nbody\n"), res.Tests[0].Body)
+		assert.Equal(t, StringContent("some\nbody\n"), res.Tests[0].Body)
 		assert.Equal(t, map[string]any{
 			"keyInt":    int64(2),
 			"keyString": "some string",
@@ -283,7 +283,7 @@ GET https://example.com
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, NoData{}, res.Tests[0].Body)
+		assert.Equal(t, NoContent{}, res.Tests[0].Body)
 	})
 
 	t.Run("unescaped-EOF", func(t *testing.T) {
@@ -301,7 +301,7 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringData("some body content\nsome more content\n"),
+			StringContent("some body content\nsome more content\n"),
 			res.Tests[0].Body)
 	})
 
@@ -322,7 +322,7 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringData("some body content\nsome more content\n"),
+			StringContent("some body content\nsome more content\n"),
 			res.Tests[0].Body)
 	})
 
@@ -343,7 +343,7 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringData("some body content\nsome more content\n"),
+			StringContent("some body content\nsome more content\n"),
 			res.Tests[0].Body)
 	})
 
@@ -362,7 +362,7 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringData("some body content\nsome more content"),
+			StringContent("some body content\nsome more content"),
 			res.Tests[0].Body)
 	})
 
@@ -382,7 +382,7 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringData("some body content\nsome more content"),
+			StringContent("some body content\nsome more content"),
 			res.Tests[0].Body)
 	})
 
@@ -400,7 +400,7 @@ GET https://example.com
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, NoData{}, res.Tests[0].Body)
+		assert.Equal(t, NoContent{}, res.Tests[0].Body)
 	})
 
 	t.Run("escaped-EOF", func(t *testing.T) {
@@ -420,7 +420,7 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringData("some body content\nsome more content\n"),
+			StringContent("some body content\nsome more content\n"),
 			res.Tests[0].Body)
 	})
 
@@ -445,7 +445,7 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringData("some body content\n\n[QueryParams]\nsome more content\n"),
+			StringContent("some body content\n\n[QueryParams]\nsome more content\n"),
 			res.Tests[0].Body)
 	})
 
@@ -471,7 +471,7 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringData("some body content\n\n---\n\nsome more content\n"),
+			StringContent("some body content\n\n---\n\nsome more content\n"),
 			res.Tests[0].Body)
 	})
 
@@ -497,7 +497,7 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringData("some body content\n\n### setup\n\nsome more content\n"),
+			StringContent("some body content\n\n### setup\n\nsome more content\n"),
 			res.Tests[0].Body)
 	})
 
@@ -537,7 +537,7 @@ var id = response.BodyJson.id;
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringData(`assert(response.StatusCode == 200, "invalid status code");`+
+			StringContent(`assert(response.StatusCode == 200, "invalid status code");`+
 				"\nvar id = response.BodyJson.id;\n"),
 			res.Tests[0].Script)
 	})

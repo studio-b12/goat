@@ -21,31 +21,34 @@ func NewGoja() Engine {
 
 	t.rt = goja.New()
 
-	t.rt.Set("assert", t.builtin_assert)
-	t.rt.Set("debug", t.builtin_debug)
-	t.rt.Set("info", t.builtin_info)
-	t.rt.Set("warn", t.builtin_warn)
-	t.rt.Set("error", t.builtin_error)
-	t.rt.Set("fatal", t.builtin_fatal)
-	t.rt.Set("print", t.builtin_print)
-	t.rt.Set("println", t.builtin_println)
+	t.Set("assert", t.builtin_assert)
+	t.Set("debug", t.builtin_debug)
+	t.Set("info", t.builtin_info)
+	t.Set("warn", t.builtin_warn)
+	t.Set("error", t.builtin_error)
+	t.Set("fatal", t.builtin_fatal)
+	t.Set("print", t.builtin_print)
+	t.Set("println", t.builtin_println)
 
 	return &t
 }
 
 func (t *Goja) SetState(s State) {
 	for k, v := range s {
-		t.Register(k, v)
+		t.Set(k, v)
 	}
 }
 
-func (t *Goja) Register(name string, v any) error {
+func (t *Goja) Set(name string, v any) error {
 	return t.rt.Set(name, v)
 }
 
 func (t *Goja) Run(script string) error {
 	_, err := t.rt.RunString(script)
 	if gojaException, ok := err.(*goja.Exception); ok {
+		// Extract Goja Exceptions into a new exception
+		// wrapper so that we can handle how error
+		// messages are printed.
 		var ex Exception
 		ex.Inner = gojaException
 		val := gojaException.Value()
@@ -62,6 +65,8 @@ func (t *Goja) State() State {
 	for _, key := range t.rt.GlobalObject().Keys() {
 		v := t.rt.Get(key)
 		typ := v.ExportType()
+		// Don't extract <null> values or function
+		// type instances.
 		if typ == nil || typ.Kind() == reflect.Func {
 			continue
 		}

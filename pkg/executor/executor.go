@@ -19,7 +19,7 @@ import (
 	"github.com/studio-b12/goat/pkg/util"
 )
 
-// Executor parses a Goatfile and executes it.
+// Executor parses a Goatfiles and executes them.
 type Executor struct {
 	engineMaker func() engine.Engine
 	req         requester.Requester
@@ -46,8 +46,9 @@ func New(engineMaker func() engine.Engine, req requester.Requester) *Executor {
 }
 
 // Execute executes a single or multiple Goatfiles
-// from the given directory. The given initialParams are
-// used as initial state for the runtime engine.
+// from the given file or directory. The given
+// initialParams are used as initial state for the
+// runtime engine.
 func (t *Executor) Execute(path string, initialParams engine.State) error {
 	stat, err := os.Stat(path)
 	if err != nil {
@@ -218,9 +219,11 @@ func (t *Executor) parseGoatfile(path string) (gf goatfile.Goatfile, err error) 
 	gf, err = goatfile.Unmarshal(string(data), relCurrDir)
 	if err != nil {
 		if errs.IsOfType[goatfile.ParseError](err) {
+			// TODO: Better wrap this error for visualization and
+			//       unwrap-ability.
 			return goatfile.Goatfile{}, fmt.Errorf("failed parsing goatfile at %s:%s", path, err.Error())
 		}
-		return goatfile.Goatfile{}, fmt.Errorf("failed parsing goatfile %s: %s", path, err.Error())
+		return goatfile.Goatfile{}, errs.WithPrefix(fmt.Sprintf("failed parsing goatfile %s:", path), err)
 	}
 
 	gf.Path = path
