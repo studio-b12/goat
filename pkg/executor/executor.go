@@ -160,6 +160,9 @@ func (t *Executor) executeFromDir(path string, initialParams engine.State) error
 	var goatfiles []goatfile.Goatfile
 
 	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, _ error) error {
+		if d.IsDir() && strings.HasPrefix(d.Name(), "_") {
+			return fs.SkipDir
+		}
 		if d.IsDir() ||
 			filepath.Ext(d.Name()) != "."+goatfile.FileExtension ||
 			strings.HasPrefix(d.Name(), "_") {
