@@ -7,9 +7,9 @@ import (
 	"path"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"github.com/studio-b12/goat/pkg/errs"
 	"github.com/studio-b12/goat/pkg/set"
+	"github.com/zekrotja/rogu/log"
 )
 
 // Unmarshal takes a raw string of a Goatfile and tries
@@ -21,7 +21,7 @@ func Unmarshal(raw string, currDir string) (gf Goatfile, err error) {
 
 func unmarshal(fSys fs.FS, raw string, currDir string, visited set.Set[string]) (gf Goatfile, err error) {
 
-	log.Trace().Str("currDir", currDir).Msg("Unmarshalling Goatfile ...")
+	log.Trace().Field("currDir", currDir).Msg("Unmarshalling Goatfile ...")
 
 	raw = crlf2lf(raw)
 
@@ -38,7 +38,7 @@ func unmarshal(fSys fs.FS, raw string, currDir string, visited set.Set[string]) 
 	for _, pth := range gf.Imports {
 		fullPath := extend(path.Join(currDir, pth), FileExtension)
 
-		log.Trace().Str("fullPath", fullPath).Msg("Reading import file ...")
+		log.Trace().Field("fullPath", fullPath).Msg("Reading import file ...")
 
 		raw, err := fs.ReadFile(fSys, fullPath)
 		if err != nil {

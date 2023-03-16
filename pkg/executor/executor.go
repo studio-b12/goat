@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/studio-b12/goat/pkg/advancer"
 	"github.com/studio-b12/goat/pkg/clr"
 	"github.com/studio-b12/goat/pkg/engine"
@@ -17,6 +16,7 @@ import (
 	"github.com/studio-b12/goat/pkg/goatfile"
 	"github.com/studio-b12/goat/pkg/requester"
 	"github.com/studio-b12/goat/pkg/util"
+	"github.com/zekrotja/rogu/log"
 )
 
 // Executor parses a Goatfiles and executes them.
@@ -71,6 +71,7 @@ func (t *Executor) Execute(path string, initialParams engine.State) error {
 // ExecuteGoatfile runs the given parsed Goatfile. The given initialParams are
 // used as initial state for the runtime engine.
 func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.State) (err error) {
+	log := log.Tagged(gf.Path)
 	log.Debug().Msg("Parsed Goatfile\n" + gf.String())
 
 	if t.Dry {
@@ -94,7 +95,7 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 		for _, req := range gf.Teardown {
 			err := t.executeRequest(eng, req)
 			if err != nil {
-				log.Err(err).Stringer("req", req).Msg("Teardown step failed")
+				log.Error().Err(err).Field("req", req).Msg("Teardown step failed")
 
 				// If the returned error comes from the params parsing step, don't
 				// cancel the teardown execution. See the following issue for more information.
@@ -111,7 +112,7 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 				break
 			}
 
-			log.Info().Stringer("req", req).Msg("Teardown step completed")
+			log.Info().Field("req", req).Msg("Teardown step completed")
 		}
 	}()
 
@@ -123,7 +124,7 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 		for _, req := range gf.Setup {
 			err := t.executeRequest(eng, req)
 			if err != nil {
-				log.Err(err).Stringer("req", req).Msg("Setup step failed")
+				log.Error().Err(err).Field("req", req).Msg("Setup step failed")
 				if !t.isAbortOnError(req) {
 					errsNoAbort = errsNoAbort.Append(err)
 					continue
@@ -131,7 +132,7 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 				return err
 			}
 
-			log.Info().Stringer("req", req).Msg("Setup step completed")
+			log.Info().Field("req", req).Msg("Setup step completed")
 		}
 	}
 
@@ -182,25 +183,36 @@ func (t *Executor) executeFromDir(path string, initialParams engine.State) error
 		return errors.New("no Goatfiles found to execute")
 	}
 
-	var errs errs.Errors
+	var mErr errs.Errors
 
 	for _, gf := range goatfiles {
-		log.Info().Str("path", gf.Path).Msg(clr.Print(clr.Format("Executing batch ...", clr.ColorFGPurple, clr.FormatBold)))
+		log.Info().Field("path", gf.Path).Msg(clr.Print(clr.Format("Executing batch ...", clr.ColorFGPurple, clr.FormatBold)))
 
 		err = t.ExecuteGoatfile(gf, initialParams)
 		if err != nil {
-			log.Err(err).Msg(clr.Print(clr.Format("Batch execution failed", clr.ColorFGRed, clr.FormatBold)))
-			errs = errs.Append(err)
+			entry := log.Error()
+			if mErr, ok := err.(errs.Errors); ok {
+				errLines := make([]string, 0, len(mErr))
+				for _, e := range mErr {
+					errLines = append(errLines, clr.Print(clr.Format(e.Error(), clr.ColorFGRed)))
+				}
+				entry.Field("errors", errLines)
+			} else {
+				entry.Err(err)
+			}
+			entry.Msg(clr.Print(clr.Format("Batch execution failed", clr.ColorFGRed, clr.FormatBold)))
+
+			mErr = mErr.Append(err)
 			continue
 		}
 
-		log.Info().Str("path", gf.Path).Msg(clr.Print(clr.Format("Batch finished successfully", clr.ColorFGPurple, clr.FormatBold)))
+		log.Info().Field("path", gf.Path).Msg(clr.Print(clr.Format("Batch finished successfully", clr.ColorFGPurple, clr.FormatBold)))
 	}
 
-	if errs.HasSome() {
+	if mErr.HasSome() {
 		return BatchExecutionError{
-			Inner: errs,
-			Total: len(goatfiles),
+			Inner: mErr,
+			Files: goatfiles,
 		}
 	}
 
@@ -208,7 +220,7 @@ func (t *Executor) executeFromDir(path string, initialParams engine.State) error
 }
 
 func (t *Executor) parseGoatfile(path string) (gf goatfile.Goatfile, err error) {
-	log.Debug().Str("from", path).Msg("Parsing goatfile ...")
+	log.Debug().Field("from", path).Msg("Parsing goatfile ...")
 
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -233,6 +245,7 @@ func (t *Executor) parseGoatfile(path string) (gf goatfile.Goatfile, err error) 
 
 func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatfile.Goatfile) (err error) {
 	var errsNoAbort errs.Errors
+	log := log.Tagged(gf.Path)
 
 	defer func() {
 		// Teardown-Each steps
@@ -245,7 +258,7 @@ func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatf
 		for _, postReq := range gf.TeardownEach {
 			err := t.executeRequest(eng, postReq)
 			if err != nil {
-				log.Err(err).Stringer("req", req).Msg("Post-Each step failed")
+				log.Error().Err(err).Field("req", req).Msg("Post-Each step failed")
 
 				err = errs.WithPrefix("post-setup-each step failed:", err)
 
@@ -264,7 +277,7 @@ func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatf
 				continue
 			}
 
-			log.Info().Stringer("req", req).Msg("Teardown-Each step completed")
+			log.Info().Field("req", req).Msg("Teardown-Each step completed")
 		}
 	}()
 
@@ -276,7 +289,7 @@ func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatf
 		for _, preReq := range gf.SetupEach {
 			err := t.executeRequest(eng, preReq)
 			if err != nil {
-				log.Err(err).Stringer("req", req).Msg("Setup-Each step failed")
+				log.Error().Err(err).Field("req", req).Msg("Setup-Each step failed")
 
 				err = errs.WithPrefix("Setup-Each step failed:", err)
 
@@ -288,7 +301,7 @@ func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatf
 				return err
 			}
 
-			log.Info().Stringer("req", req).Msg("Setup-Each step completed")
+			log.Info().Field("req", req).Msg("Setup-Each step completed")
 		}
 	}
 
@@ -296,7 +309,7 @@ func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatf
 
 	err = t.executeRequest(eng, req)
 	if err != nil {
-		log.Err(err).Stringer("req", req).Msg("Test step failed")
+		log.Error().Err(err).Field("req", req).Msg("Test step failed")
 
 		if t.isAbortOnError(req) {
 			return err
@@ -304,7 +317,7 @@ func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatf
 
 		errsNoAbort = errsNoAbort.Append(err)
 	} else {
-		log.Info().Stringer("req", req).Msg("Test completed")
+		log.Info().Field("req", req).Msg("Test completed")
 	}
 
 	return errsNoAbort.Condense()
@@ -321,14 +334,14 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request) (err 
 
 	execOpts := ExecOptionsFromMap(req.Options)
 	if !execOpts.Condition {
-		log.Warn().Stringer("req", req).Msg("Skipped due to condition")
+		log.Warn().Field("req", req).Msg("Skipped due to condition")
 		return nil
 	}
 
 	if execOpts.Delay > 0 {
 		log.Info().
-			Stringer("req", req).
-			Stringer("delay", execOpts.Delay).
+			Field("req", req).
+			Field("delay", execOpts.Delay).
 			Msg(clr.Print(clr.Format("Awaiting delay ...", clr.ColorFGBlack)))
 		time.Sleep(execOpts.Delay)
 	}

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rs/zerolog/log"
+	"github.com/zekrotja/rogu/log"
 )
 
 func (t *Goja) builtin_assert(v bool, msg ...string) {

@@ -11,8 +11,6 @@ import (
 	"time"
 
 	"github.com/alexflint/go-arg"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/studio-b12/goat/internal/embedded"
 	"github.com/studio-b12/goat/internal/version"
 	"github.com/studio-b12/goat/pkg/advancer"
@@ -21,6 +19,9 @@ import (
 	"github.com/studio-b12/goat/pkg/engine"
 	"github.com/studio-b12/goat/pkg/executor"
 	"github.com/studio-b12/goat/pkg/requester"
+	"github.com/zekrotja/rogu"
+	"github.com/zekrotja/rogu/level"
+	"github.com/zekrotja/rogu/log"
 )
 
 type Args struct {
@@ -31,7 +32,7 @@ type Args struct {
 	Dry      bool          `arg:"--dry" help:"Only parse the goatfile(s) without executing any requests"`
 	Gradual  bool          `arg:"-g,--gradual" help:"Advance the requests maually"`
 	Json     bool          `arg:"--json" help:"Use JSON format instead of pretty console format for logging"`
-	LogLevel int           `arg:"-l,--loglevel" default:"1" help:"Logging level (see https://github.com/rs/zerolog#leveled-logging for reference)"`
+	LogLevel int           `arg:"-l,--loglevel" default:"5" help:"Logging level (see https://github.com/rs/zerolog#leveled-logging for reference)"`
 	New      bool          `arg:"--new" help:"Create a new base Goatfile"`
 	NoAbort  bool          `arg:"--no-abort" help:"Do not abort batch execution on error"`
 	NoColor  bool          `arg:"--no-color" help:"Supress colored log output"`
@@ -46,16 +47,20 @@ func main() {
 	argParser := arg.MustParse(&args)
 
 	if args.Silent {
-		zerolog.SetGlobalLevel(zerolog.Level(100))
+		log.SetLevel(level.Off)
 	} else {
-		zerolog.SetGlobalLevel(zerolog.Level(args.LogLevel))
+		log.SetLevel(level.Level(args.LogLevel))
 	}
-	if !args.Json {
-		log.Logger = log.Output(zerolog.ConsoleWriter{
-			Out:        os.Stdout,
-			TimeFormat: time.RFC3339,
-			NoColor:    args.NoColor,
-		})
+
+	if args.Json {
+		w := rogu.NewJsonWriter(os.Stdout)
+		log.SetWriter(w)
+	} else {
+		w := rogu.NewPrettyWriter(os.Stdout)
+		w.NoColor = args.NoColor
+		w.TimeFormat = time.RFC3339
+		w.StyleTag.Width(20)
+		log.SetWriter(w)
 	}
 
 	clr.SetEnable(!args.Json && !args.NoColor)
@@ -79,25 +84,35 @@ func main() {
 	engineMaker := engine.NewGoja
 	req := requester.NewHttpWithCookies()
 
-	executor := executor.New(engineMaker, req)
-	executor.Dry = args.Dry
-	executor.Skip = args.Skip
-	executor.NoAbort = args.NoAbort
+	exec := executor.New(engineMaker, req)
+	exec.Dry = args.Dry
+	exec.Skip = args.Skip
+	exec.NoAbort = args.NoAbort
 
 	if args.Gradual {
 		ad := make(advancer.Channel)
-		executor.Waiter = ad
+		exec.Waiter = ad
 		go advanceManually(ad)
 	} else if args.Delay != 0 {
 		log.Info().Msgf("Delay mode: Advancing every %s", args.Delay.String())
-		executor.Waiter = advancer.NewTicker(args.Delay)
+		exec.Waiter = advancer.NewTicker(args.Delay)
 	}
 
 	log.Debug().Msgf("Initial Params\n%s", state)
 
-	err = executor.Execute(args.Goatfile, state)
+	err = exec.Execute(args.Goatfile, state)
 	if err != nil {
-		log.Fatal().Err(err).Msg(clr.Print(clr.Format("execution failed", clr.ColorFGRed, clr.FormatBold)))
+		entry := log.Fatal().Err(err)
+
+		if batchErr, ok := err.(executor.BatchExecutionError); ok {
+			coloredPathes := batchErr.Pathes()
+			for i, p := range coloredPathes {
+				coloredPathes[i] = clr.Print(clr.Format(p, clr.ColorFGRed))
+			}
+			entry.Field("failed_files", coloredPathes)
+		}
+
+		entry.Msg(clr.Print(clr.Format("execution failed", clr.ColorFGRed, clr.FormatBold)))
 	}
 
 	log.Info().Msg(clr.Print(clr.Format("Execution finished successfully", clr.ColorFGGreen, clr.FormatBold)))
@@ -150,7 +165,7 @@ func createNewGoatfile(name string) {
 		if err != nil {
 			log.Fatal().
 				Err(err).
-				Str("at", name).
+				Field("at", name).
 				Msg("Failed creating new goatfile: Failed creating directory")
 		}
 	}
@@ -159,11 +174,11 @@ func createNewGoatfile(name string) {
 	if err != nil {
 		log.Fatal().
 			Err(err).
-			Str("at", name).
+			Field("at", name).
 			Msg("Failed creating new goatfile")
 	}
 
 	log.Info().
-		Str("at", name).
+		Field("at", name).
 		Msg("Goatfile created")
 }
