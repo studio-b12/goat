@@ -1,6 +1,4 @@
 [VERSION]
 
-- Added `delay` request option. [#17]
-- Added `--json` flag to output log as JSON entries.
-- Added more colors to log output to better visually separate log sections.
-- Added `--no-color` flag to supress all colors in log output.
+- Directories which are prefixed with an underscore (`_`) will now be ignored. [#18]
+- Swapped the logging package from [rs/zerolog](https://github.com/rs/zerolog) to [zekrotja/rogu](https://github.com/zekrotja/rogu) which allows better visualization of errors and execution stages.
