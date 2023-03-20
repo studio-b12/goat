@@ -61,6 +61,11 @@ tasks:
     cmds:
       - go test -v -cover ./...
 
+  e2e:
+    desc: "Run end to end tests"
+    cmds:
+      - bash ./e2e/run.bash
+
   lint:
     desc: "Run staticcheck linter"
     preconditions:
