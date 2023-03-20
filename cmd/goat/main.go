@@ -104,8 +104,8 @@ func main() {
 	if err != nil {
 		entry := log.Fatal().Err(err)
 
-		if batchErr, ok := err.(executor.BatchExecutionError); ok {
-			coloredPathes := batchErr.Pathes()
+		if batchErr, ok := err.(executor.BatchResultError); ok {
+			coloredPathes := batchErr.ErrorMessages()
 			for i, p := range coloredPathes {
 				coloredPathes[i] = clr.Print(clr.Format(p, clr.ColorFGRed))
 			}

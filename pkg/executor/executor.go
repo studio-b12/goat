@@ -205,7 +205,7 @@ func (t *Executor) executeFromDir(path string, initialParams engine.State) error
 			}
 			entry.Msg(clr.Print(clr.Format("Batch execution failed", clr.ColorFGRed, clr.FormatBold)))
 
-			mErr = mErr.Append(err)
+			mErr = mErr.Append(wrapBatchExecutionError(err, gf.Path))
 			continue
 		}
 
@@ -213,9 +213,9 @@ func (t *Executor) executeFromDir(path string, initialParams engine.State) error
 	}
 
 	if mErr.HasSome() {
-		return BatchExecutionError{
+		return BatchResultError{
 			Inner: mErr,
-			Files: goatfiles,
+			Total: len(goatfiles),
 		}
 	}
 

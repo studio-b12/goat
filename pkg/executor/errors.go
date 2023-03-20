@@ -4,30 +4,46 @@ import (
 	"fmt"
 
 	"github.com/studio-b12/goat/pkg/errs"
-	"github.com/studio-b12/goat/pkg/goatfile"
 )
 
-// BatchExecutionError holds and array of errors
-// as well as the total amount of executions.
 type BatchExecutionError struct {
+	errs.InnerError
+	Path string
+}
+
+func wrapBatchExecutionError(err error, path string) BatchExecutionError {
+	var batchErr BatchExecutionError
+	batchErr.Inner = err
+	batchErr.Path = path
+	return batchErr
+}
+
+// BatchResultError holds and array of errors
+// as well as the total amount of executions.
+type BatchResultError struct {
 	Inner errs.Errors
-	Files []goatfile.Goatfile
+	Total int
 }
 
-func (t BatchExecutionError) Error() string {
-	return fmt.Sprintf("%02d of %02d batches failed", len(t.Inner), len(t.Files))
+func (t BatchResultError) Error() string {
+	return fmt.Sprintf("%02d of %02d batches failed", len(t.Inner), t.Total)
 }
 
-func (t BatchExecutionError) Pathes() []string {
-	pathes := make([]string, 0, len(t.Files))
-	for _, gf := range t.Files {
-		pathes = append(pathes, gf.Path)
-	}
-	return pathes
-}
-
-func (t BatchExecutionError) Unwrap() error {
+func (t BatchResultError) Unwrap() error {
 	return t.Inner.Condense()
+}
+
+// ErrorMessages returns a list of the inner errors
+// as strings assambled from the path and error
+// message.
+func (t BatchResultError) ErrorMessages() []string {
+	errMsgs := make([]string, 0, len(t.Inner))
+	for _, err := range t.Inner {
+		if batchErr, ok := err.(BatchExecutionError); ok {
+			errMsgs = append(errMsgs, fmt.Sprintf("%s: %s", batchErr.Path, batchErr.Error()))
+		}
+	}
+	return errMsgs
 }
 
 // ParamsParsingError is an alias for error
