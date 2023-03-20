@@ -1,11 +1,14 @@
 package goatfile
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/studio-b12/goat/pkg/errs"
 )
 
 // TODO: Add more unit tests
@@ -1134,6 +1137,104 @@ someoption = {{ print {{ "}}" }} }}
 
 		assert.Nil(t, err, err)
 		assert.Equal(t, ParameterValue(` print {{ "}}" }} `), res.Tests[0].Options["someoption"])
+	})
+}
+
+// See https://github.com/studio-b12/goat/issues/19
+func TestParseMultipleSectionsCheck(t *testing.T) {
+	t.Run("multiple-options", func(t *testing.T) {
+		const raw = `
+GET https://example.com
+
+[Options]
+someoption = "a"
+
+[Header]
+some: header
+
+[Options]
+anotheroption = "b"
+		`
+
+		p := stringParser(raw)
+		_, err := p.Parse()
+
+		assert.ErrorIs(t, err, ErrSectionDefinedMultiple, err)
+		var ewd errs.ErrorWithDetails
+		assert.True(t, errors.As(err, &ewd))
+		assert.Equal(t, fmt.Sprintf("[%s]:", optionNameOptions), ewd.Details.(string))
+	})
+
+	t.Run("multiple-header", func(t *testing.T) {
+		const raw = `
+GET https://example.com
+[Header]
+some: header
+
+[Options]
+someoption = "a"
+
+[Header]
+		`
+
+		p := stringParser(raw)
+		_, err := p.Parse()
+
+		assert.ErrorIs(t, err, ErrSectionDefinedMultiple, err)
+		var ewd errs.ErrorWithDetails
+		assert.True(t, errors.As(err, &ewd))
+		assert.Equal(t, fmt.Sprintf("[%s]:", optionNameHeader), ewd.Details.(string))
+	})
+
+	t.Run("multiple-script", func(t *testing.T) {
+		const raw = `
+GET https://example.com
+[Header]
+some: header
+
+[Options]
+someoption = "a"
+
+[Script]
+
+[Script]
+
+		`
+
+		p := stringParser(raw)
+		_, err := p.Parse()
+
+		assert.ErrorIs(t, err, ErrSectionDefinedMultiple, err)
+		var ewd errs.ErrorWithDetails
+		assert.True(t, errors.As(err, &ewd))
+		assert.Equal(t, fmt.Sprintf("[%s]:", optionNameScript), ewd.Details.(string))
+	})
+
+	t.Run("multiple-body", func(t *testing.T) {
+		const raw = `
+GET https://example.com
+[Header]
+some: header
+
+[Options]
+someoption = "a"
+
+[Body]
+foobar
+
+[Script]
+
+[Body]
+barbazz
+		`
+
+		p := stringParser(raw)
+		_, err := p.Parse()
+
+		assert.ErrorIs(t, err, ErrSectionDefinedMultiple, err)
+		var ewd errs.ErrorWithDetails
+		assert.True(t, errors.As(err, &ewd))
+		assert.Equal(t, fmt.Sprintf("[%s]:", optionNameBody), ewd.Details.(string))
 	})
 }
 

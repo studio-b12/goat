@@ -139,7 +139,7 @@ func (t *Parser) parseSection(gf *Goatfile) error {
 
 	var r *[]Request
 
-	switch strings.ToLower(name) {
+	switch sectionName(strings.ToLower(name)) {
 	case sectionNameSetup:
 		r = &gf.Setup
 	case sectionNameSetupEach:
@@ -197,13 +197,15 @@ func (t *Parser) parseRequest(section *[]Request) (err error) {
 	}
 	req.URI = lit
 
+	ck := wrapIntoRequestParseChecker(&req)
+
 loop:
 	for {
 		tok, _ = t.scan()
 
 		switch tok {
 		case tokBLOCKSTART:
-			err = t.parseBlock(&req)
+			err = t.parseBlock(ck)
 
 		case tokWS, tokLF:
 			continue loop
@@ -226,7 +228,7 @@ loop:
 	return nil
 }
 
-func (t *Parser) parseBlock(req *Request) error {
+func (t *Parser) parseBlock(req *requestParseChecker) error {
 	var blockHeader string
 
 	tok, lit := t.scanSkipWS()
@@ -245,7 +247,14 @@ func (t *Parser) parseBlock(req *Request) error {
 		return errs.WithSuffix(ErrInvalidToken, "(block)")
 	}
 
-	switch strings.ToLower(blockHeader) {
+	optName := optionName(strings.ToLower(blockHeader))
+
+	err := req.Check(optName)
+	if err != nil {
+		return err
+	}
+
+	switch optName {
 
 	case optionNameQueryParams:
 		data, err := t.parseBlockEntries()

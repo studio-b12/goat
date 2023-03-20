@@ -10,22 +10,26 @@ import (
 	"github.com/studio-b12/goat/pkg/util"
 )
 
-const (
-	sectionNameSetup        = "setup"
-	sectionNameSetupEach    = "setup-each"
-	sectionNameTests        = "tests"
-	sectionNameTeardown     = "teardown"
-	sectionNameTeardownEach = "teardown-each"
-)
+type sectionName string
 
 const (
-	optionNameQueryParams = "queryparams"
-	optionNameHeader      = "header"
-	optionNameHeaders     = "headers"
-	optionNameBody        = "body"
-	optionNameScript      = "script"
-	optionNameOptions     = "options"
-	abc                   = "asd"
+	sectionNameSetup        = sectionName("setup")
+	sectionNameSetupEach    = sectionName("setup-each")
+	sectionNameTests        = sectionName("tests")
+	sectionNameTeardown     = sectionName("teardown")
+	sectionNameTeardownEach = sectionName("teardown-each")
+)
+
+type optionName string
+
+const (
+	optionNameQueryParams = optionName("queryparams")
+	optionNameHeader      = optionName("header")
+	optionNameHeaders     = optionName("headers")
+	optionNameBody        = optionName("body")
+	optionNameScript      = optionName("script")
+	optionNameOptions     = optionName("options")
+	abc                   = optionName("asd")
 )
 
 // Goatfile holds all sections and
