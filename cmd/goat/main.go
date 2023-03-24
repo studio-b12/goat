@@ -25,7 +25,7 @@ import (
 )
 
 type Args struct {
-	Goatfile string `arg:"positional" help:"Goatfile(s) location"`
+	Goatfile []string `arg:"positional" help:"Goatfile(s) location"`
 
 	Arg      []string      `arg:"-a,--args,separate" help:"Pass params as key value arguments into the execution (format: key=value)"`
 	Delay    time.Duration `arg:"-d,--delay" help:"Delay requests by the given duration"`
@@ -70,7 +70,7 @@ func main() {
 		return
 	}
 
-	if args.Goatfile == "" {
+	if len(args.Goatfile) == 0 {
 		argParser.Fail("Goatfile must be specified.")
 	}
 
@@ -151,9 +151,10 @@ func advanceManually(a advancer.Advancer) {
 	}
 }
 
-func createNewGoatfile(name string) {
-	if name == "" {
-		name = "tests.goat"
+func createNewGoatfile(names []string) {
+	name := "tests.goat"
+	if len(names) > 0 {
+		name = names[0]
 	}
 
 	pathTo := filepath.Dir(name)
