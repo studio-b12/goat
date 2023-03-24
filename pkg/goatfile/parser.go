@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/studio-b12/goat/pkg/errs"
+	"github.com/zekrotja/rogu/log"
 )
 
 // Parser parses a Goatfile.
@@ -139,7 +140,7 @@ func (t *Parser) parseSection(gf *Goatfile) error {
 
 	var r *[]Request
 
-	switch strings.ToLower(name) {
+	switch sectionName(strings.ToLower(name)) {
 	case sectionNameSetup:
 		r = &gf.Setup
 	case sectionNameSetupEach:
@@ -197,13 +198,15 @@ func (t *Parser) parseRequest(section *[]Request) (err error) {
 	}
 	req.URI = lit
 
+	ck := wrapIntoRequestParseChecker(&req)
+
 loop:
 	for {
 		tok, _ = t.scan()
 
 		switch tok {
 		case tokBLOCKSTART:
-			err = t.parseBlock(&req)
+			err = t.parseBlock(ck)
 
 		case tokWS, tokLF:
 			continue loop
@@ -226,7 +229,7 @@ loop:
 	return nil
 }
 
-func (t *Parser) parseBlock(req *Request) error {
+func (t *Parser) parseBlock(req *requestParseChecker) error {
 	var blockHeader string
 
 	tok, lit := t.scanSkipWS()
@@ -245,7 +248,14 @@ func (t *Parser) parseBlock(req *Request) error {
 		return errs.WithSuffix(ErrInvalidToken, "(block)")
 	}
 
-	switch strings.ToLower(blockHeader) {
+	optName := optionName(strings.ToLower(blockHeader))
+
+	err := req.Check(optName)
+	if err != nil {
+		return err
+	}
+
+	switch optName {
 
 	case optionNameQueryParams:
 		data, err := t.parseBlockEntries()
@@ -254,7 +264,17 @@ func (t *Parser) parseBlock(req *Request) error {
 		}
 		req.QueryParams = data
 
-	case optionNameHeader, optionNameHeaders:
+	case optionNameHeader:
+		err := t.parseHeaders(req.Header)
+		if err != nil {
+			return err
+		}
+	case optionNameHeaders:
+		// TODO: Remove due to deprecation
+		log.Warn().Tag("Parser").
+			Field("pos", fmt.Sprintf("%d:%d", t.s.line, t.s.linepos)).
+			Msg("Option name [headers] is deprecated! Please use [header] instead! See the release notes of v0.8.0 for more information: " +
+				"https://github.com/studio-b12/goat/releases/tag/v0.8.0")
 		err := t.parseHeaders(req.Header)
 		if err != nil {
 			return err

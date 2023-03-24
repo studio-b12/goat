@@ -28,6 +28,7 @@ var (
 	ErrBlockOutOfRequest           = errors.New("blocks must follow after a request head")
 	ErrMultiImport                 = errors.New("the impoted resource has already been imported")
 	ErrInvalidFileDescriptor       = errors.New("invalid file descriptor")
+	ErrSectionDefinedMultiple      = errors.New("the section has been already defined")
 )
 
 // ParseError wraps an inner error with

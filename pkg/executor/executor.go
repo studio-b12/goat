@@ -49,23 +49,24 @@ func New(engineMaker func() engine.Engine, req requester.Requester) *Executor {
 // from the given file or directory. The given
 // initialParams are used as initial state for the
 // runtime engine.
-func (t *Executor) Execute(path string, initialParams engine.State) error {
-	stat, err := os.Stat(path)
-	if err != nil {
-		return errs.WithPrefix("stat failed:", err)
+func (t *Executor) Execute(pathes []string, initialParams engine.State) error {
+	if len(pathes) == 1 {
+		stat, err := os.Stat(pathes[0])
+		if err != nil {
+			return errs.WithPrefix("stat failed:", err)
+		}
+		if !stat.IsDir() {
+			gf, err := t.parseGoatfile(pathes[0])
+			if err != nil {
+				return err
+			}
+
+			log.Debug().Msg("Executing goatfile ...")
+			return t.ExecuteGoatfile(gf, initialParams)
+		}
 	}
 
-	if stat.IsDir() {
-		return t.executeFromDir(path, initialParams)
-	}
-
-	gf, err := t.parseGoatfile(path)
-	if err != nil {
-		return err
-	}
-
-	log.Debug().Msg("Executing goatfile ...")
-	return t.ExecuteGoatfile(gf, initialParams)
+	return t.executeFromPathes(pathes, initialParams)
 }
 
 // ExecuteGoatfile runs the given parsed Goatfile. The given initialParams are
@@ -156,30 +157,31 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 	return errsNoAbort.Condense()
 }
 
-func (t *Executor) executeFromDir(path string, initialParams engine.State) error {
+func (t *Executor) executeFromPathes(pathes []string, initialParams engine.State) error {
 	var goatfiles []goatfile.Goatfile
 
-	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, _ error) error {
-		if d.IsDir() && strings.HasPrefix(d.Name(), "_") {
-			return fs.SkipDir
-		}
-		if d.IsDir() ||
-			filepath.Ext(d.Name()) != "."+goatfile.FileExtension ||
-			strings.HasPrefix(d.Name(), "_") {
-			return nil
-		}
+	for _, path := range pathes {
+		err := filepath.WalkDir(path, func(path string, d fs.DirEntry, _ error) error {
+			if d.IsDir() && strings.HasPrefix(d.Name(), "_") {
+				return fs.SkipDir
+			}
+			if d.IsDir() ||
+				filepath.Ext(d.Name()) != "."+goatfile.FileExtension ||
+				strings.HasPrefix(d.Name(), "_") {
+				return nil
+			}
 
-		gf, err := t.parseGoatfile(path)
+			gf, err := t.parseGoatfile(path)
+			if err != nil {
+				return err
+			}
+
+			goatfiles = append(goatfiles, gf)
+			return nil
+		})
 		if err != nil {
 			return err
 		}
-
-		goatfiles = append(goatfiles, gf)
-		return nil
-	})
-
-	if err != nil {
-		return err
 	}
 
 	if len(goatfiles) == 0 {
@@ -191,7 +193,7 @@ func (t *Executor) executeFromDir(path string, initialParams engine.State) error
 	for _, gf := range goatfiles {
 		log.Info().Field("path", gf.Path).Msg(clr.Print(clr.Format("Executing batch ...", clr.ColorFGPurple, clr.FormatBold)))
 
-		err = t.ExecuteGoatfile(gf, initialParams)
+		err := t.ExecuteGoatfile(gf, initialParams)
 		if err != nil {
 			entry := log.Error()
 			if mErr, ok := err.(errs.Errors); ok {
@@ -205,7 +207,7 @@ func (t *Executor) executeFromDir(path string, initialParams engine.State) error
 			}
 			entry.Msg(clr.Print(clr.Format("Batch execution failed", clr.ColorFGRed, clr.FormatBold)))
 
-			mErr = mErr.Append(err)
+			mErr = mErr.Append(wrapBatchExecutionError(err, gf.Path))
 			continue
 		}
 
@@ -213,9 +215,9 @@ func (t *Executor) executeFromDir(path string, initialParams engine.State) error
 	}
 
 	if mErr.HasSome() {
-		return BatchExecutionError{
+		return BatchResultError{
 			Inner: mErr,
-			Files: goatfiles,
+			Total: len(goatfiles),
 		}
 	}
 
