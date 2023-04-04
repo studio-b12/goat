@@ -47,6 +47,11 @@ func (t *Parser) Parse() (gf Goatfile, err error) {
 		case tokCOMMENT, tokWS, tokLF:
 			continue
 
+		case tokLOGSECTION:
+			sec := t.s.scanUntilLF()
+			gf.Tests = append(gf.Tests, LogSection(strings.TrimSpace(sec)))
+			continue
+
 		case tokIDENT, tokSTRING:
 			t.unscan()
 			err = t.parseRequest(&gf.Tests)
@@ -138,7 +143,7 @@ func (t *Parser) parseUse(gf *Goatfile) error {
 func (t *Parser) parseSection(gf *Goatfile) error {
 	name := strings.TrimSpace(t.s.readToLF())
 
-	var r *[]Request
+	var r *[]Action
 
 	switch sectionName(strings.ToLower(name)) {
 	case sectionNameSetup:
@@ -166,6 +171,12 @@ func (t *Parser) parseSection(gf *Goatfile) error {
 			break
 		}
 
+		if tok == tokLOGSECTION {
+			sec := t.s.scanUntilLF()
+			*r = append(*r, LogSection(strings.TrimSpace(sec)))
+			continue
+		}
+
 		t.unscan()
 		err := t.parseRequest(r)
 		if err != nil {
@@ -176,7 +187,7 @@ func (t *Parser) parseSection(gf *Goatfile) error {
 	return nil
 }
 
-func (t *Parser) parseRequest(section *[]Request) (err error) {
+func (t *Parser) parseRequest(section *[]Action) (err error) {
 	req := newRequest()
 
 	// parse header
@@ -210,7 +221,7 @@ loop:
 
 		case tokWS, tokLF:
 			continue loop
-		case tokEOF, tokSECTION:
+		case tokEOF, tokSECTION, tokLOGSECTION:
 			t.unscan()
 			break loop
 		case tokDELIMITER:
@@ -270,7 +281,7 @@ func (t *Parser) parseBlock(req *requestParseChecker) error {
 			return err
 		}
 	case optionNameHeaders:
-		// TODO: Remove due to deprecation
+		// TODO: Remove due to deprecation with release 1.0
 		log.Warn().Tag("Parser").
 			Field("pos", fmt.Sprintf("%d:%d", t.s.line, t.s.linepos)).
 			Msg("Option name [headers] is deprecated! Please use [header] instead! See the release notes of v0.8.0 for more information: " +
@@ -393,8 +404,6 @@ func (t *Parser) parseRaw() (Data, error) {
 	t.s.unread()
 
 	for {
-		r := t.s.read()
-
 		if !inEscape {
 			if out.Len() > 3 && string(out.Bytes()[out.Len()-4:]) == "\n---" {
 				t.buf.tok = tokDELIMITER
@@ -406,19 +415,30 @@ func (t *Parser) parseRaw() (Data, error) {
 			if out.Len() > 1 && string(out.Bytes()[out.Len()-2:]) == "\n[" {
 				t.buf.tok = tokBLOCKSTART
 				t.buf.lit = ""
-				t.s.unread()
 				t.unscan()
 				out.Truncate(out.Len() - 2)
 				break
 			}
 			if out.Len() > 3 && string(out.Bytes()[out.Len()-4:]) == "\n###" {
-				t.buf.tok = tokSECTION
-				t.buf.lit = ""
+				if t.s.read() != '#' {
+					t.buf.tok = tokSECTION
+					t.buf.lit = ""
+				} else {
+					if r = t.s.read(); r != '#' {
+						return nil, ErrInvalidLogSection
+					}
+					// t.s.unread()
+					t.buf.tok = tokLOGSECTION
+					t.buf.lit = ""
+				}
+
 				t.unscan()
 				out.Truncate(out.Len() - 4)
 				break
 			}
 		}
+
+		r := t.s.read()
 
 		if r == eof {
 			if inEscape {

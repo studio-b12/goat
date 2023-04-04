@@ -25,11 +25,17 @@ type Request struct {
 	parsed bool
 }
 
+var _ Action = (*Request)(nil)
+
 func newRequest() (r Request) {
 	r.Header = http.Header{}
 	r.Body = NoContent{}
 	r.Script = NoContent{}
 	return r
+}
+
+func (t Request) Type() ActionType {
+	return ActionRequest
 }
 
 // ParseWithParams takes the given parameters
