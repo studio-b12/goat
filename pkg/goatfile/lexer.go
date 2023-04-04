@@ -26,6 +26,7 @@ const (
 	tokCOMMENT
 	tokESCAPE
 	tokSECTION
+	tokLOGSECTION
 	tokDELIMITER
 	tokBLOCKSTART
 	tokBLOCKEND
@@ -282,14 +283,17 @@ func (t *scanner) scanSection() (tk token, lit string) {
 		}
 	}
 
-	for {
-		r := t.read()
-		if r != '#' {
-			break
+	r := t.read()
+	if r == '#' {
+		if t.read() != '#' {
+			return tokILLEGAL, ""
 		}
+		if t.read() == '#' {
+			return tokILLEGAL, ""
+		}
+		t.unread()
+		return tokLOGSECTION, ""
 	}
-
-	t.unread()
 
 	return tokSECTION, ""
 }

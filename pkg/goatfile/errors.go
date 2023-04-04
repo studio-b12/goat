@@ -14,6 +14,7 @@ var (
 	ErrInvalidStringLiteral        = errors.New("invalid string literal")
 	ErrEmptyUsePath                = errors.New("empty use path")
 	ErrInvalidSection              = errors.New("invalid section")
+	ErrInvalidLogSection           = errors.New("invalid log section")
 	ErrInvalidRequestMethod        = errors.New("invalid request method")
 	ErrNoRequestURI                = errors.New("method must be followed by the request URI")
 	ErrInvalidToken                = errors.New("invalid token")

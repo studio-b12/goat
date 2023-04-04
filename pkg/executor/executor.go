@@ -16,6 +16,7 @@ import (
 	"github.com/studio-b12/goat/pkg/goatfile"
 	"github.com/studio-b12/goat/pkg/requester"
 	"github.com/studio-b12/goat/pkg/util"
+	"github.com/zekrotja/rogu"
 	"github.com/zekrotja/rogu/log"
 )
 
@@ -93,27 +94,33 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 			return
 		}
 
-		for _, req := range gf.Teardown {
-			err := t.executeRequest(eng, req)
+		for _, act := range gf.Teardown {
+			err := t.executeAction(log, eng, act)
 			if err != nil {
-				log.Error().Err(err).Field("req", req).Msg("Teardown step failed")
+				if act.Type() == goatfile.ActionRequest {
+					log.Error().Err(err).Field("req", act).Msg("Teardown step failed")
 
-				// If the returned error comes from the params parsing step, don't
-				// cancel the teardown execution. See the following issue for more information.
-				// https://github.com/studio-b12/goat/issues/9
-				if errs.IsOfType[ParamsParsingError](err) {
-					continue
-				}
+					// If the returned error comes from the params parsing step, don't
+					// cancel the teardown execution. See the following issue for more information.
+					// https://github.com/studio-b12/goat/issues/9
+					if errs.IsOfType[ParamsParsingError](err) {
+						continue
+					}
 
-				if !t.isAbortOnError(req) {
-					errsNoAbort = errsNoAbort.Append(err)
-					continue
+					if !t.isAbortOnError(act.(goatfile.Request)) {
+						errsNoAbort = errsNoAbort.Append(err)
+						continue
+					}
+				} else {
+					log.Error().Err(err).Field("act", act).Msg("Action failed")
 				}
 
 				break
 			}
 
-			log.Info().Field("req", req).Msg("Teardown step completed")
+			if act.Type() == goatfile.ActionRequest {
+				log.Info().Field("req", act).Msg("Teardown step completed")
+			}
 		}
 	}()
 
@@ -122,18 +129,22 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 	if t.isSkip("setup") {
 		log.Warn().Msg("skipping setup steps")
 	} else {
-		for _, req := range gf.Setup {
-			err := t.executeRequest(eng, req)
+		for _, act := range gf.Setup {
+			err := t.executeAction(log, eng, act)
 			if err != nil {
-				log.Error().Err(err).Field("req", req).Msg("Setup step failed")
-				if !t.isAbortOnError(req) {
-					errsNoAbort = errsNoAbort.Append(err)
-					continue
+				if act.Type() == goatfile.ActionRequest {
+					log.Error().Err(err).Field("req", act).Msg("Setup step failed")
+					if !t.isAbortOnError(act.(goatfile.Request)) {
+						errsNoAbort = errsNoAbort.Append(err)
+						continue
+					}
 				}
 				return err
 			}
 
-			log.Info().Field("req", req).Msg("Setup step completed")
+			if act.Type() == goatfile.ActionRequest {
+				log.Info().Field("req", act).Msg("Setup step completed")
+			}
 		}
 	}
 
@@ -142,10 +153,10 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 	if t.isSkip("tests") {
 		log.Warn().Msg("skipping test steps")
 	} else {
-		for _, req := range gf.Tests {
-			err := t.executeTest(req, eng, gf)
+		for _, act := range gf.Tests {
+			err := t.executeTest(act, eng, gf)
 			if err != nil {
-				if !t.isAbortOnError(req) {
+				if act.Type() == goatfile.ActionRequest && !t.isAbortOnError(act.(goatfile.Request)) {
 					errsNoAbort = errsNoAbort.Append(err)
 					continue
 				}
@@ -248,7 +259,11 @@ func (t *Executor) parseGoatfile(path string) (gf goatfile.Goatfile, err error) 
 	return gf, nil
 }
 
-func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatfile.Goatfile) (err error) {
+func (t *Executor) executeTest(
+	act goatfile.Action,
+	eng engine.Engine,
+	gf goatfile.Goatfile,
+) (err error) {
 	var errsNoAbort errs.Errors
 	log := log.Tagged(gf.Path)
 
@@ -261,28 +276,35 @@ func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatf
 		}
 
 		for _, postReq := range gf.TeardownEach {
-			err := t.executeRequest(eng, postReq)
+			err := t.executeAction(log, eng, postReq)
 			if err != nil {
-				log.Error().Err(err).Field("req", req).Msg("Post-Each step failed")
+				if act.Type() == goatfile.ActionRequest {
+					log.Error().Err(err).Field("req", act).Msg("Post-Each step failed")
 
-				err = errs.WithPrefix("post-setup-each step failed:", err)
+					err = errs.WithPrefix("post-setup-each step failed:", err)
 
-				// If the returned error comes from the params parsing step, don't
-				// cancel the teardown-each execution. See the following issue for more information.
-				// https://github.com/studio-b12/goat/issues/9
-				if errs.IsOfType[ParamsParsingError](err) {
+					// If the returned error comes from the params parsing step, don't
+					// cancel the teardown-each execution. See the following issue for more information.
+					// https://github.com/studio-b12/goat/issues/9
+					if errs.IsOfType[ParamsParsingError](err) {
+						continue
+					}
+
+					if t.isAbortOnError(postReq.(goatfile.Request)) {
+						break
+					}
+
+					errsNoAbort = errsNoAbort.Append(err)
 					continue
-				}
-
-				if t.isAbortOnError(postReq) {
+				} else {
+					log.Error().Err(err).Field("act", act).Msg("Action failed")
 					break
 				}
-
-				errsNoAbort = errsNoAbort.Append(err)
-				continue
 			}
 
-			log.Info().Field("req", req).Msg("Teardown-Each step completed")
+			if act.Type() == goatfile.ActionRequest {
+				log.Info().Field("req", act).Msg("Teardown-Each step completed")
+			}
 		}
 	}()
 
@@ -291,41 +313,79 @@ func (t *Executor) executeTest(req goatfile.Request, eng engine.Engine, gf goatf
 	if t.isSkip("setup-each") {
 		log.Warn().Msg("skipping setup-each steps")
 	} else {
-		for _, preReq := range gf.SetupEach {
-			err := t.executeRequest(eng, preReq)
+		for _, preAct := range gf.SetupEach {
+			err := t.executeAction(log, eng, preAct)
 			if err != nil {
-				log.Error().Err(err).Field("req", req).Msg("Setup-Each step failed")
+				if preAct.Type() == goatfile.ActionRequest {
+					log.Error().Err(err).Field("req", act).Msg("Setup-Each step failed")
 
-				err = errs.WithPrefix("Setup-Each step failed:", err)
+					err = errs.WithPrefix("Setup-Each step failed:", err)
 
-				if !t.isAbortOnError(preReq) {
-					errsNoAbort = errsNoAbort.Append(err)
-					continue
+					if !t.isAbortOnError(preAct.(goatfile.Request)) {
+						errsNoAbort = errsNoAbort.Append(err)
+						continue
+					}
 				}
 
 				return err
 			}
 
-			log.Info().Field("req", req).Msg("Setup-Each step completed")
+			if preAct.Type() == goatfile.ActionRequest {
+				log.Info().Field("req", act).Msg("Setup-Each step completed")
+			}
 		}
 	}
 
 	// Actual Test Step
 
-	err = t.executeRequest(eng, req)
+	err = t.executeAction(log, eng, act)
 	if err != nil {
-		log.Error().Err(err).Field("req", req).Msg("Test step failed")
+		if act.Type() == goatfile.ActionRequest {
+			log.Error().Err(err).Field("req", act).Msg("Test step failed")
 
-		if t.isAbortOnError(req) {
+			if !t.isAbortOnError(act.(goatfile.Request)) {
+				return err
+			}
+
+			errsNoAbort = errsNoAbort.Append(err)
+		} else {
 			return err
 		}
-
-		errsNoAbort = errsNoAbort.Append(err)
 	} else {
-		log.Info().Field("req", req).Msg("Test completed")
+		if act.Type() == goatfile.ActionRequest {
+			log.Info().Field("req", act).Msg("Test completed")
+		}
 	}
 
 	return errsNoAbort.Condense()
+}
+
+func (t *Executor) executeAction(log rogu.Logger, eng engine.Engine, act goatfile.Action) (err error) {
+	switch act.Type() {
+	case goatfile.ActionRequest:
+		return t.executeRequest(eng, act.(goatfile.Request))
+	case goatfile.ActionLogSection:
+		const lenSpacerTotal = 100
+		logSection := act.(goatfile.LogSection)
+
+		lenSpacer := lenSpacerTotal - 2 - len(logSection)
+		lenSpacerLeft := lenSpacer / 2
+		lenSpacerRight := lenSpacerLeft
+		if lenSpacer%2 > 0 {
+			lenSpacerRight--
+		}
+
+		log.Info().Msgf("%s %s %s",
+			strings.Repeat("-", lenSpacerLeft),
+			logSection,
+			strings.Repeat("-", lenSpacerRight))
+		return nil
+	default:
+		panic(fmt.Sprintf("An invalid action has been executed: %v\n"+
+			"This should actually never happen. If it does though,"+
+			"please report this issue to https://github.com/studio-b12/goat.",
+			act.Type()))
+	}
 }
 
 func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request) (err error) {

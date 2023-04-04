@@ -36,7 +36,7 @@ GET https://example3.com
 	gf, err := unmarshal(mockFs, contentA, "test", set.Set[string]{})
 	assert.Nil(t, err)
 	assert.Equal(t, Goatfile{
-		Tests: []Request{
+		Tests: []Action{
 			testRequest("GET", "https://example3.com"),
 			testRequest("GET", "https://example2.com"),
 			testRequest("GET", "https://example1.com"),

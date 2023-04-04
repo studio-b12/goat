@@ -9,34 +9,34 @@ import (
 func TestMerge(t *testing.T) {
 	getA := func() Goatfile {
 		return Goatfile{
-			Setup: []Request{
+			Setup: []Action{
 				testRequest("A", "1"),
 				testRequest("A", "2"),
 				testRequest("A", "3"),
 			},
-			Tests: []Request{
+			Tests: []Action{
 				testRequest("A", "4"),
 				testRequest("A", "5"),
 			},
-			Teardown: []Request{},
+			Teardown: []Action{},
 		}
 	}
 
 	getB := func() Goatfile {
 		return Goatfile{
-			Setup: []Request{
+			Setup: []Action{
 				testRequest("B", "1"),
 				testRequest("B", "2"),
 			},
-			SetupEach: []Request{
+			SetupEach: []Action{
 				testRequest("B", "3"),
 			},
-			Tests: []Request{},
-			Teardown: []Request{
+			Tests: []Action{},
+			Teardown: []Action{
 				testRequest("B", "4"),
 				testRequest("B", "5"),
 			},
-			TeardownEach: []Request{
+			TeardownEach: []Action{
 				testRequest("B", "6"),
 			},
 		}
@@ -50,25 +50,25 @@ func TestMerge(t *testing.T) {
 
 		assert.Equal(t, getB(), b)
 		assert.Equal(t, Goatfile{
-			Setup: []Request{
+			Setup: []Action{
 				testRequest("A", "1"),
 				testRequest("A", "2"),
 				testRequest("A", "3"),
 				testRequest("B", "1"),
 				testRequest("B", "2"),
 			},
-			SetupEach: []Request{
+			SetupEach: []Action{
 				testRequest("B", "3"),
 			},
-			Tests: []Request{
+			Tests: []Action{
 				testRequest("A", "4"),
 				testRequest("A", "5"),
 			},
-			Teardown: []Request{
+			Teardown: []Action{
 				testRequest("B", "4"),
 				testRequest("B", "5"),
 			},
-			TeardownEach: []Request{
+			TeardownEach: []Action{
 				testRequest("B", "6"),
 			},
 		}, a)
@@ -82,25 +82,25 @@ func TestMerge(t *testing.T) {
 
 		assert.Equal(t, getA(), a)
 		assert.Equal(t, Goatfile{
-			Setup: []Request{
+			Setup: []Action{
 				testRequest("B", "1"),
 				testRequest("B", "2"),
 				testRequest("A", "1"),
 				testRequest("A", "2"),
 				testRequest("A", "3"),
 			},
-			SetupEach: []Request{
+			SetupEach: []Action{
 				testRequest("B", "3"),
 			},
-			Tests: []Request{
+			Tests: []Action{
 				testRequest("A", "4"),
 				testRequest("A", "5"),
 			},
-			Teardown: []Request{
+			Teardown: []Action{
 				testRequest("B", "4"),
 				testRequest("B", "5"),
 			},
-			TeardownEach: []Request{
+			TeardownEach: []Action{
 				testRequest("B", "6"),
 			},
 		}, b)

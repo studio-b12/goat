@@ -37,11 +37,11 @@ const (
 type Goatfile struct {
 	Imports []string
 
-	Setup        []Request
-	SetupEach    []Request
-	Tests        []Request
-	Teardown     []Request
-	TeardownEach []Request
+	Setup        []Action
+	SetupEach    []Action
+	Tests        []Action
+	Teardown     []Action
+	TeardownEach []Action
 
 	Path string
 }
