@@ -7,6 +7,10 @@ const (
 	ActionLogSection
 )
 
+// Action is used to determine the
+// ActionType of an action definition
+// used to cast the action to the specific
+// Action implementation.
 type Action interface {
 	Type() ActionType
 }
