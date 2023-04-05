@@ -1,0 +1,53 @@
+### Setup
+
+##### Setup Stuff
+
+POST {{.instance}}/some/setup
+
+[Script]
+assert(response.StatusCode === 200);
+
+---
+
+POST {{.instance}}/another/setup
+
+[Script]
+assert(response.StatusCode === 200);
+
+### Tests
+
+GET {{.instance}}/test
+
+[Script]
+assert(response.StatusCode === 200);
+
+##### Test 1
+
+GET {{.instance}}/test
+
+[Script]
+assert(response.StatusCode === 200);
+
+---
+
+##### Test 2
+
+GET {{.instance}}/test
+
+[Script]
+assert(response.StatusCode === 200);
+
+---
+
+GET {{.instance}}/test
+
+[Script]
+assert(response.StatusCode === 200);
+
+---
+
+### Teardown
+##### Soem teardown
+DELETE {{.instance}}/teardown
+[Script]
+assert(response.StatusCode === 200);
