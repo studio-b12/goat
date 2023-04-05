@@ -372,10 +372,11 @@ func (t *Executor) executeAction(log rogu.Logger, eng engine.Engine, act goatfil
 		lenSpacerLeft := lenSpacer / 2
 		lenSpacerRight := lenSpacerLeft
 		if lenSpacer%2 > 0 {
-			lenSpacerRight--
+			lenSpacerRight++
 		}
 
-		log.Info().Msgf("%s %s %s",
+		msg := clr.Print(clr.Format("%s %s %s", clr.ColorFGPurple))
+		log.Info().Msgf(msg,
 			strings.Repeat("-", lenSpacerLeft),
 			logSection,
 			strings.Repeat("-", lenSpacerRight))
