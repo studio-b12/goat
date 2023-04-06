@@ -27,9 +27,9 @@ const (
 	optionNameHeader      = optionName("header")
 	optionNameHeaders     = optionName("headers")
 	optionNameBody        = optionName("body")
+	optionNamePreScript   = optionName("prescript")
 	optionNameScript      = optionName("script")
 	optionNameOptions     = optionName("options")
-	abc                   = optionName("asd")
 )
 
 // Goatfile holds all sections and

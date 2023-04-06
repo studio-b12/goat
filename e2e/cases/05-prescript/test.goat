@@ -1,0 +1,22 @@
+##### No Prescript
+
+GET {{.instance}}/test
+
+[Script]
+assert(response.StatusCode === 200);
+
+##### With Prescript
+
+GET {{.instance}}/{{.path}}
+
+[PreScript]
+var path = "somepath";
+var body = JSON.stringify({"foo": "bar"});
+
+[Body]
+{{.body}}
+
+[Script]
+assert(response.StatusCode === 200);
+assert(response.BodyJson.path === "/somepath");
+assert(response.BodyJson.body_string === '{"foo":"bar"}\n');

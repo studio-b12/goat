@@ -16,11 +16,12 @@ import (
 type Request struct {
 	Opts
 
-	Method string
-	URI    string
-	Header http.Header
-	Body   Data
-	Script Data
+	Method    string
+	URI       string
+	Header    http.Header
+	Body      Data
+	PreScript Data
+	Script    Data
 
 	parsed bool
 }
@@ -30,6 +31,7 @@ var _ Action = (*Request)(nil)
 func newRequest() (r Request) {
 	r.Header = http.Header{}
 	r.Body = NoContent{}
+	r.PreScript = NoContent{}
 	r.Script = NoContent{}
 	return r
 }

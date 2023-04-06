@@ -391,6 +391,18 @@ func (t *Executor) executeAction(log rogu.Logger, eng engine.Engine, act goatfil
 
 func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request) (err error) {
 
+	preScript, err := util.ReadReaderToString(req.PreScript.Reader())
+	if err != nil {
+		return errs.WithPrefix("reading preScript failed:", err)
+	}
+
+	if preScript != "" {
+		err = eng.Run(preScript)
+		if err != nil {
+			return errs.WithPrefix("preScript failed:", err)
+		}
+	}
+
 	state := eng.State()
 	err = req.ParseWithParams(state)
 	if err != nil {
@@ -438,9 +450,11 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request) (err 
 		return errs.WithPrefix("reading script failed:", err)
 	}
 
-	err = eng.Run(script)
-	if err != nil {
-		return errs.WithPrefix("script failed:", err)
+	if script != "" {
+		err = eng.Run(script)
+		if err != nil {
+			return errs.WithPrefix("script failed:", err)
+		}
 	}
 
 	return nil
