@@ -6,7 +6,7 @@ filterBy = ["date", "name", "age"]
 page = 2
 count = 100
 
-[Headers]
+[Header]
 Content-Type: text/plain
 X-Foo: bar
 

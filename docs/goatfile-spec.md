@@ -11,7 +11,7 @@ Section Heading  |  ### Setup
                  |
    Method & URL  |  POST https://example.com
                  |  
-        Headers  |  [Headers]
+        Headers  |  [Header]
                  |  X-Requested-With: XMLHttpRequest
                  |  Content-Type: application/json
                  |  Hash: {{ sha256 .data }}
