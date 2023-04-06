@@ -18,6 +18,27 @@ Name | Type | Default | Description
 `condition` | `boolean` | `true` | Whether or not to execute the request.
 `delay` | `string` | `0` | A duration which is awaited before the request is executed. The duration must be formatted in compatibility to Go's [ParseDuration](https://pkg.go.dev/time#ParseDuration) function.
 
+### `PreScript`
+
+The "PreScript" is executed before the actual request is infused with parameters and executed afterwards. This allows setting request parameters via scripting before the execution of a request.
+
+Example:
+```
+GET https://echo.zekro.de/{{.path}}
+
+[PreScript]
+var path = "somepath";
+var body = JSON.stringify({"foo": "bar"});
+
+[Body]
+{{.body}}
+
+[Script]
+assert(response.StatusCode === 200);
+assert(response.BodyJson.path === "/somepath");
+assert(response.BodyJson.body_string === '{"foo":"bar"}\n');
+```
+
 ## Script Implementation
 
 This implementation is using ECMAScript 5. Inm detail, it is using the [goja](https://github.com/dop251/goja) engine to perform the script part.

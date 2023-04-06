@@ -298,6 +298,13 @@ func (t *Parser) parseBlock(req *requestParseChecker) error {
 		}
 		req.Body = raw
 
+	case optionNamePreScript:
+		raw, err := t.parseRaw()
+		if err != nil {
+			return err
+		}
+		req.PreScript = raw
+
 	case optionNameScript:
 		raw, err := t.parseRaw()
 		if err != nil {

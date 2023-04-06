@@ -372,10 +372,11 @@ func (t *Executor) executeAction(log rogu.Logger, eng engine.Engine, act goatfil
 		lenSpacerLeft := lenSpacer / 2
 		lenSpacerRight := lenSpacerLeft
 		if lenSpacer%2 > 0 {
-			lenSpacerRight--
+			lenSpacerRight++
 		}
 
-		log.Info().Msgf("%s %s %s",
+		msg := clr.Print(clr.Format("%s %s %s", clr.ColorFGPurple))
+		log.Info().Msgf(msg,
 			strings.Repeat("-", lenSpacerLeft),
 			logSection,
 			strings.Repeat("-", lenSpacerRight))
@@ -389,6 +390,18 @@ func (t *Executor) executeAction(log rogu.Logger, eng engine.Engine, act goatfil
 }
 
 func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request) (err error) {
+
+	preScript, err := util.ReadReaderToString(req.PreScript.Reader())
+	if err != nil {
+		return errs.WithPrefix("reading preScript failed:", err)
+	}
+
+	if preScript != "" {
+		err = eng.Run(preScript)
+		if err != nil {
+			return errs.WithPrefix("preScript failed:", err)
+		}
+	}
 
 	state := eng.State()
 	err = req.ParseWithParams(state)
@@ -437,9 +450,11 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request) (err 
 		return errs.WithPrefix("reading script failed:", err)
 	}
 
-	err = eng.Run(script)
-	if err != nil {
-		return errs.WithPrefix("script failed:", err)
+	if script != "" {
+		err = eng.Run(script)
+		if err != nil {
+			return errs.WithPrefix("script failed:", err)
+		}
 	}
 
 	return nil

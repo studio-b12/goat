@@ -1,3 +1,4 @@
 [VERSION]
 
-- Added Log Sections [#23]
+- Add `[PreScript]` request block. [#20]
+- Fix log section spacers and add color to them. 🎨
