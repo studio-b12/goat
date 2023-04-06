@@ -38,8 +38,18 @@ LOGIN https://example3.com
 -----------------------
 		
 CHECK https://example4.com
+
+[Body]
+abc
 		
 ---
+
+CHECK https://example5.com
+
+[Body]
+abc
+		
+------
 		`
 
 		p := stringParser(raw)
@@ -47,7 +57,7 @@ CHECK https://example4.com
 
 		assert.Nil(t, err, err)
 
-		assert.Equal(t, 4, len(res.Tests))
+		assert.Equal(t, 5, len(res.Tests))
 
 		assert.Equal(t, "GET", res.Tests[0].(Request).Method)
 		assert.Equal(t, "https://example1.com", res.Tests[0].(Request).URI)
@@ -60,6 +70,9 @@ CHECK https://example4.com
 
 		assert.Equal(t, "CHECK", res.Tests[3].(Request).Method)
 		assert.Equal(t, "https://example4.com", res.Tests[3].(Request).URI)
+
+		assert.Equal(t, "CHECK", res.Tests[4].(Request).Method)
+		assert.Equal(t, "https://example5.com", res.Tests[4].(Request).URI)
 	})
 }
 

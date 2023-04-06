@@ -413,6 +413,12 @@ func (t *Parser) parseRaw() (Data, error) {
 	for {
 		if !inEscape {
 			if out.Len() > 3 && string(out.Bytes()[out.Len()-4:]) == "\n---" {
+				for {
+					if t.s.read() != '-' {
+						break
+					}
+				}
+				t.s.unread()
 				t.buf.tok = tokDELIMITER
 				t.buf.lit = ""
 				t.unscan()
