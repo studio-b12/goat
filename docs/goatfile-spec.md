@@ -9,6 +9,8 @@ A Goatfile is an UTF-8 encoded plain text file with the file extension `.goat`.
                  |
 Section Heading  |  ### Setup
                  |
+Context Section  |  ##### Upload Tests
+                 |
    Method & URL  |  POST https://example.com
                  |  
         Headers  |  [Header]
@@ -63,6 +65,10 @@ A Goatfile consists of sections containing one or more requests. Each section ha
 - `Teardown-Each`: Requests which will be executed after each single request in `Tests`. Will also be executed if a `Setup-Each` request fails.
 
 When two Goatfiles are merged (for example on importing one into another), all requests in all sections of one file are appended to the requests in the sections of the other file. The specific order of the sections in the Goatfile is irrelevant.
+
+### Context Sections
+
+These sections do not alter the execution of the specified requests in a batch and are just there to be used to provide additional context during the execution. For example, these sections can be used to be logged to visualy separate different sections in a batch.
 
 ### Requests
 
