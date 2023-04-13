@@ -192,6 +192,8 @@ func (t *Parser) parseRequest(section *[]Action) (err error) {
 
 	// parse header
 
+	req.PosLine = t.s.line + 1
+
 	tok, lit := t.scan()
 	if tok != tokIDENT && tok != tokSTRING || lit == "" {
 		return ErrInvalidRequestMethod
