@@ -401,7 +401,6 @@ func (t *Executor) executeAction(
 
 func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf goatfile.Goatfile) (err error) {
 	req.Merge(gf.Defaults)
-	fmt.Println(gf.Defaults)
 
 	preScript, err := util.ReadReaderToString(req.PreScript.Reader())
 	if err != nil {

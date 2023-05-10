@@ -67,14 +67,12 @@ func (t Response) String() string {
 	}
 
 	if t.BodyJson != nil {
-		fmt.Fprintln(&sb)
 		enc := json.NewEncoder(&sb)
 		enc.SetIndent("", "  ")
 		// This shouldn't error because it was decoded by
 		// via json.Unmarshal before.
 		enc.Encode(t.BodyJson)
 	} else if len(t.Body) != 0 {
-		fmt.Fprintln(&sb)
 		sb.WriteString(t.Body)
 	}
 
