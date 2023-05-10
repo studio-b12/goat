@@ -2,7 +2,6 @@
 
 which "echo-server" &> /dev/null || {
     go install github.com/zekroTJA/echo/cmd/echo@latest
-    mv "$GOBIN/echo" "$GOBIN/echo-server"
 }
 
 which "goat" &> /dev/null || {
@@ -14,7 +13,7 @@ export ECHO_VERBOSITY=4
 
 export GOAT_INSTANCE=http://localhost:8080
 
-echo-server &> /dev/null &
+"$HOME/go/bin/echo" &> /dev/null &
 sleep 1
 
 cd $(dirname $0)
