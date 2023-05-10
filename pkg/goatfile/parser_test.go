@@ -1309,6 +1309,187 @@ script stuff 3`
 	})
 }
 
+func TestDefaults(t *testing.T) {
+	t.Run("general", func(t *testing.T) {
+		const raw = `
+### Defaults
+
+// Some headers
+[Header]
+foo: bar
+hello: world
+
+[Options]
+answer = 42 // some comment
+some = "value"
+
+[Body]
+hello
+world
+
+[PreScript]
+some pre script
+
+[Script]
+some script
+`
+
+		p := stringParser(raw)
+		gf, err := p.Parse()
+		assert.Nil(t, err, err)
+		assert.Equal(t, "bar", gf.Defaults.Header.Get("foo"))
+		assert.Equal(t, "world", gf.Defaults.Header.Get("hello"))
+		assert.Equal(t, int64(42), gf.Defaults.Options["answer"])
+		assert.Equal(t, "value", gf.Defaults.Options["some"])
+		assert.Equal(t, StringContent("hello\nworld\n"), gf.Defaults.Body)
+		assert.Equal(t, StringContent("some pre script\n"), gf.Defaults.PreScript)
+		assert.Equal(t, StringContent("some script\n"), gf.Defaults.Script)
+	})
+
+	t.Run("with-following-section", func(t *testing.T) {
+		const raw = `
+### Defaults
+
+// Some headers
+[Header]
+foo: bar
+hello: world
+
+[Script]
+some script
+
+### Tests
+
+GET https://exmaple.com
+---
+GET https://exmaple.com
+`
+
+		p := stringParser(raw)
+		gf, err := p.Parse()
+		assert.Nil(t, err, err)
+		assert.Equal(t, "bar", gf.Defaults.Header.Get("foo"))
+		assert.Equal(t, "world", gf.Defaults.Header.Get("hello"))
+		assert.Equal(t, StringContent("some script\n"), gf.Defaults.Script)
+	})
+
+	t.Run("with-following-splitter+section", func(t *testing.T) {
+		const raw = `
+### Defaults
+
+// Some headers
+[Header]
+foo: bar
+hello: world
+
+[Script]
+some script
+
+---
+
+### Tests
+
+GET https://exmaple.com
+---
+GET https://exmaple.com
+`
+
+		p := stringParser(raw)
+		gf, err := p.Parse()
+		assert.Nil(t, err, err)
+		assert.Equal(t, "bar", gf.Defaults.Header.Get("foo"))
+		assert.Equal(t, "world", gf.Defaults.Header.Get("hello"))
+		assert.Equal(t, StringContent("some script\n"), gf.Defaults.Script)
+	})
+
+	t.Run("with-following-splitter", func(t *testing.T) {
+		const raw = `
+### Defaults
+
+// Some headers
+[Header]
+foo: bar
+hello: world
+
+[Script]
+some script
+
+---
+
+GET https://exmaple.com
+---
+GET https://exmaple.com
+`
+
+		p := stringParser(raw)
+		gf, err := p.Parse()
+		assert.Nil(t, err, err)
+		assert.Equal(t, "bar", gf.Defaults.Header.Get("foo"))
+		assert.Equal(t, "world", gf.Defaults.Header.Get("hello"))
+		assert.Equal(t, StringContent("some script\n"), gf.Defaults.Script)
+	})
+
+	t.Run("in-between", func(t *testing.T) {
+		const raw = `
+### Tests
+
+GET https://exmaple.com
+
+### Defaults
+
+// Some headers
+[Header]
+foo: bar
+hello: world
+
+[Script]
+some script
+
+### Setup
+
+GET https://exmaple.com
+`
+
+		p := stringParser(raw)
+		gf, err := p.Parse()
+		assert.Nil(t, err, err)
+		assert.Equal(t, "bar", gf.Defaults.Header.Get("foo"))
+		assert.Equal(t, "world", gf.Defaults.Header.Get("hello"))
+		assert.Equal(t, StringContent("some script\n"), gf.Defaults.Script)
+	})
+
+	t.Run("multiple", func(t *testing.T) {
+		const raw = `
+### Defaults
+
+// Some headers
+[Header]
+foo: bar
+hello: world
+
+[Script]
+some script
+
+### Defaults
+
+// Some headers
+[Header]
+foo: bar
+hello: moon
+
+[Script]
+some script 2
+`
+
+		p := stringParser(raw)
+		gf, err := p.Parse()
+		assert.Nil(t, err, err)
+		assert.Equal(t, "bar", gf.Defaults.Header.Get("foo"))
+		assert.Equal(t, "moon", gf.Defaults.Header.Get("hello"))
+		assert.Equal(t, StringContent("some script 2\n"), gf.Defaults.Script)
+	})
+}
+
 // --- Helpers --------------------------------------------
 
 func stringParser(raw string) *Parser {

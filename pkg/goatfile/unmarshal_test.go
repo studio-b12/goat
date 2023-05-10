@@ -37,9 +37,9 @@ GET https://example3.com
 	assert.Nil(t, err)
 	assert.Equal(t, Goatfile{
 		Tests: []Action{
-			testRequest("GET", "https://example3.com"),
-			testRequest("GET", "https://example2.com"),
-			testRequest("GET", "https://example1.com"),
+			testRequest("GET", "https://example3.com", 2),
+			testRequest("GET", "https://example2.com", 4),
+			testRequest("GET", "https://example1.com", 4),
 		},
 	}, gf)
 }

@@ -134,12 +134,59 @@ func (t Request) ToHttpRequest() (*http.Request, error) {
 	return req, nil
 }
 
+func (t *Request) Merge(with *Request) {
+	if t == nil || with == nil {
+		return
+	}
+
+	if len(with.Header) > 0 {
+		newHeaders := t.Header.Clone()
+		for key, vals := range with.Header {
+			for _, val := range vals {
+				newHeaders.Add(key, val)
+			}
+		}
+		t.Header = newHeaders
+	}
+
+	if len(with.QueryParams) > 0 {
+		t.QueryParams = mergeMaps(t.QueryParams, with.QueryParams)
+	}
+
+	if len(with.Options) > 0 {
+		t.Options = mergeMaps(t.Options, with.Options)
+	}
+
+	if IsNoContent(t.Body) && !IsNoContent(with.Body) {
+		t.Body = with.Body
+	}
+
+	if IsNoContent(t.PreScript) && !IsNoContent(with.PreScript) {
+		t.PreScript = with.PreScript
+	}
+
+	if IsNoContent(t.Script) && !IsNoContent(with.Script) {
+		t.Script = with.Script
+	}
+}
+
 func (t Request) String() string {
 	return fmt.Sprintf("%s %s", t.Method, t.URI)
 }
 
 func toString(v any) string {
 	return fmt.Sprintf("%v", v)
+}
+
+func mergeMaps[TK comparable, TV any](src, base map[TK]TV) map[TK]TV {
+	new := map[TK]TV{}
+	for key, val := range base {
+		new[key] = val
+	}
+	for key, val := range src {
+		new[key] = val
+	}
+	return new
 }
 
 type requestParseChecker struct {

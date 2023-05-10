@@ -60,3 +60,8 @@ func (t FileContent) Reader() (r io.Reader, err error) {
 	r, err = os.Open(pth)
 	return r, err
 }
+
+func IsNoContent(d Data) bool {
+	_, ok := d.(NoContent)
+	return ok
+}

@@ -18,6 +18,7 @@ const (
 	sectionNameTests        = sectionName("tests")
 	sectionNameTeardown     = sectionName("teardown")
 	sectionNameTeardownEach = sectionName("teardown-each")
+	sectionNameDefaults     = sectionName("defaults")
 )
 
 type optionName string
@@ -37,6 +38,8 @@ const (
 type Goatfile struct {
 	Imports []string
 
+	Defaults *Request
+
 	Setup        []Action
 	SetupEach    []Action
 	Tests        []Action
@@ -49,6 +52,12 @@ type Goatfile struct {
 // Merge appends all requests in all sections of with
 // to the current Goatfile.
 func (t *Goatfile) Merge(with Goatfile) {
+	if t.Defaults == nil && with.Defaults != nil {
+		t.Defaults = with.Defaults
+	} else {
+		t.Defaults.Merge(with.Defaults)
+	}
+
 	t.Setup = append(t.Setup, with.Setup...)
 	t.SetupEach = append(t.SetupEach, with.SetupEach...)
 	t.Tests = append(t.Tests, with.Tests...)
