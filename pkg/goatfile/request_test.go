@@ -63,3 +63,144 @@ func TestParseWithParams(t *testing.T) {
 		assert.Nil(t, err, err)
 	})
 }
+
+func TestMerge_request(t *testing.T) {
+	t.Run("headers", func(t *testing.T) {
+		def := newRequest()
+		def.Header.Add("foo", "bar")
+		def.Header.Add("hello", "world")
+
+		req := newRequest()
+		req.Header.Add("bazz", "fuzz")
+		req.Header.Add("hello", "moon")
+
+		req.Merge(&def)
+
+		assert.Equal(t, "bar",
+			req.Header.Get("foo"))
+		assert.Equal(t, "fuzz",
+			req.Header.Get("bazz"))
+		assert.Equal(t, "moon",
+			req.Header.Get("hello"))
+	})
+
+	t.Run("queryParams", func(t *testing.T) {
+		def := newRequest()
+		def.QueryParams = make(map[string]any)
+		def.QueryParams["foo"] = "bar"
+		def.QueryParams["hello"] = "world"
+
+		req := newRequest()
+		req.QueryParams = make(map[string]any)
+		req.QueryParams["bazz"] = "fuzz"
+		req.QueryParams["hello"] = "moon"
+
+		req.Merge(&def)
+
+		assert.Equal(t, "bar",
+			req.QueryParams["foo"])
+		assert.Equal(t, "fuzz",
+			req.QueryParams["bazz"])
+		assert.Equal(t, "moon",
+			req.QueryParams["hello"])
+	})
+
+	t.Run("options", func(t *testing.T) {
+		def := newRequest()
+		def.Options = make(map[string]any)
+		def.Options["foo"] = "bar"
+		def.Options["hello"] = "world"
+
+		req := newRequest()
+		req.Options = make(map[string]any)
+		req.Options["bazz"] = "fuzz"
+		req.Options["hello"] = "moon"
+
+		req.Merge(&def)
+
+		assert.Equal(t, "bar",
+			req.Options["foo"])
+		assert.Equal(t, "fuzz",
+			req.Options["bazz"])
+		assert.Equal(t, "moon",
+			req.Options["hello"])
+	})
+
+	t.Run("body", func(t *testing.T) {
+		def := newRequest()
+		def.Body = StringContent("foo bar")
+		req := newRequest()
+		req.Merge(&def)
+		assert.Equal(t, StringContent("foo bar"), req.Body)
+
+		def = newRequest()
+		req = newRequest()
+		req.Body = StringContent("foo bar")
+		req.Merge(&def)
+		assert.Equal(t, StringContent("foo bar"), req.Body)
+
+		def = newRequest()
+		def.Body = StringContent("hello world")
+		req = newRequest()
+		req.Body = StringContent("foo bar")
+		req.Merge(&def)
+		assert.Equal(t, StringContent("foo bar"), req.Body)
+
+		def = newRequest()
+		req = newRequest()
+		req.Merge(&def)
+		assert.Equal(t, NoContent{}, req.Body)
+	})
+
+	t.Run("preScript", func(t *testing.T) {
+		def := newRequest()
+		def.PreScript = StringContent("foo bar")
+		req := newRequest()
+		req.Merge(&def)
+		assert.Equal(t, StringContent("foo bar"), req.PreScript)
+
+		def = newRequest()
+		req = newRequest()
+		req.PreScript = StringContent("foo bar")
+		req.Merge(&def)
+		assert.Equal(t, StringContent("foo bar"), req.PreScript)
+
+		def = newRequest()
+		def.PreScript = StringContent("hello world")
+		req = newRequest()
+		req.PreScript = StringContent("foo bar")
+		req.Merge(&def)
+		assert.Equal(t, StringContent("foo bar"), req.PreScript)
+
+		def = newRequest()
+		req = newRequest()
+		req.Merge(&def)
+		assert.Equal(t, NoContent{}, req.PreScript)
+	})
+
+	t.Run("script", func(t *testing.T) {
+		def := newRequest()
+		def.Script = StringContent("foo bar")
+		req := newRequest()
+		req.Merge(&def)
+		assert.Equal(t, StringContent("foo bar"), req.Script)
+
+		def = newRequest()
+		req = newRequest()
+		req.Script = StringContent("foo bar")
+		req.Merge(&def)
+		assert.Equal(t, StringContent("foo bar"), req.Script)
+
+		def = newRequest()
+		def.Script = StringContent("hello world")
+		req = newRequest()
+		req.Script = StringContent("foo bar")
+		req.Merge(&def)
+		assert.Equal(t, StringContent("foo bar"), req.Script)
+
+		def = newRequest()
+		req = newRequest()
+		req.Merge(&def)
+		assert.Equal(t, NoContent{}, req.Script)
+	})
+}

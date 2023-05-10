@@ -95,7 +95,7 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 		}
 
 		for _, act := range gf.Teardown {
-			err := t.executeAction(log, eng, act)
+			err := t.executeAction(log, eng, act, gf)
 			if err != nil {
 				if act.Type() == goatfile.ActionRequest {
 					log.Error().Err(err).Field("req", act).Msg("Teardown step failed")
@@ -130,7 +130,7 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 		log.Warn().Msg("skipping setup steps")
 	} else {
 		for _, act := range gf.Setup {
-			err := t.executeAction(log, eng, act)
+			err := t.executeAction(log, eng, act, gf)
 			if err != nil {
 				if act.Type() == goatfile.ActionRequest {
 					log.Error().Err(err).Field("req", act).Msg("Setup step failed")
@@ -276,7 +276,7 @@ func (t *Executor) executeTest(
 		}
 
 		for _, postReq := range gf.TeardownEach {
-			err := t.executeAction(log, eng, postReq)
+			err := t.executeAction(log, eng, postReq, gf)
 			if err != nil {
 				if act.Type() == goatfile.ActionRequest {
 					log.Error().Err(err).Field("req", act).Msg("Post-Each step failed")
@@ -314,7 +314,7 @@ func (t *Executor) executeTest(
 		log.Warn().Msg("skipping setup-each steps")
 	} else {
 		for _, preAct := range gf.SetupEach {
-			err := t.executeAction(log, eng, preAct)
+			err := t.executeAction(log, eng, preAct, gf)
 			if err != nil {
 				if preAct.Type() == goatfile.ActionRequest {
 					log.Error().Err(err).Field("req", act).Msg("Setup-Each step failed")
@@ -338,7 +338,7 @@ func (t *Executor) executeTest(
 
 	// Actual Test Step
 
-	err = t.executeAction(log, eng, act)
+	err = t.executeAction(log, eng, act, gf)
 	if err != nil {
 		if act.Type() == goatfile.ActionRequest {
 			log.Error().Err(err).Field("req", act).Msg("Test step failed")
@@ -360,10 +360,20 @@ func (t *Executor) executeTest(
 	return errsNoAbort.Condense()
 }
 
-func (t *Executor) executeAction(log rogu.Logger, eng engine.Engine, act goatfile.Action) (err error) {
+func (t *Executor) executeAction(
+	log rogu.Logger,
+	eng engine.Engine,
+	act goatfile.Action,
+	gf goatfile.Goatfile,
+) (err error) {
 	switch act.Type() {
 	case goatfile.ActionRequest:
-		return t.executeRequest(eng, act.(goatfile.Request))
+		req := act.(goatfile.Request)
+		err = t.executeRequest(eng, req, gf)
+		if err != nil {
+			err = errs.WithSuffix(err, fmt.Sprintf("(%s:%d)", gf.Path, req.PosLine))
+		}
+		return err
 	case goatfile.ActionLogSection:
 		const lenSpacerTotal = 100
 		logSection := act.(goatfile.LogSection)
@@ -389,7 +399,9 @@ func (t *Executor) executeAction(log rogu.Logger, eng engine.Engine, act goatfil
 	}
 }
 
-func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request) (err error) {
+func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf goatfile.Goatfile) (err error) {
+	req.Merge(gf.Defaults)
+	fmt.Println(gf.Defaults)
 
 	preScript, err := util.ReadReaderToString(req.PreScript.Reader())
 	if err != nil {

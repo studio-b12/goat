@@ -1,6 +1,6 @@
 # https://taskfile.dev
 
-version: '3'
+version: "3"
 
 tasks:
   default:
@@ -19,7 +19,7 @@ tasks:
     cmds:
       - bash scripts/version.sh
       - defer: git checkout internal/version/version.go
-      - go build -v -o $GOBIN/goat cmd/goat/main.go
+      - go build -v -o $HOME/go/bin/goat cmd/goat/main.go
 
   run:
     desc: "Compiles and runs goat"
@@ -75,10 +75,9 @@ tasks:
       - mockgen
     cmds:
       - staticcheck -checks all,-ST1000,-ST1022,-ST1003 ./...
-      
+
   bundle:
-    desc:
-      Builds binaries for different architectures and bundles the 
+    desc: Builds binaries for different architectures and bundles the
       current directory into a gzipped tarball.
     deps:
       - release
@@ -90,5 +89,5 @@ tasks:
       - sh: which mockgen
         msg: mockgen is not installed!
     cmds:
-      - '[ -d mocks ] || mkdir mocks'
+      - "[ -d mocks ] || mkdir mocks"
       - mockgen -package mocks io/fs FS,File,FileInfo > mocks/fs.go

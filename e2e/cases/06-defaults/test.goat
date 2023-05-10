@@ -1,0 +1,15 @@
+### Defaults
+
+[Header]
+foo: bar
+
+[Body]
+some body
+
+### Tests
+
+GET {{.instance}}/
+
+[Script]
+assert(response.BodyJson.headers["Foo"] == "bar");
+assert(response.BodyJson.body_string == "some body\n");

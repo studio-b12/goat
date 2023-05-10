@@ -140,12 +140,15 @@ func (t *Parser) parseUse(gf *Goatfile) error {
 	return nil
 }
 
-func (t *Parser) parseSection(gf *Goatfile) error {
+func (t *Parser) parseSection(gf *Goatfile) (err error) {
 	name := strings.TrimSpace(t.s.readToLF())
 
 	var r *[]Action
 
 	switch sectionName(strings.ToLower(name)) {
+	case sectionNameDefaults:
+		gf.Defaults, err = t.parseDefaults()
+		return err
 	case sectionNameSetup:
 		r = &gf.Setup
 	case sectionNameSetupEach:
@@ -191,6 +194,8 @@ func (t *Parser) parseRequest(section *[]Action) (err error) {
 	req := newRequest()
 
 	// parse header
+
+	req.PosLine = t.s.line + 1
 
 	tok, lit := t.scan()
 	if tok != tokIDENT && tok != tokSTRING || lit == "" {
@@ -238,6 +243,40 @@ loop:
 
 	*section = append(*section, req)
 	return nil
+}
+
+func (t *Parser) parseDefaults() (*Request, error) {
+	req := newRequest()
+	ck := wrapIntoRequestParseChecker(&req)
+
+	var err error
+
+loop:
+	for {
+		tok, _ := t.scan()
+
+		switch tok {
+		case tokBLOCKSTART:
+			err = t.parseBlock(ck)
+
+		case tokWS, tokLF:
+			continue loop
+		case tokEOF, tokSECTION, tokLOGSECTION:
+			t.unscan()
+			break loop
+		case tokDELIMITER:
+			break loop
+
+		default:
+			err = errs.WithSuffix(ErrInvalidToken, "(request)")
+		}
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &req, nil
 }
 
 func (t *Parser) parseBlock(req *requestParseChecker) error {
@@ -413,6 +452,12 @@ func (t *Parser) parseRaw() (Data, error) {
 	for {
 		if !inEscape {
 			if out.Len() > 3 && string(out.Bytes()[out.Len()-4:]) == "\n---" {
+				for {
+					if t.s.read() != '-' {
+						break
+					}
+				}
+				t.s.unread()
 				t.buf.tok = tokDELIMITER
 				t.buf.lit = ""
 				t.unscan()

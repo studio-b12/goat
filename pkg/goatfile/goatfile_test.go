@@ -7,8 +7,12 @@ import (
 )
 
 func TestMerge(t *testing.T) {
+	def := newRequest()
+	def.Header.Add("foo", "bar")
+
 	getA := func() Goatfile {
 		return Goatfile{
+			Defaults: &def,
 			Setup: []Action{
 				testRequest("A", "1"),
 				testRequest("A", "2"),
@@ -50,6 +54,7 @@ func TestMerge(t *testing.T) {
 
 		assert.Equal(t, getB(), b)
 		assert.Equal(t, Goatfile{
+			Defaults: &def,
 			Setup: []Action{
 				testRequest("A", "1"),
 				testRequest("A", "2"),
@@ -82,6 +87,7 @@ func TestMerge(t *testing.T) {
 
 		assert.Equal(t, getA(), a)
 		assert.Equal(t, Goatfile{
+			Defaults: &def,
 			Setup: []Action{
 				testRequest("B", "1"),
 				testRequest("B", "2"),
@@ -109,9 +115,12 @@ func TestMerge(t *testing.T) {
 
 // --- Helpers ---
 
-func testRequest(method, uri string) Request {
+func testRequest(method, uri string, pos ...int) Request {
 	r := newRequest()
 	r.Method = method
 	r.URI = uri
+	if len(pos) > 0 {
+		r.PosLine = pos[0]
+	}
 	return r
 }

@@ -66,6 +66,8 @@ A Goatfile consists of sections containing one or more requests. Each section ha
 
 When two Goatfiles are merged (for example on importing one into another), all requests in all sections of one file are appended to the requests in the sections of the other file. The specific order of the sections in the Goatfile is irrelevant.
 
+A special section also exist called `Defaults`, which can contain different optional blocks. The values in these blocks will be used as default values for all other requests in this batch. For single-value fields like `[Body]`, `[PreBody]` or `[Script]`, the specified value in a request overwrites the default value. Otherwise, the value specified in the defaults will be applied to the request. For multi-value fields like `[Options]`, `[Header]` or `[QueryParams]`, the values of these will be merged where existing values overwrite default values.
+
 ### Context Sections
 
 These sections do not alter the execution of the specified requests in a batch and are just there to be used to provide additional context during the execution. For example, these sections can be used to be logged to visualy separate different sections in a batch.
