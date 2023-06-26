@@ -54,7 +54,7 @@ goat has some advantages versus common tools like Postman or Insomnia.
 
 If you have the Go toolchain installed, you can simply install the tool via `go install`.
 ```
-go install github.com/studio-b12/goat/cmd/goat
+go install github.com/studio-b12/goat/cmd/goat@latest
 ```
 
 Otherwise, you can also download the binaries from the [Releases Page](https://github.com/studio-b12/goat/releases).
