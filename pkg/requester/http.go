@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+
+	"github.com/zekrotja/rogu/log"
 )
 
 // noSetWrapper wraps a cookiejar where no
@@ -57,6 +59,8 @@ func (t HttpWithCookies) Do(req *http.Request, opt Options) (*http.Response, err
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debug().Field("cookies", jar.Cookies(req.URL)).Send()
 
 	client := *t.client
 	client.Jar = jar
