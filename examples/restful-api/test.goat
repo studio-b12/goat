@@ -1,11 +1,16 @@
+### Defaults
+
+[Header]
+Content-Type: application/json
+Accept: application/json
+
+---
+
 ### Setup
 
 // Create an entry for Cyberpunk 2077.
 
 POST https://api.restful-api.dev/objects
-
-[Header]
-Content-Type: application/json
 
 [Body]
 {
@@ -29,9 +34,6 @@ var game1Id = response.BodyJson.id;
 // Create an entry for Cult of the Lamb.
 
 POST https://api.restful-api.dev/objects
-
-[Header]
-Content-Type: application/json
 
 [Body]
 {
