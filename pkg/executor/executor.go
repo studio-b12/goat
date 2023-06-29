@@ -94,6 +94,7 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 			return
 		}
 
+		printSeparator("TEARDOWN")
 		for _, act := range gf.Teardown {
 			err := t.executeAction(log, eng, act, gf)
 			if err != nil {
@@ -129,6 +130,7 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 	if t.isSkip("setup") {
 		log.Warn().Msg("skipping setup steps")
 	} else {
+		printSeparator("SETUP")
 		for _, act := range gf.Setup {
 			err := t.executeAction(log, eng, act, gf)
 			if err != nil {
@@ -153,6 +155,7 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 	if t.isSkip("tests") {
 		log.Warn().Msg("skipping test steps")
 	} else {
+		printSeparator("TESTS")
 		for _, act := range gf.Tests {
 			err := t.executeTest(act, eng, gf)
 			if err != nil {
@@ -372,21 +375,8 @@ func (t *Executor) executeAction(
 		}
 		return err
 	case goatfile.ActionLogSection:
-		const lenSpacerTotal = 100
 		logSection := act.(goatfile.LogSection)
-
-		lenSpacer := lenSpacerTotal - 2 - len(logSection)
-		lenSpacerLeft := lenSpacer / 2
-		lenSpacerRight := lenSpacerLeft
-		if lenSpacer%2 > 0 {
-			lenSpacerRight++
-		}
-
-		msg := clr.Print(clr.Format("%s %s %s", clr.ColorFGPurple))
-		log.Info().Msgf(msg,
-			strings.Repeat("-", lenSpacerLeft),
-			logSection,
-			strings.Repeat("-", lenSpacerRight))
+		printSeparator(string(logSection))
 		return nil
 	default:
 		panic(fmt.Sprintf("An invalid action has been executed: %v\n"+
