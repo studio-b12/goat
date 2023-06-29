@@ -8,6 +8,8 @@ import (
 	"github.com/zekrotja/rogu/log"
 )
 
+var logger = log.Tagged("requester")
+
 // noSetWrapper wraps a cookiejar where no
 // cookies can be set by the response.
 type noSetWrapper struct {
@@ -60,12 +62,27 @@ func (t HttpWithCookies) Do(req *http.Request, opt Options) (*http.Response, err
 		return nil, err
 	}
 
-	log.Debug().Field("cookies", jar.Cookies(req.URL)).Send()
+	logger.Debug().Fields(
+		"method", req.Method,
+		"url", req.URL,
+		"header", req.Header,
+		"cookies", jar.Cookies(req.URL),
+	).Msg("Sending request ...")
 
 	client := *t.client
 	client.Jar = jar
 
-	return client.Do(req)
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Debug().Fields(
+		"statusCode", res.StatusCode,
+		"header", res.Header,
+	).Msg("Received response")
+
+	return res, nil
 }
 
 // getJar takes a cookiejar from the internal jar map
