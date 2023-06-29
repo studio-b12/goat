@@ -33,14 +33,15 @@ GET https://example3.com
 	mockFs.EXPECT().Open("test/b/b.goat").Return(mockFileB, nil)
 	mockFs.EXPECT().Open("test/c.goat").Return(mockFileC, nil)
 
-	gf, err := unmarshal(mockFs, contentA, "test", set.Set[string]{})
+	gf, err := unmarshal(mockFs, contentA, "test/test.goat", set.Set[string]{})
 	assert.Nil(t, err)
 	assert.Equal(t, Goatfile{
 		Tests: []Action{
-			testRequest("GET", "https://example3.com", 2),
-			testRequest("GET", "https://example2.com", 4),
-			testRequest("GET", "https://example1.com", 4),
+			testRequestWithPath("GET", "https://example3.com", "test/c.goat", 2),
+			testRequestWithPath("GET", "https://example2.com", "test/b/b.goat", 4),
+			testRequestWithPath("GET", "https://example1.com", "test/test.goat", 4),
 		},
+		Path: "test/test.goat",
 	}, gf)
 }
 
@@ -65,7 +66,7 @@ GET https://example2.com
 		mockFs.EXPECT().Open("test/b/b.goat").Return(mockFileB, nil)
 		mockFs.EXPECT().Open("test/c.goat").Return(nil, errNotFound)
 
-		_, err := unmarshal(mockFs, contentA, "test", set.Set[string]{})
+		_, err := unmarshal(mockFs, contentA, "test/test.goat", set.Set[string]{})
 		assert.ErrorIs(t, err, errNotFound, err)
 	})
 
@@ -90,7 +91,7 @@ GET https://example2.com
 		mockFs.EXPECT().Open("test/b/b.goat").Return(mockFileB, nil)
 		mockFs.EXPECT().Open("test/c.goat").Return(mockFileC, nil)
 
-		_, err := unmarshal(mockFs, contentA, "test", set.Set[string]{})
+		_, err := unmarshal(mockFs, contentA, "test/test.goat", set.Set[string]{})
 		assert.ErrorIs(t, err, errReadError, err)
 	})
 }
@@ -120,7 +121,7 @@ GET https://example3.com
 	mockFs.EXPECT().Open("test/b/b.goat").Return(mockFileB, nil)
 	mockFs.EXPECT().Open("test/c.goat").Return(mockFileC, nil)
 
-	_, err := unmarshal(mockFs, contentA, "test", set.Set[string]{})
+	_, err := unmarshal(mockFs, contentA, "test/a.goat", set.Set[string]{})
 	assert.ErrorIs(t, err, ErrMultiImport)
 }
 

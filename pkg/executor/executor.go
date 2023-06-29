@@ -243,8 +243,7 @@ func (t *Executor) parseGoatfile(path string) (gf goatfile.Goatfile, err error) 
 		return goatfile.Goatfile{}, errs.WithPrefix("failed reading file:", err)
 	}
 
-	relCurrDir := filepath.Dir(path)
-	gf, err = goatfile.Unmarshal(string(data), relCurrDir)
+	gf, err = goatfile.Unmarshal(string(data), path)
 	if err != nil {
 		if errs.IsOfType[goatfile.ParseError](err) {
 			// TODO: Better wrap this error for visualization and
@@ -253,8 +252,6 @@ func (t *Executor) parseGoatfile(path string) (gf goatfile.Goatfile, err error) 
 		}
 		return goatfile.Goatfile{}, errs.WithPrefix(fmt.Sprintf("failed parsing goatfile %s:", path), err)
 	}
-
-	gf.Path = path
 
 	return gf, nil
 }
@@ -371,7 +368,7 @@ func (t *Executor) executeAction(
 		req := act.(goatfile.Request)
 		err = t.executeRequest(eng, req, gf)
 		if err != nil {
-			err = errs.WithSuffix(err, fmt.Sprintf("(%s:%d)", gf.Path, req.PosLine))
+			err = errs.WithSuffix(err, fmt.Sprintf("(%s:%d)", req.Path, req.PosLine))
 		}
 		return err
 	case goatfile.ActionLogSection:

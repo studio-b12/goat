@@ -63,6 +63,8 @@ func (t *Goatfile) Merge(with Goatfile) {
 	t.Tests = append(t.Tests, with.Tests...)
 	t.Teardown = append(t.Teardown, with.Teardown...)
 	t.TeardownEach = append(t.TeardownEach, with.TeardownEach...)
+
+	t.Path = with.Path
 }
 
 // String returns the Goatfile as JSON encoded string.
