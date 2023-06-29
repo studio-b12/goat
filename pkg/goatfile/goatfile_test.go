@@ -115,12 +115,27 @@ func TestMerge(t *testing.T) {
 
 // --- Helpers ---
 
-func testRequest(method, uri string, pos ...int) Request {
+func testRequest(method, uri string, opt ...int) Request {
 	r := newRequest()
 	r.Method = method
 	r.URI = uri
-	if len(pos) > 0 {
-		r.PosLine = pos[0]
+
+	if len(opt) > 0 {
+		r.PosLine = opt[0]
 	}
+
+	return r
+}
+
+func testRequestWithPath(method, uri string, path string, opt ...int) Request {
+	r := newRequest()
+	r.Method = method
+	r.URI = uri
+	r.Path = path
+
+	if len(opt) > 0 {
+		r.PosLine = opt[0]
+	}
+
 	return r
 }

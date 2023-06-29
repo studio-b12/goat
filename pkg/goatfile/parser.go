@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path"
 	"strconv"
 	"strings"
 
@@ -14,7 +15,7 @@ import (
 
 // Parser parses a Goatfile.
 type Parser struct {
-	currDir string
+	fileDir string
 	s       *scanner
 	prevPos readerPos
 	buf     struct {
@@ -26,9 +27,9 @@ type Parser struct {
 
 // NewParser returns a new Parser scanning from
 // the given Reader.
-func NewParser(r io.Reader, currDir string) *Parser {
+func NewParser(r io.Reader, fileDir string) *Parser {
 	return &Parser{
-		currDir: currDir,
+		fileDir: fileDir,
 		s:       newScanner(r),
 	}
 }
@@ -241,6 +242,7 @@ loop:
 		}
 	}
 
+	req.Path = t.fileDir
 	*section = append(*section, req)
 	return nil
 }
@@ -444,7 +446,7 @@ func (t *Parser) parseRaw() (Data, error) {
 		if tk != tokSTRING {
 			return NoContent{}, ErrInvalidFileDescriptor
 		}
-		return FileContent{filePath: file, currDir: t.currDir}, nil
+		return FileContent{filePath: file, currDir: path.Dir(t.fileDir)}, nil
 	}
 
 	t.s.unread()

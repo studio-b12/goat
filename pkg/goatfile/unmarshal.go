@@ -14,21 +14,22 @@ import (
 
 // Unmarshal takes a raw string of a Goatfile and tries
 // to parse it. Returns the parsed Goatfile.
-func Unmarshal(raw string, currDir string) (gf Goatfile, err error) {
-	currDir = strings.ReplaceAll(currDir, "\\", "/")
-	return unmarshal(os.DirFS("."), raw, currDir, set.Set[string]{})
+func Unmarshal(raw string, fileDir string) (gf Goatfile, err error) {
+	fileDir = strings.ReplaceAll(fileDir, "\\", "/")
+	return unmarshal(os.DirFS("."), raw, fileDir, set.Set[string]{})
 }
 
-func unmarshal(fSys fs.FS, raw string, currDir string, visited set.Set[string]) (gf Goatfile, err error) {
+func unmarshal(fSys fs.FS, raw string, fileDir string, visited set.Set[string]) (gf Goatfile, err error) {
 
-	log.Trace().Field("currDir", currDir).Msg("Unmarshalling Goatfile ...")
+	log.Trace().Field("fileDir", fileDir).Msg("Unmarshalling Goatfile ...")
 
 	raw = crlf2lf(raw)
 
-	gf, err = NewParser(strings.NewReader(raw), currDir).Parse()
+	gf, err = NewParser(strings.NewReader(raw), fileDir).Parse()
 	if err != nil {
 		return Goatfile{}, err
 	}
+	gf.Path = fileDir
 
 	if !visited.Add(gf.String()) {
 		return Goatfile{}, ErrMultiImport
@@ -36,7 +37,7 @@ func unmarshal(fSys fs.FS, raw string, currDir string, visited set.Set[string]) 
 
 	var imports Goatfile
 	for _, pth := range gf.Imports {
-		fullPath := extend(path.Join(currDir, pth), FileExtension)
+		fullPath := extend(path.Join(path.Dir(fileDir), pth), FileExtension)
 
 		log.Trace().Field("fullPath", fullPath).Msg("Reading import file ...")
 
@@ -46,8 +47,7 @@ func unmarshal(fSys fs.FS, raw string, currDir string, visited set.Set[string]) 
 				fmt.Sprintf("failed following import %s:", fullPath), err)
 		}
 
-		relativeCurrDir := path.Dir(fullPath)
-		importGf, err := unmarshal(fSys, string(raw), relativeCurrDir, visited)
+		importGf, err := unmarshal(fSys, string(raw), fullPath, visited)
 		if err != nil {
 			return Goatfile{}, errs.WithPrefix(
 				fmt.Sprintf("failed parsing imported file %s:", fullPath), err)

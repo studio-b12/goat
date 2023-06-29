@@ -23,6 +23,7 @@ type Request struct {
 	PreScript Data
 	Script    Data
 
+	Path    string
 	PosLine int
 
 	parsed bool
