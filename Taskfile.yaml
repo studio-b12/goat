@@ -8,26 +8,26 @@ tasks:
       - task: run
 
   build:
-    desc: "Build goat binary"
+    desc: "Build the goat binary."
     cmds:
       - bash scripts/version.sh
       - defer: git checkout internal/version/version.go
       - "{{.ENV}} go build -v -o bin/goat{{.SUFFIX}} cmd/goat/main.go"
 
   install:
-    desc: "Build goat binary"
+    desc: "Build the goat binary and install it to the GOPATH binary directory."
     cmds:
       - bash scripts/version.sh
       - defer: git checkout internal/version/version.go
-      - go build -v -o $HOME/go/bin/goat cmd/goat/main.go
+      - go build -v -o $(go env GOPATH)/bin/goat cmd/goat/main.go
 
   run:
-    desc: "Compiles and runs goat"
+    desc: "Compiles and runs goat."
     cmds:
       - go run -v cmd/goat/main.go {{.CLI_ARGS}}
 
   release:
-    desc: "Build binaries for different architectures"
+    desc: "Build binaries for different architectures."
     cmds:
       - task: build
         vars:
@@ -55,19 +55,19 @@ tasks:
           ENV: "GOOS=windows GOARCH=arm64"
 
   test:
-    desc: "Run unit tests"
+    desc: "Run all unit tests."
     deps:
       - mockgen
     cmds:
       - go test -v -cover ./...
 
   e2e:
-    desc: "Run end to end tests"
+    desc: "Run end to end tests."
     cmds:
       - bash ./e2e/run.bash
 
   lint:
-    desc: "Run staticcheck linter"
+    desc: "Run staticcheck linter."
     preconditions:
       - sh: which staticcheck
         msg: staticcheck is not installed!
@@ -77,17 +77,24 @@ tasks:
       - staticcheck -checks all,-ST1000,-ST1022,-ST1003 ./...
 
   bundle:
-    desc: Builds binaries for different architectures and bundles the
-      current directory into a gzipped tarball.
+    desc: "Builds binaries for different architectures and bundles the
+      current directory into a gzipped tarball."
     deps:
       - release
     cmds:
       - tar -czvf goat.tar.gz $(ls -a1 | grep -v "^\.\.$" | grep -v "^\.$")
 
   mockgen:
+    desc: "(Re-)generate mock files for unit tests."
     preconditions:
       - sh: which mockgen
-        msg: mockgen is not installed!
+        msg: mockgen is not installed. Use 'task dev-env' to set up all required tools.
     cmds:
       - "[ -d mocks ] || mkdir mocks"
       - mockgen -package mocks io/fs FS,File,FileInfo > mocks/fs.go
+
+  dev-env:
+    desc: "Execute all necessary steps to set up a working dev environment for goat."
+    cmds:
+      - go install github.com/golang/mock/mockgen@latest
+      - task: mockgen
