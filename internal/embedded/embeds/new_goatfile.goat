@@ -23,6 +23,28 @@
 
 
 ////////////////////////////////////////////////
+// Here you can define default values for 
+// Header, Options, QueryParams, Body and 
+// Script which will be applied to each
+// request.
+
+### Defaults
+
+// Header, Option and QueryParam defaults will 
+// be appended to the other specified values 
+// in the request.
+[Header]
+Content-Type: application/json
+
+// Script and Body values will be set when no
+// other value is specified for the request.
+// Otherwise, the request's value will be used.
+[Script]
+assert(response.StatusCode == 200, `Status code was ${response.StatusCode}`);
+
+---
+
+////////////////////////////////////////////////
 // Setup steps which will run at the 
 // start of the tests batch.
 
@@ -63,6 +85,11 @@ assert(response.StatusCode == 200, `Status code was ${response.StatusCode}`);
 // Test steps to test your API.
 
 ### Tests
+
+// This is an extra log section which will help
+// to visually separate tests from another in the
+// output logs.
+##### Test Endpoint Tests
 
 GET {{.instance}}/api/v1/test
 
