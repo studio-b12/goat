@@ -2,64 +2,26 @@
 
 # New Features
 
-## Request Defaults [#13]
+## Logical Section Logging [#28]
 
-You can now specify default values for requests which will be applied to each request in the batch when not specified on the request.
+The beginning of the processing of a "logical" section (like `Setup`, `Test` and `Teardown`) is now represented in the log output in the same way as context sections are.
 
-*Example:*
+Therefore, you don't need to write work around like stuff like the following to visually separate between Goatfile sections.
+
 ```
-### Defaults
-
-[Header]
-Content-Type: application/json
-Accept: application/json
-
-[Script]
-assert(response.StatusCode === 200, 
-       `Status Code was ${response.StatusCode}`);
-
 ### Tests
-
-POST {{.instance}}/objects
-
-[Body]
-{
-    "name": "Cult of the Lamb",
-    "data": {
-        "publisher": "Devolver Digital",
-        "developer": "Massive Monster",
-        "released": "2022-08-11T00:00:00Z",
-        "tags": ["Base Building", "Roguelite", "Character Customization"],
-        "age_rating": "0"
-    }
-}
-
----
-
+##### Tests
 // ...
 ```
 
-## Line of Request in Error Logs [#7]
+An example output would look like the following.
+![](https://github.com/studio-b12/goat/assets/16734205/fab842d9-f49c-4ccb-834a-7ddc8e50a8c2)
 
-The file and line where a failed request has been defined is now printed into the log output for a better debugging experience.
 
-*Example:*
+## More detailed debugg logging [#29]
 
-> ./test.goat
-```
-GET https://github.com
-
-[Script]
-assert(response.StatusCode === 404);
-```
-
-```bash
-goat test.goat
-```
-
-![](https://github.com/studio-b12/goat/assets/16734205/9abb45e3-c3ad-4702-82df-e84af35c698f)
+When debug logging is enabled (log level of `6` or higher), detailed information about the outgoing request as well as the incoming response is provided in the log. Therefore, you don't need to add a `debug(response)` to your `[Script]` field in your Goatfiles anymore.
 
 # Bug Fixes
 
-- Fixed a bug where more than 3 dashes (`-`) as section delimiters after a raw block failed the parsing.
-- Removed unnecessary terminal outputs.
+- In [v0.11.0](https://github.com/studio-b12/goat/releases/tag/v0.11.0), a feature has been added that the file and line of a request that failed is represented in the error message in the console ([#7]). There was a bug that faield reqeusts in imported files show up as being in the file which imports the file. This has been fixed now. [#30]
