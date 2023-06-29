@@ -94,7 +94,9 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 			return
 		}
 
-		printSeparator("TEARDOWN")
+		if len(gf.Teardown) > 0 {
+			printSeparator("TEARDOWN")
+		}
 		for _, act := range gf.Teardown {
 			err := t.executeAction(log, eng, act, gf)
 			if err != nil {
@@ -130,7 +132,9 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 	if t.isSkip("setup") {
 		log.Warn().Msg("skipping setup steps")
 	} else {
-		printSeparator("SETUP")
+		if len(gf.Setup) > 0 {
+			printSeparator("SETUP")
+		}
 		for _, act := range gf.Setup {
 			err := t.executeAction(log, eng, act, gf)
 			if err != nil {
@@ -155,7 +159,9 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 	if t.isSkip("tests") {
 		log.Warn().Msg("skipping test steps")
 	} else {
-		printSeparator("TESTS")
+		if len(gf.Tests) > 0 {
+			printSeparator("TESTS")
+		}
 		for _, act := range gf.Tests {
 			err := t.executeTest(act, eng, gf)
 			if err != nil {
