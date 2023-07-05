@@ -50,16 +50,16 @@ func New(engineMaker func() engine.Engine, req requester.Requester) *Executor {
 // from the given file or directory. The given
 // initialParams are used as initial state for the
 // runtime engine.
-func (t *Executor) Execute(pathes []string, initialParams engine.State) error {
+func (t *Executor) Execute(pathes []string, initialParams engine.State) (res Result, err error) {
 	if len(pathes) == 1 {
 		stat, err := os.Stat(pathes[0])
 		if err != nil {
-			return errs.WithPrefix("stat failed:", err)
+			return Result{}, errs.WithPrefix("stat failed:", err)
 		}
 		if !stat.IsDir() {
 			gf, err := t.parseGoatfile(pathes[0])
 			if err != nil {
-				return err
+				return Result{}, err
 			}
 
 			log.Debug().Msg("Executing goatfile ...")
@@ -72,13 +72,13 @@ func (t *Executor) Execute(pathes []string, initialParams engine.State) error {
 
 // ExecuteGoatfile runs the given parsed Goatfile. The given initialParams are
 // used as initial state for the runtime engine.
-func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.State) (err error) {
+func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.State) (res Result, err error) {
 	log := log.Tagged(gf.Path)
 	log.Debug().Msg("Parsed Goatfile\n" + gf.String())
 
 	if t.Dry {
 		log.Warn().Msg("This is a dry run: no requets will be executed")
-		return nil
+		return Result{}, nil
 	}
 
 	var errsNoAbort errs.Errors
@@ -99,9 +99,11 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 		}
 		for _, act := range gf.Teardown {
 			err := t.executeAction(log, eng, act, gf)
+			res.Teardown.Inc()
 			if err != nil {
 				if act.Type() == goatfile.ActionRequest {
 					log.Error().Err(err).Field("req", act).Msg("Teardown step failed")
+					res.Teardown.IncFailed()
 
 					// If the returned error comes from the params parsing step, don't
 					// cancel the teardown execution. See the following issue for more information.
@@ -137,7 +139,9 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 		}
 		for _, act := range gf.Setup {
 			err := t.executeAction(log, eng, act, gf)
+			res.Setup.Inc()
 			if err != nil {
+				res.Setup.IncFailed()
 				if act.Type() == goatfile.ActionRequest {
 					log.Error().Err(err).Field("req", act).Msg("Setup step failed")
 					if !t.isAbortOnError(act.(goatfile.Request)) {
@@ -145,7 +149,7 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 						continue
 					}
 				}
-				return err
+				return Result{}, err
 			}
 
 			if act.Type() == goatfile.ActionRequest {
@@ -164,20 +168,23 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 		}
 		for _, act := range gf.Tests {
 			err := t.executeTest(act, eng, gf)
+			res.Tests.Inc()
 			if err != nil {
+				res.Tests.IncFailed()
 				if act.Type() == goatfile.ActionRequest && !t.isAbortOnError(act.(goatfile.Request)) {
 					errsNoAbort = errsNoAbort.Append(err)
 					continue
 				}
-				return err
+				return Result{}, err
 			}
 		}
 	}
 
-	return errsNoAbort.Condense()
+	err = errsNoAbort.Condense()
+	return res, err
 }
 
-func (t *Executor) executeFromPathes(pathes []string, initialParams engine.State) error {
+func (t *Executor) executeFromPathes(pathes []string, initialParams engine.State) (finalRes Result, err error) {
 	var goatfiles []goatfile.Goatfile
 
 	for _, path := range pathes {
@@ -200,12 +207,12 @@ func (t *Executor) executeFromPathes(pathes []string, initialParams engine.State
 			return nil
 		})
 		if err != nil {
-			return err
+			return Result{}, err
 		}
 	}
 
 	if len(goatfiles) == 0 {
-		return errors.New("no Goatfiles found to execute")
+		return Result{}, errors.New("no Goatfiles found to execute")
 	}
 
 	var mErr errs.Errors
@@ -213,7 +220,8 @@ func (t *Executor) executeFromPathes(pathes []string, initialParams engine.State
 	for _, gf := range goatfiles {
 		log.Info().Field("path", gf.Path).Msg(clr.Print(clr.Format("Executing batch ...", clr.ColorFGPurple, clr.FormatBold)))
 
-		err := t.ExecuteGoatfile(gf, initialParams)
+		res, err := t.ExecuteGoatfile(gf, initialParams)
+		finalRes.Merge(res)
 		if err != nil {
 			entry := log.Error()
 			if mErr, ok := err.(errs.Errors); ok {
@@ -235,13 +243,14 @@ func (t *Executor) executeFromPathes(pathes []string, initialParams engine.State
 	}
 
 	if mErr.HasSome() {
-		return BatchResultError{
+		err = BatchResultError{
 			Inner: mErr,
 			Total: len(goatfiles),
 		}
+		return finalRes, err
 	}
 
-	return nil
+	return finalRes, nil
 }
 
 func (t *Executor) parseGoatfile(path string) (gf goatfile.Goatfile, err error) {

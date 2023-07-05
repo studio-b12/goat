@@ -72,11 +72,13 @@ func main() {
 
 	if len(args.Goatfile) == 0 {
 		argParser.Fail("Goatfile must be specified.")
+		return
 	}
 
 	state, err := config.Parse(args.Params, "GOAT_", engine.State{})
 	if err != nil {
 		log.Fatal().Err(err).Msg("parameter parsing failed")
+		return
 	}
 
 	config.ParseKVArgs(args.Arg, state)
@@ -100,7 +102,8 @@ func main() {
 
 	log.Debug().Msgf("Initial Params\n%s", state)
 
-	err = exec.Execute(args.Goatfile, state)
+	res, err := exec.Execute(args.Goatfile, state)
+	res.Log()
 	if err != nil {
 		entry := log.Fatal().Err(err)
 
@@ -113,6 +116,7 @@ func main() {
 		}
 
 		entry.Msg(clr.Print(clr.Format("execution failed", clr.ColorFGRed, clr.FormatBold)))
+		return
 	}
 
 	log.Info().Msg(clr.Print(clr.Format("Execution finished successfully", clr.ColorFGGreen, clr.FormatBold)))
@@ -177,6 +181,7 @@ func createNewGoatfile(names []string) {
 			Err(err).
 			Field("at", name).
 			Msg("Failed creating new goatfile")
+		return
 	}
 
 	log.Info().
