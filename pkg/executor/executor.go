@@ -149,7 +149,7 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 						continue
 					}
 				}
-				return Result{}, err
+				return res, err
 			}
 
 			if act.Type() == goatfile.ActionRequest {
@@ -175,7 +175,7 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 					errsNoAbort = errsNoAbort.Append(err)
 					continue
 				}
-				return Result{}, err
+				return res, err
 			}
 		}
 	}
