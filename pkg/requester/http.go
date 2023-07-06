@@ -62,7 +62,7 @@ func (t HttpWithCookies) Do(req *http.Request, opt Options) (*http.Response, err
 		return nil, err
 	}
 
-	logger.Debug().Fields(
+	logger.Trace().Fields(
 		"method", req.Method,
 		"url", req.URL,
 		"header", req.Header,
@@ -77,7 +77,7 @@ func (t HttpWithCookies) Do(req *http.Request, opt Options) (*http.Response, err
 		return nil, err
 	}
 
-	logger.Debug().Fields(
+	logger.Trace().Fields(
 		"statusCode", res.StatusCode,
 		"header", res.Header,
 	).Msg("Received response")
