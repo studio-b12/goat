@@ -168,7 +168,7 @@ func (t *Parser) parseExecute() (execParams Execute, err error) {
 
 	execParams.File = lit
 
-	tok, lit := t.scanSkipWS()
+	tok, _ := t.scanSkipWS()
 	if tok == tokLF || tok == tokEOF {
 		t.unscan()
 		return execParams, nil
@@ -189,13 +189,13 @@ func (t *Parser) parseExecute() (execParams Execute, err error) {
 	}
 	t.scan() // re-scan closing group `)`
 
-	tok, lit = t.scanSkipWS()
+	tok, _ = t.scanSkipWS()
 	if tok != tokRETURN {
 		t.unscan()
 		return execParams, nil
 	}
 
-	tok, lit = t.scanSkipWS()
+	tok, _ = t.scanSkipWS()
 	if tok != tokGROUPSTART {
 		return Execute{}, ErrMissingGroup
 	}
@@ -216,7 +216,7 @@ func (t *Parser) parseExecute() (execParams Execute, err error) {
 			return Execute{}, ErrIllegalCharacter
 		}
 
-		tok, lit = t.scanSkipWS()
+		tok, _ = t.scanSkipWS()
 		if tok != tokAS {
 			return Execute{}, ErrIllegalCharacter
 		}
