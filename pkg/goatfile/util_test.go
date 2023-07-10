@@ -63,7 +63,7 @@ func TestApplyTemplateToArray(t *testing.T) {
 			"bar": "some bar",
 		}
 
-		err := applyTemplateToArray(arr, params)
+		err := ApplyTemplateToArray(arr, params)
 		assert.Nil(t, err)
 		assert.Equal(t, []any{
 			"some foo",
@@ -79,7 +79,7 @@ func TestApplyTemplateToArray(t *testing.T) {
 			"bar": "some bar",
 		}
 
-		err := applyTemplateToArray(arr, params)
+		err := ApplyTemplateToArray(arr, params)
 		assert.Nil(t, err)
 		assert.Equal(t, []any{
 			"some foo",
@@ -95,7 +95,7 @@ func TestApplyTemplateToArray(t *testing.T) {
 			"bar": "some bar",
 		}
 
-		err := applyTemplateToArray(arr, params)
+		err := ApplyTemplateToArray(arr, params)
 		assert.Error(t, err)
 	})
 
@@ -107,7 +107,7 @@ func TestApplyTemplateToArray(t *testing.T) {
 			"fuzz": "some fuzz",
 		}
 
-		err := applyTemplateToArray(arr, params)
+		err := ApplyTemplateToArray(arr, params)
 		assert.Nil(t, err)
 		assert.Equal(t, []any{
 			"some foo",
@@ -130,7 +130,7 @@ func TestApplyTemplateToArray(t *testing.T) {
 			"bazz": "some bazz",
 		}
 
-		err := applyTemplateToArray(arr, params)
+		err := ApplyTemplateToArray(arr, params)
 		assert.Error(t, err)
 	})
 }
@@ -157,7 +157,7 @@ func TestApplyTemplateToMap(t *testing.T) {
 			"fuzz": "some fuzz",
 		}
 
-		err := applyTemplateToMap(m, params)
+		err := ApplyTemplateToMap(m, params)
 		assert.Nil(t, err)
 		assert.Equal(t, map[string]any{
 			"a": int64(123),
@@ -192,7 +192,7 @@ func TestApplyTemplateToMap(t *testing.T) {
 			"fuzz": "some fuzz",
 		}
 
-		err := applyTemplateToMap(m, params)
+		err := ApplyTemplateToMap(m, params)
 		assert.Error(t, err)
 	})
 }

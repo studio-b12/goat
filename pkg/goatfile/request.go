@@ -86,8 +86,8 @@ func (t *Request) ParseWithParams(params any) error {
 	}
 	t.Script = StringContent(scriptStr)
 
-	applyTemplateToMap(t.QueryParams, params)
-	applyTemplateToMap(t.Options, params)
+	ApplyTemplateToMap(t.QueryParams, params)
+	ApplyTemplateToMap(t.Options, params)
 
 	return nil
 }

@@ -494,28 +494,16 @@ func (t *Executor) executeExecute(rootPath string, params goatfile.Execute, eng 
 	}
 
 	state := eng.State()
-	paramsMap := make(map[string]any, len(params.Params))
-	for k, v := range params.Params {
-		switch vv := v.(type) {
-		case goatfile.ParameterValue:
-			v, err = vv.ApplyTemplate(state)
-			if err != nil {
-				return Result{}, err
-			}
-		case string:
-			res, err := goatfile.ApplyTemplate(vv, state)
-			if err != nil {
-				return Result{}, err
-			}
-			v = string(res)
-		}
-		paramsMap[k] = v
+
+	err = goatfile.ApplyTemplateToMap(params.Params, state)
+	if err != nil {
+		return Result{}, err
 	}
 
 	log := log.Tagged(gf.Path)
 
 	isolatedEng := t.engineMaker()
-	isolatedEng.SetState(paramsMap)
+	isolatedEng.SetState(params.Params)
 
 	res, err := t.executeGoatfile(log, gf, isolatedEng)
 	if err != nil {
