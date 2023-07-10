@@ -1490,6 +1490,114 @@ some script 2
 	})
 }
 
+func TestExecute(t *testing.T) {
+	t.Run("simple", func(t *testing.T) {
+		const raw = `
+execute ../pathTo/someGoatfile
+`
+
+		p := stringParser(raw)
+		gf, err := p.Parse()
+		assert.Nil(t, err, err)
+
+		assert.Equal(t, "../pathTo/someGoatfile", gf.Tests[0].(Execute).File)
+	})
+
+	t.Run("params", func(t *testing.T) {
+		const raw = `
+execute ../pathTo/someGoatfile (foo=1)
+
+---
+
+execute ../pathTo/someGoatfile (foo=1 bar="hello")
+
+---
+
+execute ../pathTo/someGoatfile (
+	foo =    "hello"
+	bar=2
+	bazz= {{.someParam}}
+)
+`
+
+		p := stringParser(raw)
+		gf, err := p.Parse()
+		assert.Nil(t, err, err)
+
+		assert.Equal(t, "../pathTo/someGoatfile", gf.Tests[0].(Execute).File)
+		assert.Equal(t, map[string]any{
+			"foo": int64(1),
+		}, gf.Tests[0].(Execute).Params)
+
+		assert.Equal(t, "../pathTo/someGoatfile", gf.Tests[1].(Execute).File)
+		assert.Equal(t, map[string]any{
+			"foo": int64(1),
+			"bar": "hello",
+		}, gf.Tests[1].(Execute).Params)
+
+		assert.Equal(t, "../pathTo/someGoatfile", gf.Tests[2].(Execute).File)
+		assert.Equal(t, map[string]any{
+			"foo":  "hello",
+			"bar":  int64(2),
+			"bazz": ParameterValue(".someParam"),
+		}, gf.Tests[2].(Execute).Params)
+	})
+
+	t.Run("return", func(t *testing.T) {
+		const raw = `
+execute ../pathTo/someGoatfile (foo=1) return (foo as bar)
+
+---
+
+execute ../pathTo/someGoatfile (foo=1 bar="hello") return (foo as bar bar as bazz)
+
+---
+
+execute ../pathTo/someGoatfile (
+	foo =    "hello"
+	bar=2
+	bazz= {{.someParam}}
+) return (
+	foo as   bar
+	bar    as bazz
+)
+`
+
+		p := stringParser(raw)
+		gf, err := p.Parse()
+		assert.Nil(t, err, err)
+
+		assert.Equal(t, "../pathTo/someGoatfile", gf.Tests[0].(Execute).File)
+		assert.Equal(t, map[string]any{
+			"foo": int64(1),
+		}, gf.Tests[0].(Execute).Params)
+		assert.Equal(t, map[string]string{
+			"foo": "bar",
+		}, gf.Tests[0].(Execute).Returns)
+
+		assert.Equal(t, "../pathTo/someGoatfile", gf.Tests[1].(Execute).File)
+		assert.Equal(t, map[string]any{
+			"foo": int64(1),
+			"bar": "hello",
+		}, gf.Tests[1].(Execute).Params)
+		assert.Equal(t, map[string]string{
+			"foo": "bar",
+			"bar": "bazz",
+		}, gf.Tests[1].(Execute).Returns)
+
+		assert.Equal(t, "../pathTo/someGoatfile", gf.Tests[2].(Execute).File)
+		assert.Equal(t, map[string]any{
+			"foo":  "hello",
+			"bar":  int64(2),
+			"bazz": ParameterValue(".someParam"),
+		}, gf.Tests[2].(Execute).Params)
+		assert.Equal(t, map[string]string{
+			"foo": "bar",
+			"bar": "bazz",
+		}, gf.Tests[2].(Execute).Returns)
+	})
+}
+
 // --- Helpers --------------------------------------------
 
 func stringParser(raw string) *Parser {

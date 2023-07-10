@@ -5,6 +5,7 @@ type ActionType int
 const (
 	ActionRequest = ActionType(iota + 1)
 	ActionLogSection
+	ActionExecute
 )
 
 // Action is used to determine the

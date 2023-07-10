@@ -34,6 +34,8 @@ const (
 	tokCOMMA
 	tokASSIGNMENT
 	tokFILEDESC
+	tokGROUPSTART
+	tokGROUPEND
 
 	// Types
 	tokSTRING
@@ -42,6 +44,9 @@ const (
 
 	// Keywords
 	tokUSE
+	tokEXECUTE
+	tokRETURN
+	tokAS
 )
 
 type readerPos struct {
@@ -126,6 +131,10 @@ func (t *scanner) scan() (tk token, lit string) {
 		return tokBLOCKSTART, ""
 	case ']':
 		return tokBLOCKEND, ""
+	case '(':
+		return tokGROUPSTART, ""
+	case ')':
+		return tokGROUPEND, ""
 	case ':':
 		return tokCOLON, ""
 	case ',':
@@ -317,6 +326,12 @@ func (t *scanner) scanIdent() (tk token, lit string) {
 	switch strings.ToLower(str) {
 	case "use":
 		return tokUSE, ""
+	case "execute":
+		return tokEXECUTE, ""
+	case "return":
+		return tokRETURN, ""
+	case "as":
+		return tokAS, ""
 	}
 
 	return tokIDENT, str

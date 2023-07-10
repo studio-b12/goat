@@ -48,6 +48,9 @@ func (t *Parser) Parse() (gf Goatfile, err error) {
 		case tokCOMMENT, tokWS, tokLF:
 			continue
 
+		case tokDELIMITER:
+			continue
+
 		case tokLOGSECTION:
 			sec := t.s.scanUntilLF()
 			gf.Tests = append(gf.Tests, LogSection(strings.TrimSpace(sec)))
@@ -56,6 +59,13 @@ func (t *Parser) Parse() (gf Goatfile, err error) {
 		case tokIDENT, tokSTRING:
 			t.unscan()
 			err = t.parseRequest(&gf.Tests)
+
+		case tokEXECUTE:
+			var exec Execute
+			exec, err = t.parseExecute()
+			if err == nil {
+				gf.Tests = append(gf.Tests, exec)
+			}
 
 		case tokUSE:
 			err = t.parseUse(&gf)
@@ -141,6 +151,87 @@ func (t *Parser) parseUse(gf *Goatfile) error {
 	return nil
 }
 
+func (t *Parser) parseExecute() (execParams Execute, err error) {
+	tk, _ := t.scan()
+	if tk != tokWS {
+		return Execute{}, ErrInvalidStringLiteral
+	}
+
+	tk, lit := t.s.scanString()
+	if tk == tokILLEGAL {
+		return Execute{}, ErrInvalidStringLiteral
+	}
+
+	if lit == "" {
+		return Execute{}, ErrEmptyCallPath
+	}
+
+	execParams.File = lit
+
+	tok, lit := t.scanSkipWS()
+	if tok == tokLF || tok == tokEOF {
+		t.unscan()
+		return execParams, nil
+	}
+	if tok != tokGROUPSTART {
+		return Execute{}, ErrInvalidToken
+	}
+
+	// tok, lit = t.scanSkipWS()
+	// if tok == tokEOF {
+	// 	return ErrUnclosedGroup
+	// }
+
+	end := tokGROUPEND
+	execParams.Params, err = t.parseBlockEntries(&end)
+	if err != nil {
+		return Execute{}, err
+	}
+	t.scan() // re-scan closing group `)`
+
+	tok, lit = t.scanSkipWS()
+	if tok != tokRETURN {
+		t.unscan()
+		return execParams, nil
+	}
+
+	tok, lit = t.scanSkipWS()
+	if tok != tokGROUPSTART {
+		return Execute{}, ErrMissingGroup
+	}
+
+	execParams.Returns = map[string]string{}
+	for {
+		tok, key := t.scanSkipWS()
+		if tok == tokEOF {
+			return Execute{}, ErrUnclosedGroup
+		}
+		if tok == tokLF {
+			continue
+		}
+		if tok == tokGROUPEND {
+			break
+		}
+		if tok != tokIDENT {
+			return Execute{}, ErrIllegalCharacter
+		}
+
+		tok, lit = t.scanSkipWS()
+		if tok != tokAS {
+			return Execute{}, ErrIllegalCharacter
+		}
+
+		tok, val := t.scanSkipWS()
+		if tok != tokIDENT {
+			return Execute{}, ErrIllegalCharacter
+		}
+
+		execParams.Returns[key] = val
+	}
+
+	return execParams, nil
+}
+
 func (t *Parser) parseSection(gf *Goatfile) (err error) {
 	name := strings.TrimSpace(t.s.readToLF())
 
@@ -178,6 +269,15 @@ func (t *Parser) parseSection(gf *Goatfile) (err error) {
 		if tok == tokLOGSECTION {
 			sec := t.s.scanUntilLF()
 			*r = append(*r, LogSection(strings.TrimSpace(sec)))
+			continue
+		}
+
+		if tok == tokEXECUTE {
+			exec, err := t.parseExecute()
+			if err != nil {
+				return err
+			}
+			*r = append(*r, exec)
 			continue
 		}
 
@@ -310,7 +410,7 @@ func (t *Parser) parseBlock(req *requestParseChecker) error {
 	switch optName {
 
 	case optionNameQueryParams:
-		data, err := t.parseBlockEntries()
+		data, err := t.parseBlockEntries(nil)
 		if err != nil {
 			return err
 		}
@@ -354,7 +454,7 @@ func (t *Parser) parseBlock(req *requestParseChecker) error {
 		req.Script = raw
 
 	case optionNameOptions:
-		data, err := t.parseBlockEntries()
+		data, err := t.parseBlockEntries(nil)
 		if err != nil {
 			return err
 		}
@@ -368,7 +468,7 @@ func (t *Parser) parseBlock(req *requestParseChecker) error {
 	return nil
 }
 
-func (t *Parser) parseBlockEntries() (map[string]any, error) {
+func (t *Parser) parseBlockEntries(exitToken *token) (map[string]any, error) {
 	m := map[string]any{}
 
 	for {
@@ -376,7 +476,10 @@ func (t *Parser) parseBlockEntries() (map[string]any, error) {
 		if tok == tokLF {
 			continue
 		}
-		if tok == tokDELIMITER || tok == tokEOF || tok == tokBLOCKSTART || tok == tokSECTION {
+		if tok == tokEOF ||
+			(exitToken != nil && tok == *exitToken) ||
+			(tok == tokDELIMITER || tok == tokBLOCKSTART || tok == tokSECTION) {
+
 			t.unscan()
 			break
 		}

@@ -13,6 +13,7 @@ var (
 	ErrUnexpected                  = errors.New("unexpected error")
 	ErrInvalidStringLiteral        = errors.New("invalid string literal")
 	ErrEmptyUsePath                = errors.New("empty use path")
+	ErrEmptyCallPath               = errors.New("empty call path")
 	ErrInvalidSection              = errors.New("invalid section")
 	ErrInvalidLogSection           = errors.New("invalid log section")
 	ErrInvalidRequestMethod        = errors.New("invalid request method")
@@ -30,6 +31,8 @@ var (
 	ErrMultiImport                 = errors.New("the impoted resource has already been imported")
 	ErrInvalidFileDescriptor       = errors.New("invalid file descriptor")
 	ErrSectionDefinedMultiple      = errors.New("the section has been already defined")
+	ErrUnclosedGroup               = errors.New("group has not been closed")
+	ErrMissingGroup                = errors.New("missing group definition")
 )
 
 // ParseError wraps an inner error with
