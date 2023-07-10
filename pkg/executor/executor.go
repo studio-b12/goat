@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -81,10 +82,14 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 		return Result{}, nil
 	}
 
-	var errsNoAbort errs.Errors
-
 	eng := t.engineMaker()
 	eng.SetState(initialParams)
+
+	return t.executeGoatfile(log, gf, eng)
+}
+
+func (t *Executor) executeGoatfile(log rogu.Logger, gf goatfile.Goatfile, eng engine.Engine) (res Result, err error) {
+	var errsNoAbort errs.Errors
 
 	defer func() {
 		// Teardown Procedures
@@ -393,6 +398,14 @@ func (t *Executor) executeAction(
 		logSection := act.(goatfile.LogSection)
 		printSeparator(string(logSection))
 		return nil
+	case goatfile.ActionExecute:
+		execParams := act.(goatfile.Execute)
+		res, err := t.executeExecute(path.Dir(gf.Path), execParams, eng)
+		_ = res
+		// if err != nil {
+		// 	err = errs.WithSuffix(err, fmt.Sprintf("(%s:%d)", req.Path, req.PosLine))
+		// }
+		return err
 	default:
 		panic(fmt.Sprintf("An invalid action has been executed: %v\n"+
 			"This should actually never happen. If it does though,"+
@@ -471,6 +484,55 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf go
 	}
 
 	return nil
+}
+
+func (t *Executor) executeExecute(rootPath string, params goatfile.Execute, eng engine.Engine) (Result, error) {
+	pth := goatfile.Extend(path.Join(rootPath, params.File), goatfile.FileExtension)
+	gf, err := t.parseGoatfile(pth)
+	if err != nil {
+		return Result{}, err
+	}
+
+	state := eng.State()
+	paramsMap := make(map[string]any, len(params.Params))
+	for k, v := range params.Params {
+		switch vv := v.(type) {
+		case goatfile.ParameterValue:
+			v, err = vv.ApplyTemplate(state)
+			if err != nil {
+				return Result{}, err
+			}
+		case string:
+			res, err := goatfile.ApplyTemplate(vv, state)
+			if err != nil {
+				return Result{}, err
+			}
+			v = string(res)
+		}
+		paramsMap[k] = v
+	}
+
+	log := log.Tagged(gf.Path)
+
+	isolatedEng := t.engineMaker()
+	isolatedEng.SetState(paramsMap)
+
+	res, err := t.executeGoatfile(log, gf, isolatedEng)
+	if err != nil {
+		return res, err
+	}
+
+	capturedState := isolatedEng.State()
+	for k, v := range capturedState {
+		storeAs, ok := params.Returns[k]
+		if ok {
+			state[storeAs] = v
+		}
+	}
+
+	eng.SetState(state)
+
+	return res, nil
 }
 
 func (t *Executor) isSkip(section string) bool {

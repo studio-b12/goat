@@ -53,14 +53,14 @@ func (t *Request) ParseWithParams(params any) error {
 
 	var err error
 
-	t.URI, err = applyTemplate(t.URI, params)
+	t.URI, err = ApplyTemplate(t.URI, params)
 	if err != nil {
 		return err
 	}
 
 	for _, vals := range t.Header {
 		for i, v := range vals {
-			vals[i], err = applyTemplate(v, params)
+			vals[i], err = ApplyTemplate(v, params)
 			if err != nil {
 				return err
 			}
@@ -68,7 +68,7 @@ func (t *Request) ParseWithParams(params any) error {
 	}
 
 	if strData, ok := t.Body.(StringContent); ok {
-		bodyStr, err := applyTemplate(string(strData), params)
+		bodyStr, err := ApplyTemplate(string(strData), params)
 		if err != nil {
 			return err
 		}
@@ -80,7 +80,7 @@ func (t *Request) ParseWithParams(params any) error {
 		return errs.WithPrefix("reading script failed:", err)
 	}
 
-	scriptStr, err = applyTemplate(scriptStr, params)
+	scriptStr, err = ApplyTemplate(scriptStr, params)
 	if err != nil {
 		return err
 	}
