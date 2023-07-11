@@ -67,12 +67,19 @@ func (t *Request) ParseWithParams(params any) error {
 		}
 	}
 
-	if strData, ok := t.Body.(StringContent); ok {
-		bodyStr, err := ApplyTemplate(string(strData), params)
+	switch body := t.Body.(type) {
+	case StringContent:
+		bodyStr, err := ApplyTemplate(string(body), params)
 		if err != nil {
 			return err
 		}
 		t.Body = StringContent(bodyStr)
+	case FileContent:
+		body.filePath, err = ApplyTemplate(body.filePath, params)
+		if err != nil {
+			return err
+		}
+		t.Body = body
 	}
 
 	scriptStr, err := util.ReadReaderToString(t.Script.Reader())

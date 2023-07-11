@@ -1,0 +1,31 @@
+POST {{.instance}}/hello/world
+
+[QueryParams]
+orderBy = "date"
+filterBy = ["date", "name", "age"]
+page = 2
+count = 100
+
+[Header]
+Content-Type: text/plain
+X-Foo: bar
+
+[Body]
+@../{{.file}}
+
+[Script]
+info(response)
+
+var body = response.BodyJson;
+
+assert(response.StatusCode == 200);
+assert(body.method == "POST");
+assert(body.query.orderBy[0] == "date");
+assert(body.query.filterBy[0] == "date");
+assert(body.query.filterBy[1] == "name");
+assert(body.query.filterBy[2] == "age");
+assert(body.query.page[0] == "2");
+assert(body.query.count[0] == "100");
+assert(body.headers["Content-Type"][0] == "text/plain");
+assert(body.headers["X-Foo"][0] == "bar");
+assert(body.body_string == "some\nbody\ncontent");
