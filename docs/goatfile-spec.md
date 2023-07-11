@@ -48,6 +48,13 @@ Context Section  |  ##### Upload Tests
                  |
         Request  |  ---
       Separator  |
+                 |
+        Execute  |  execute ./testFileUpload (
+                 |    file="file_a.txt"
+                 |    token="{{.auth.token}}"
+                 |  ) return (
+                 |    fileId as fileId_a
+                 |  )
 ```
 
 ## Structure
