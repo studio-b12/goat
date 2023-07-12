@@ -127,3 +127,113 @@ Goat also provides some additional functions which are available in Goatfiles.
 - `randomString <integer?>`: Returns a random string with the given length. If no length is passed, the default length is 8 characters.
 - `randomInt <integer?>`: Returns a random integer in the range [0, n) where n is given as parameter. If no parameter is passed, n is the max int value.
 - `timestamp <format?>`: Returns the current timestamp in the given format. If no format is specified, the timestamp is returned as Unix Seconds string.
+
+## `use` Directive
+
+### Syntax
+
+> *UseExpression* :  
+> `use` *StringLiteral*
+
+### Example
+
+```
+use ../path/to/goatfile
+```
+
+### Implementation
+
+The `use` directive allows to "import" a Goatfile *A* into another Goatfile *B*. This behaves like all actions of *A* and *B* were merged together to a single Goatfile where all actions of *B* will be inserted before all actions of *A*. That means that Setups and Teardowns of the imported Goatfile *B* will be executed together with the Setup and Teardown Sections of the base Goatfile *A*.
+
+Imported Goatfiles will be statically checked as same as the executed Goatfile. Circular imports are not allowed.
+
+Because the Goatfile with imported Goatfiles behaves like a single Goatfile, both files share the same execution state and parameters.
+
+Schematical Example:
+> `A.goat`
+```
+use B
+
+### Setup
+
+GET A1
+
+### Tests
+
+GET A2
+
+### Teardown
+
+GET A3
+```
+
+> `B.goat`
+```
+### Setup
+
+GET B1
+
+### Tests
+
+GET B2
+
+### Teardown
+
+GET B3
+```
+
+> Result (virtual):
+```
+### Setup
+
+GET B1
+GET A1
+
+### Tests
+
+GET B2
+GET A2
+
+### Teardown
+
+GET B3
+GET A3
+```
+
+## `execute` Directive
+
+### Syntax
+
+> *ExecuteExpression* :  
+> `execute` *StringLiteral* *ExecuteSignature?*
+>
+> *ExecuteSignature* :  
+> `(` *ParameterAssignment** `)` *ReturnsValueSignature*?
+>
+> *ParameterAssignment* :  
+> `LF`* *Literal* `=` *Value* `LF`*
+>
+> *ReturnsValueSignature* :  
+> `return` `(` *ReturnValueAssignment** `)`
+>
+> *ReturnValueAssignment* :  
+> `LF`* *Literal* `as` *Literal* `LF`*
+
+### Example
+```
+execute ../doStuff (
+    username="{{.username}}" 
+    password="{{.password}}"
+    n=1
+) return (
+    response as response1
+)
+```
+
+### Implementation
+
+The `execute` directive allows to execute a foreign Goatfile *A* inside another Goatfile *B* with the ability to pass specific parameters and capture return values.
+
+In contrast to the `use` directive, the executed Goatfile *A* is ran like a completely separate Goatfile execution with its own isolated state which does not share any values with the state of file *B*. All parameters which shall be available in *A* must be passed as a list of key-value pairs. Resulting state values of *A* can then be captured to the state of *B* by listing them in the `return` statement with the name of the parameter in the state of *A* and the name the value shall be acessible in *B*.
+
+Goatfiles executed are parsed in place, so they are only statically checked once they are executed within the executing Goatfile.
