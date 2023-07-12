@@ -400,11 +400,10 @@ func (t *Executor) executeAction(
 		return nil
 	case goatfile.ActionExecute:
 		execParams := act.(goatfile.Execute)
-		res, err := t.executeExecute(path.Dir(gf.Path), execParams, eng)
-		_ = res
-		// if err != nil {
-		// 	err = errs.WithSuffix(err, fmt.Sprintf("(%s:%d)", req.Path, req.PosLine))
-		// }
+		_, err := t.executeExecute(path.Dir(gf.Path), execParams, eng)
+		if err != nil {
+			err = errs.WithSuffix(err, "(imported)")
+		}
 		return err
 	default:
 		panic(fmt.Sprintf("An invalid action has been executed: %v\n"+
