@@ -1,0 +1,12 @@
+execute ./b (
+    url="{{.instance}}"
+) return (
+    body as importedBody
+)
+
+---
+
+GET {{.instance}}
+
+[Script]
+assert(importedBody === "Hello world!", "invalid imported body value: '${importedBody}'")

@@ -16,15 +16,17 @@ export GOAT_INSTANCE=http://localhost:8080
 "$HOME/go/bin/echo" &> /dev/null &
 sleep 1
 
-cd $(dirname $0)
+set -e
+
+cd "$(dirname "$0")"
 
 for case in cases/*; do
-    pushd $case &> /dev/null
+    pushd "$case" &> /dev/null
     LOG=$(bash run.sh) && {
         echo -e "\e[42mSUCCESS \e[0m $case"
     } || {
         echo -e "\e[41mERROR   \e[0m $case"
-        printf "$LOG\n"
+        printf "%s\n" "$LOG"
         exit 1
     }
     popd &> /dev/null

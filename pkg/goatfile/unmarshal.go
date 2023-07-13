@@ -37,7 +37,7 @@ func unmarshal(fSys fs.FS, raw string, fileDir string, visited set.Set[string]) 
 
 	var imports Goatfile
 	for _, pth := range gf.Imports {
-		fullPath := extend(path.Join(path.Dir(fileDir), pth), FileExtension)
+		fullPath := Extend(path.Join(path.Dir(fileDir), pth), FileExtension)
 
 		log.Trace().Field("fullPath", fullPath).Msg("Reading import file ...")
 

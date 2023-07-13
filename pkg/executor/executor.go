@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -81,10 +82,14 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 		return Result{}, nil
 	}
 
-	var errsNoAbort errs.Errors
-
 	eng := t.engineMaker()
 	eng.SetState(initialParams)
+
+	return t.executeGoatfile(log, gf, eng)
+}
+
+func (t *Executor) executeGoatfile(log rogu.Logger, gf goatfile.Goatfile, eng engine.Engine) (res Result, err error) {
+	var errsNoAbort errs.Errors
 
 	defer func() {
 		// Teardown Procedures
@@ -393,6 +398,13 @@ func (t *Executor) executeAction(
 		logSection := act.(goatfile.LogSection)
 		printSeparator(string(logSection))
 		return nil
+	case goatfile.ActionExecute:
+		execParams := act.(goatfile.Execute)
+		_, err := t.executeExecute(path.Dir(gf.Path), execParams, eng)
+		if err != nil {
+			err = errs.WithSuffix(err, "(imported)")
+		}
+		return err
 	default:
 		panic(fmt.Sprintf("An invalid action has been executed: %v\n"+
 			"This should actually never happen. If it does though,"+
@@ -471,6 +483,43 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf go
 	}
 
 	return nil
+}
+
+func (t *Executor) executeExecute(rootPath string, params goatfile.Execute, eng engine.Engine) (Result, error) {
+	pth := goatfile.Extend(path.Join(rootPath, params.File), goatfile.FileExtension)
+	gf, err := t.parseGoatfile(pth)
+	if err != nil {
+		return Result{}, err
+	}
+
+	state := eng.State()
+
+	err = goatfile.ApplyTemplateToMap(params.Params, state)
+	if err != nil {
+		return Result{}, err
+	}
+
+	log := log.Tagged(gf.Path)
+
+	isolatedEng := t.engineMaker()
+	isolatedEng.SetState(params.Params)
+
+	res, err := t.executeGoatfile(log, gf, isolatedEng)
+	if err != nil {
+		return res, err
+	}
+
+	capturedState := isolatedEng.State()
+	for k, v := range capturedState {
+		storeAs, ok := params.Returns[k]
+		if ok {
+			state[storeAs] = v
+		}
+	}
+
+	eng.SetState(state)
+
+	return res, nil
 }
 
 func (t *Executor) isSkip(section string) bool {

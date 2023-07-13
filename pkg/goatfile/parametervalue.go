@@ -13,7 +13,7 @@ type ParameterValue string
 // value and parses the result using a new instance of Parser
 // as sub-parser.
 func (t ParameterValue) ApplyTemplate(params any) (any, error) {
-	b, err := applyTemplateBuf(fmt.Sprintf("{{%s}}", t), params)
+	b, err := ApplyTemplateBuf(fmt.Sprintf("{{%s}}", t), params)
 	if err != nil {
 		return nil, err
 	}

@@ -1,0 +1,1 @@
+execute c/c (instance="{{.url}}") return (body as body)

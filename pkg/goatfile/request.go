@@ -53,26 +53,33 @@ func (t *Request) ParseWithParams(params any) error {
 
 	var err error
 
-	t.URI, err = applyTemplate(t.URI, params)
+	t.URI, err = ApplyTemplate(t.URI, params)
 	if err != nil {
 		return err
 	}
 
 	for _, vals := range t.Header {
 		for i, v := range vals {
-			vals[i], err = applyTemplate(v, params)
+			vals[i], err = ApplyTemplate(v, params)
 			if err != nil {
 				return err
 			}
 		}
 	}
 
-	if strData, ok := t.Body.(StringContent); ok {
-		bodyStr, err := applyTemplate(string(strData), params)
+	switch body := t.Body.(type) {
+	case StringContent:
+		bodyStr, err := ApplyTemplate(string(body), params)
 		if err != nil {
 			return err
 		}
 		t.Body = StringContent(bodyStr)
+	case FileContent:
+		body.filePath, err = ApplyTemplate(body.filePath, params)
+		if err != nil {
+			return err
+		}
+		t.Body = body
 	}
 
 	scriptStr, err := util.ReadReaderToString(t.Script.Reader())
@@ -80,14 +87,14 @@ func (t *Request) ParseWithParams(params any) error {
 		return errs.WithPrefix("reading script failed:", err)
 	}
 
-	scriptStr, err = applyTemplate(scriptStr, params)
+	scriptStr, err = ApplyTemplate(scriptStr, params)
 	if err != nil {
 		return err
 	}
 	t.Script = StringContent(scriptStr)
 
-	applyTemplateToMap(t.QueryParams, params)
-	applyTemplateToMap(t.Options, params)
+	ApplyTemplateToMap(t.QueryParams, params)
+	ApplyTemplateToMap(t.Options, params)
 
 	return nil
 }

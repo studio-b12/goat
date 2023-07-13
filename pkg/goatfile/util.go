@@ -9,13 +9,13 @@ import (
 	"github.com/studio-b12/goat/pkg/errs"
 )
 
-// applyTemplateBuf parses the given raw string as a template
+// ApplyTemplateBuf parses the given raw string as a template
 // and applies the given values in params onto it returning
 // the result as bytes buffer.
 //
 // If a key in the template is not present in the params,
 // an error will be returned.
-func applyTemplateBuf(raw string, params any) (*bytes.Buffer, error) {
+func ApplyTemplateBuf(raw string, params any) (*bytes.Buffer, error) {
 	tmpl, err := template.New("").
 		Funcs(builtinFuncsMap).
 		Option("missingkey=error").
@@ -33,14 +33,14 @@ func applyTemplateBuf(raw string, params any) (*bytes.Buffer, error) {
 	return &out, err
 }
 
-// applyTemplate parses the given raw string as a template
+// ApplyTemplate parses the given raw string as a template
 // and applies the given values in params onto it returning
 // the result as string.
 //
 // If a key in the template is not present in the params,
 // an error will be returned.
-func applyTemplate(raw string, params any) (string, error) {
-	out, err := applyTemplateBuf(raw, params)
+func ApplyTemplate(raw string, params any) (string, error) {
+	out, err := ApplyTemplateBuf(raw, params)
 	if err != nil {
 		return "", err
 	}
@@ -49,16 +49,16 @@ func applyTemplate(raw string, params any) (string, error) {
 	return outStr, nil
 }
 
-// applyTemplateToArray executes applyTemplate
+// ApplyTemplateToArray executes applyTemplate
 // on all string instances in the given array
 // or sub arrays.
-func applyTemplateToArray(arr []any, params any) (err error) {
+func ApplyTemplateToArray(arr []any, params any) (err error) {
 	for i, v := range arr {
 		switch vt := v.(type) {
 		case string:
-			arr[i], err = applyTemplate(vt, params)
+			arr[i], err = ApplyTemplate(vt, params)
 		case []any:
-			err = applyTemplateToArray(vt, params)
+			err = ApplyTemplateToArray(vt, params)
 		default:
 			continue
 		}
@@ -71,19 +71,19 @@ func applyTemplateToArray(arr []any, params any) (err error) {
 	return nil
 }
 
-// applyTemplateToMap executes applyTemplate
+// ApplyTemplateToMap executes applyTemplate
 // on all values in the given map.
-func applyTemplateToMap(m map[string]any, params any) (err error) {
+func ApplyTemplateToMap(m map[string]any, params any) (err error) {
 	for k, v := range m {
 		switch vt := v.(type) {
 		case ParameterValue:
 			m[k], err = vt.ApplyTemplate(params)
 		case string:
-			m[k], err = applyTemplate(vt, params)
+			m[k], err = ApplyTemplate(vt, params)
 		case []any:
-			err = applyTemplateToArray(vt, params)
+			err = ApplyTemplateToArray(vt, params)
 		case map[string]any:
-			err = applyTemplateToMap(vt, params)
+			err = ApplyTemplateToMap(vt, params)
 		default:
 			continue
 		}
@@ -96,9 +96,9 @@ func applyTemplateToMap(m map[string]any, params any) (err error) {
 	return nil
 }
 
-// extend takes a file path and adds the given extension
+// Extend takes a file path and adds the given extension
 // to it if the path does not end with any file extension.
-func extend(v string, ext string) string {
+func Extend(v string, ext string) string {
 	if path.Ext(v) == "" {
 		return v + "." + ext
 	}
