@@ -103,26 +103,26 @@ func (t *Executor) executeGoatfile(log rogu.Logger, gf goatfile.Goatfile, eng en
 			printSeparator("TEARDOWN")
 		}
 		for _, act := range gf.Teardown {
-			err := t.executeAction(log, eng, act, gf)
+			exErr := t.executeAction(log, eng, act, gf)
 			res.Teardown.Inc()
-			if err != nil {
+			if exErr != nil {
+				err = errs.Join(err, exErr)
 				if act.Type() == goatfile.ActionRequest {
-					log.Error().Err(err).Field("req", act).Msg("Teardown step failed")
+					log.Error().Err(exErr).Field("req", act).Msg("Teardown step failed")
 					res.Teardown.IncFailed()
 
 					// If the returned error comes from the params parsing step, don't
 					// cancel the teardown execution. See the following issue for more information.
 					// https://github.com/studio-b12/goat/issues/9
-					if errs.IsOfType[ParamsParsingError](err) {
+					if errs.IsOfType[ParamsParsingError](exErr) {
 						continue
 					}
 
 					if !t.isAbortOnError(act.(goatfile.Request)) {
-						errsNoAbort = errsNoAbort.Append(err)
 						continue
 					}
 				} else {
-					log.Error().Err(err).Field("act", act).Msg("Action failed")
+					log.Error().Err(exErr).Field("act", act).Msg("Action failed")
 				}
 
 				break
