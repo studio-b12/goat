@@ -2,26 +2,26 @@
 
 # New Features
 
-## Logical Section Logging [#28]
+## External Goatfile Execution [#32]
 
-The beginning of the processing of a "logical" section (like `Setup`, `Test` and `Teardown`) is now represented in the log output in the same way as context sections are.
+It is now possible to `execute` a different Goatfile from within a Goatfile.
 
-Therefore, you don't need to write work around like stuff like the following to visually separate between Goatfile sections.
-
+Here is a quick example.
 ```
-### Tests
-##### Tests
-// ...
+execute ../doStuff (
+    username="{{.username}}" 
+    password="{{.password}}"
+    n=1
+) return (
+    response as response1
+)
 ```
 
-An example output would look like the following.
-![](https://github.com/studio-b12/goat/assets/16734205/fab842d9-f49c-4ccb-834a-7ddc8e50a8c2)
+Executed Goatfiles are ran in a completely separate state with the parameters specified passed in and values captured which are listed in the `return` statement.
 
+More detials to the implementation can be found [**here**](https://github.com/studio-b12/goat/blob/master/docs/implementation.md#execute-directive).
 
-## More detailed debugg logging [#29]
+# Minor Changes and Bug Fixes
 
-When debug logging is enabled (log level of `6` or higher), detailed information about the outgoing request as well as the incoming response is provided in the log. Therefore, you don't need to add a `debug(response)` to your `[Script]` field in your Goatfiles anymore.
+- It is now possible to substitute file descriptors with parameters (e.g. `@../{{.fileName}}`).
 
-# Bug Fixes
-
-- In [v0.11.0](https://github.com/studio-b12/goat/releases/tag/v0.11.0), a feature has been added that the file and line of a request that failed is represented in the error message in the console ([#7]). There was a bug that faield reqeusts in imported files show up as being in the file which imports the file. This has been fixed now. [#30]
