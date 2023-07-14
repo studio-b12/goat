@@ -21,7 +21,7 @@ import (
 	"github.com/zekrotja/rogu/log"
 )
 
-// Executor parses a Goatfiles and executes them.
+// Executor parses Goatfiles and executes them.
 type Executor struct {
 	engineMaker func() engine.Engine
 	req         requester.Requester
@@ -94,7 +94,7 @@ func (t *Executor) executeGoatfile(log rogu.Logger, gf goatfile.Goatfile, eng en
 	defer func() {
 		// Teardown Procedures
 
-		if t.isSkip("teardown") {
+		if t.isSkip(goatfile.SectionTeardown) {
 			log.Warn().Msg("skipping teardown steps")
 			return
 		}
@@ -136,7 +136,7 @@ func (t *Executor) executeGoatfile(log rogu.Logger, gf goatfile.Goatfile, eng en
 
 	// Setup Procedures
 
-	if t.isSkip("setup") {
+	if t.isSkip(goatfile.SectionSetup) {
 		log.Warn().Msg("skipping setup steps")
 	} else {
 		if len(gf.Setup) > 0 {
@@ -165,7 +165,7 @@ func (t *Executor) executeGoatfile(log rogu.Logger, gf goatfile.Goatfile, eng en
 
 	// Test Procedures
 
-	if t.isSkip("tests") {
+	if t.isSkip(goatfile.SectionTests) {
 		log.Warn().Msg("skipping test steps")
 	} else {
 		if len(gf.Tests) > 0 {
@@ -290,7 +290,7 @@ func (t *Executor) executeTest(
 	defer func() {
 		// Teardown-Each steps
 
-		if t.isSkip("teardown-each") {
+		if t.isSkip(goatfile.SectionTeardownEach) {
 			log.Warn().Msg("skipping teardown-each steps")
 			return
 		}
@@ -330,7 +330,7 @@ func (t *Executor) executeTest(
 
 	// Setup-Each Steps
 
-	if t.isSkip("setup-each") {
+	if t.isSkip(goatfile.SectionSetupEach) {
 		log.Warn().Msg("skipping setup-each steps")
 	} else {
 		for _, preAct := range gf.SetupEach {
@@ -522,9 +522,9 @@ func (t *Executor) executeExecute(rootPath string, params goatfile.Execute, eng 
 	return res, nil
 }
 
-func (t *Executor) isSkip(section string) bool {
+func (t *Executor) isSkip(section goatfile.SectionName) bool {
 	for _, s := range t.Skip {
-		if strings.ToLower(s) == section {
+		if strings.ToLower(s) == string(section) {
 			return true
 		}
 	}

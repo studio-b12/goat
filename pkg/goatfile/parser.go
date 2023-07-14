@@ -229,19 +229,19 @@ func (t *Parser) parseSection(gf *Goatfile) (err error) {
 
 	var r *[]Action
 
-	switch sectionName(strings.ToLower(name)) {
-	case sectionNameDefaults:
+	switch SectionName(strings.ToLower(name)) {
+	case SectionDefaults:
 		gf.Defaults, err = t.parseDefaults()
 		return err
-	case sectionNameSetup:
+	case SectionSetup:
 		r = &gf.Setup
-	case sectionNameSetupEach:
+	case SectionSetupEach:
 		r = &gf.SetupEach
-	case sectionNameTests:
+	case SectionTests:
 		r = &gf.Tests
-	case sectionNameTeardown:
+	case SectionTeardown:
 		r = &gf.Teardown
-	case sectionNameTeardownEach:
+	case SectionTeardownEach:
 		r = &gf.TeardownEach
 	default:
 		return ErrInvalidSection
