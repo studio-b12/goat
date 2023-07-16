@@ -21,7 +21,7 @@ import (
 	"github.com/zekrotja/rogu/log"
 )
 
-// Executor parses a Goatfiles and executes them.
+// Executor parses Goatfiles and executes them.
 type Executor struct {
 	engineMaker func() engine.Engine
 	req         requester.Requester
@@ -94,7 +94,7 @@ func (t *Executor) executeGoatfile(log rogu.Logger, gf goatfile.Goatfile, eng en
 	defer func() {
 		// Teardown Procedures
 
-		if t.isSkip("teardown") {
+		if t.isSkip(goatfile.SectionTeardown) {
 			log.Warn().Msg("skipping teardown steps")
 			return
 		}
@@ -103,26 +103,26 @@ func (t *Executor) executeGoatfile(log rogu.Logger, gf goatfile.Goatfile, eng en
 			printSeparator("TEARDOWN")
 		}
 		for _, act := range gf.Teardown {
-			err := t.executeAction(log, eng, act, gf)
+			exErr := t.executeAction(log, eng, act, gf)
 			res.Teardown.Inc()
-			if err != nil {
+			if exErr != nil {
+				err = errs.Join(err, exErr)
 				if act.Type() == goatfile.ActionRequest {
-					log.Error().Err(err).Field("req", act).Msg("Teardown step failed")
+					log.Error().Err(exErr).Field("req", act).Msg("Teardown step failed")
 					res.Teardown.IncFailed()
 
 					// If the returned error comes from the params parsing step, don't
 					// cancel the teardown execution. See the following issue for more information.
 					// https://github.com/studio-b12/goat/issues/9
-					if errs.IsOfType[ParamsParsingError](err) {
+					if errs.IsOfType[ParamsParsingError](exErr) {
 						continue
 					}
 
 					if !t.isAbortOnError(act.(goatfile.Request)) {
-						errsNoAbort = errsNoAbort.Append(err)
 						continue
 					}
 				} else {
-					log.Error().Err(err).Field("act", act).Msg("Action failed")
+					log.Error().Err(exErr).Field("act", act).Msg("Action failed")
 				}
 
 				break
@@ -136,7 +136,7 @@ func (t *Executor) executeGoatfile(log rogu.Logger, gf goatfile.Goatfile, eng en
 
 	// Setup Procedures
 
-	if t.isSkip("setup") {
+	if t.isSkip(goatfile.SectionSetup) {
 		log.Warn().Msg("skipping setup steps")
 	} else {
 		if len(gf.Setup) > 0 {
@@ -165,7 +165,7 @@ func (t *Executor) executeGoatfile(log rogu.Logger, gf goatfile.Goatfile, eng en
 
 	// Test Procedures
 
-	if t.isSkip("tests") {
+	if t.isSkip(goatfile.SectionTests) {
 		log.Warn().Msg("skipping test steps")
 	} else {
 		if len(gf.Tests) > 0 {
@@ -290,7 +290,7 @@ func (t *Executor) executeTest(
 	defer func() {
 		// Teardown-Each steps
 
-		if t.isSkip("teardown-each") {
+		if t.isSkip(goatfile.SectionTeardownEach) {
 			log.Warn().Msg("skipping teardown-each steps")
 			return
 		}
@@ -330,7 +330,7 @@ func (t *Executor) executeTest(
 
 	// Setup-Each Steps
 
-	if t.isSkip("setup-each") {
+	if t.isSkip(goatfile.SectionSetupEach) {
 		log.Warn().Msg("skipping setup-each steps")
 	} else {
 		for _, preAct := range gf.SetupEach {
@@ -522,9 +522,9 @@ func (t *Executor) executeExecute(rootPath string, params goatfile.Execute, eng 
 	return res, nil
 }
 
-func (t *Executor) isSkip(section string) bool {
+func (t *Executor) isSkip(section goatfile.SectionName) bool {
 	for _, s := range t.Skip {
-		if strings.ToLower(s) == section {
+		if strings.ToLower(s) == string(section) {
 			return true
 		}
 	}

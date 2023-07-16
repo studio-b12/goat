@@ -1,0 +1,12 @@
+### Tests
+
+POST {{.instance}}/hello/world
+
+---
+
+### Teardown
+
+POST {{.instance}}/hello/world
+
+[Script]
+assert(false)

@@ -1,0 +1,4 @@
+POST {{.instance}}/hello/world
+
+[Script]
+assert(false)

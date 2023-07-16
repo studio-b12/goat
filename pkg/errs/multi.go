@@ -63,3 +63,22 @@ func (t Errors) Append(err error) Errors {
 
 	return append(t, err)
 }
+
+func Join(target error, err error) error {
+	if err == nil {
+		return target
+	}
+
+	var errs Errors
+
+	switch v := target.(type) {
+	case Errors:
+		errs = v
+	case error:
+		errs = Errors{err}
+	default:
+		errs = Errors{}
+	}
+
+	return errs.Append(err).Condense()
+}

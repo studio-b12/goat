@@ -18,5 +18,5 @@ func (t State) Merge(with State) {
 }
 
 func (t State) String() string {
-	return util.MustJsonMarshalIndent(t)
+	return util.SafeJsonMarshalIndent(t)
 }

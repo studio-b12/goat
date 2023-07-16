@@ -10,15 +10,15 @@ import (
 	"github.com/studio-b12/goat/pkg/util"
 )
 
-type sectionName string
+type SectionName string
 
 const (
-	sectionNameSetup        = sectionName("setup")
-	sectionNameSetupEach    = sectionName("setup-each")
-	sectionNameTests        = sectionName("tests")
-	sectionNameTeardown     = sectionName("teardown")
-	sectionNameTeardownEach = sectionName("teardown-each")
-	sectionNameDefaults     = sectionName("defaults")
+	SectionSetup        = SectionName("setup")
+	SectionSetupEach    = SectionName("setup-each")
+	SectionTests        = SectionName("tests")
+	SectionTeardown     = SectionName("teardown")
+	SectionTeardownEach = SectionName("teardown-each")
+	SectionDefaults     = SectionName("defaults")
 )
 
 type optionName string
@@ -69,7 +69,7 @@ func (t *Goatfile) Merge(with Goatfile) {
 
 // String returns the Goatfile as JSON encoded string.
 func (t Goatfile) String() string {
-	return util.MustJsonMarshalIndent(t)
+	return util.SafeJsonMarshalIndent(t)
 }
 
 // Opts holds the specific request

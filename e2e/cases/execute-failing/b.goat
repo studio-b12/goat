@@ -1,0 +1,6 @@
+
+
+GET {{.url}}
+
+[Script]
+assert(false)

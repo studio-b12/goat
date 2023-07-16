@@ -1503,6 +1503,41 @@ execute ../pathTo/someGoatfile
 		assert.Equal(t, "../pathTo/someGoatfile", gf.Tests[0].(Execute).File)
 	})
 
+	t.Run("multiple", func(t *testing.T) {
+		const raw = `
+execute ../pathTo/someGoatfile1
+---
+execute ../pathTo/someGoatfile2
+
+execute ../pathTo/someGoatfile3
+execute ../pathTo/someGoatfile4
+`
+
+		p := stringParser(raw)
+		gf, err := p.Parse()
+		assert.Nil(t, err, err)
+
+		assert.Equal(t, 4, len(gf.Tests))
+	})
+
+	t.Run("multiple-in-section", func(t *testing.T) {
+		const raw = `
+### Tests
+execute ../pathTo/someGoatfile1
+---
+execute ../pathTo/someGoatfile2
+
+execute ../pathTo/someGoatfile3
+execute ../pathTo/someGoatfile4
+`
+
+		p := stringParser(raw)
+		gf, err := p.Parse()
+		assert.Nil(t, err, err)
+
+		assert.Equal(t, 4, len(gf.Tests))
+	})
+
 	t.Run("params", func(t *testing.T) {
 		const raw = `
 execute ../pathTo/someGoatfile (foo=1)
