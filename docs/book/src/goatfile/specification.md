@@ -3,10 +3,10 @@
 Goatfiles are built from the following blocks.
 
 - [Import Statement](./import-statement.md)
-- [Defaults Block]()
-- [Sections]()
-- [Log Sections]()
-- [Requests]()
+- [Sections](./sections.md)
+- [Defaults Section](./defaults-section.md)
+- [Log Sections](./logsections.md)
+- [Requests](./requests/index.md)
   - [Method and URL]()
   - [Options]()
   - [Headers]()
