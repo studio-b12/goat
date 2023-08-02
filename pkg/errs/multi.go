@@ -43,10 +43,13 @@ func (t Errors) HasSome() bool {
 // array has no errors in it. Otherwise, the
 // error array will be returned as Errors type.
 func (t Errors) Condense() error {
-	if t.HasSome() {
-		return t
+	if !t.HasSome() {
+		return nil
 	}
-	return nil
+	if len(t) == 1 {
+		return t[0]
+	}
+	return t
 }
 
 // Append adds the given error to the errors
@@ -75,7 +78,7 @@ func Join(target error, err error) error {
 	case Errors:
 		errs = v
 	case error:
-		errs = Errors{err}
+		errs = Errors{v}
 	default:
 		errs = Errors{}
 	}
