@@ -1,0 +1,5 @@
+GET {{.instance}}/hello
+
+[Script]
+assert(response.StatusCode === 200);
+var test = "hello";
