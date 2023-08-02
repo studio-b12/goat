@@ -167,6 +167,7 @@ func (t *Parser) parseExecute() (execParams Execute, err error) {
 	}
 
 	execParams.File = lit
+	execParams.Path = t.fileDir
 
 	tok, _ := t.scanSkipWS()
 	if tok != tokGROUPSTART {

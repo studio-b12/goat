@@ -400,7 +400,7 @@ func (t *Executor) executeAction(
 		return nil
 	case goatfile.ActionExecute:
 		execParams := act.(goatfile.Execute)
-		_, err := t.executeExecute(path.Dir(gf.Path), execParams, eng)
+		_, err := t.executeExecute(execParams, eng)
 		if err != nil {
 			err = errs.WithSuffix(err, "(imported)")
 		}
@@ -485,8 +485,8 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf go
 	return nil
 }
 
-func (t *Executor) executeExecute(rootPath string, params goatfile.Execute, eng engine.Engine) (Result, error) {
-	pth := goatfile.Extend(path.Join(rootPath, params.File), goatfile.FileExtension)
+func (t *Executor) executeExecute(params goatfile.Execute, eng engine.Engine) (Result, error) {
+	pth := goatfile.Extend(path.Join(path.Dir(params.Path), params.File), goatfile.FileExtension)
 	gf, err := t.parseGoatfile(pth)
 	if err != nil {
 		return Result{}, err
