@@ -236,14 +236,10 @@ func (t *Parser) parseSection(gf *Goatfile) (err error) {
 		return err
 	case SectionSetup:
 		r = &gf.Setup
-	case SectionSetupEach:
-		r = &gf.SetupEach
 	case SectionTests:
 		r = &gf.Tests
 	case SectionTeardown:
 		r = &gf.Teardown
-	case SectionTeardownEach:
-		r = &gf.TeardownEach
 	default:
 		return ErrInvalidSection
 	}

@@ -66,10 +66,8 @@ All requests in all sections of one or more Goatfiles is called a **batch**.
 A Goatfile consists of sections containing one or more requests. Each section has a specific name and function. Though, specifying sections is optional. Defaultly, when no sections are specified, all requests will be assigned to the section `Tests`.
 
 - `Setup`: Requests which will be executed once before all tests are executed. If a request fails, the batch execution is aborted.
-- `Setup-Each`: Requests which will be executed before every single request in `Tests`. If a request fails, the batch execution is aborted.
 - `Tests`: The actual test requests which will be executed.
 - `Teardown`: Requests which will always be executed at the end of the execution of a batch, even if the execution is aborted midways.
-- `Teardown-Each`: Requests which will be executed after each single request in `Tests`. Will also be executed if a `Setup-Each` request fails.
 
 When two Goatfiles are merged (for example on importing one into another), all requests in all sections of one file are appended to the requests in the sections of the other file. The specific order of the sections in the Goatfile is irrelevant.
 
