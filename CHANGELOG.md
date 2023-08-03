@@ -1,27 +1,8 @@
 [VERSION]
 
-# New Features
-
-## External Goatfile Execution [#32]
-
-It is now possible to `execute` a different Goatfile from within a Goatfile.
-
-Here is a quick example.
-```
-execute ../doStuff (
-    username="{{.username}}" 
-    password="{{.password}}"
-    n=1
-) return (
-    response as response1
-)
-```
-
-Executed Goatfiles are ran in a completely separate state with the parameters specified passed in and values captured which are listed in the `return` statement.
-
-More detials to the implementation can be found [**here**](https://github.com/studio-b12/goat/blob/master/docs/implementation.md#execute-directive).
+<!-- # New Features -->
 
 # Minor Changes and Bug Fixes
 
-- It is now possible to substitute file descriptors with parameters (e.g. `@../{{.fileName}}`).
-
+- Fixed a bug where an `execute`d files location in a `use`d file is looked for in the directory that `use`s the file and not the `use`d file. [#39]
+- Fixed a bug in the `errs` package which, when using `Join` with an `error` type as target, overwrites the passed error.

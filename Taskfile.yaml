@@ -99,3 +99,17 @@ tasks:
     cmds:
       - go install github.com/golang/mock/mockgen@latest
       - task: mockgen
+
+  serve-book:
+    desc: "Start the documentation mdbook server."
+    aliases: [book-serve]
+    dir: "docs/book"
+    cmds:
+      - mdbook serve
+
+  build-book:
+    desc: "Build the mdbook documentation."
+    aliases: [book-build]
+    dir: "docs/book"
+    cmds:
+      - mdbook build
