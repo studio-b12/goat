@@ -27,6 +27,7 @@ var builtinFuncsMap = template.FuncMap{
 	"randomString": builtin_randomString,
 	"randomInt":    builtin_randomInt,
 	"timestamp":    builtin_timestamp,
+	"isset":        builtin_isset,
 }
 
 func builtin_base64(v string) string {
@@ -78,4 +79,9 @@ func builtin_timestamp(formatOpt ...string) string {
 	}
 
 	return strconv.Itoa(int(now.Unix()))
+}
+
+func builtin_isset(m map[string]any, key string) bool {
+	v, ok := m[key]
+	return ok && v != nil
 }

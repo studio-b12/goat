@@ -1117,14 +1117,16 @@ someoption = {{ .param }}
 GET https://example.com
 
 [Options]
-someoption = {{ print {{.param1}} {{.param2}} }}
+someoption1 = {{ print {{.param1}} {{.param2}} }}
+someoption2 = {{ print {{if .param1}}true{{else}}false{{end}} }}
 		`
 
 		p := stringParser(raw)
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(" print {{.param1}} {{.param2}} "), res.Tests[0].(Request).Options["someoption"])
+		assert.Equal(t, ParameterValue(" print {{.param1}} {{.param2}} "), res.Tests[0].(Request).Options["someoption1"])
+		assert.Equal(t, ParameterValue(" print {{if .param1}}true{{else}}false{{end}} "), res.Tests[0].(Request).Options["someoption2"])
 	})
 
 	t.Run("instring-1", func(t *testing.T) {

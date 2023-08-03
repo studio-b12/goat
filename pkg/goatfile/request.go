@@ -10,6 +10,8 @@ import (
 	"github.com/studio-b12/goat/pkg/util"
 )
 
+const conditionOptionName = "condition"
+
 // Request holds the specifications
 // for a HTTP request with options
 // and script commands.
@@ -53,6 +55,15 @@ func (t *Request) ParseWithParams(params any) error {
 
 	var err error
 
+	err = ApplyTemplateToMap(t.Options, params)
+	if err != nil {
+		return err
+	}
+
+	if v, ok := t.Options[conditionOptionName].(bool); ok && !v {
+		return nil
+	}
+
 	t.URI, err = ApplyTemplate(t.URI, params)
 	if err != nil {
 		return err
@@ -93,8 +104,10 @@ func (t *Request) ParseWithParams(params any) error {
 	}
 	t.Script = StringContent(scriptStr)
 
-	ApplyTemplateToMap(t.QueryParams, params)
-	ApplyTemplateToMap(t.Options, params)
+	err = ApplyTemplateToMap(t.QueryParams, params)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
