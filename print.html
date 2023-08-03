@@ -84,7 +84,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction/index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="introduction/glossary.html"><strong aria-hidden="true">1.1.</strong> Glossary</a></li></ol></li><li class="chapter-item expanded "><a href="getting-started/index.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="command-line-tool/index.html"><strong aria-hidden="true">3.</strong> Command Line Tool</a></li><li class="chapter-item expanded "><a href="explanations/index.html"><strong aria-hidden="true">4.</strong> How does it work?</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explanations/state.html"><strong aria-hidden="true">4.1.</strong> State Management</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Goatfile</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> Continuous Integration</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">7.</strong> Project Structure</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">8.</strong> Contributing</div></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction/index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="introduction/glossary.html"><strong aria-hidden="true">1.1.</strong> Glossary</a></li></ol></li><li class="chapter-item expanded "><a href="getting-started/index.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="command-line-tool/index.html"><strong aria-hidden="true">3.</strong> Command Line Tool</a></li><li class="chapter-item expanded "><a href="explanations/index.html"><strong aria-hidden="true">4.</strong> How does it work?</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explanations/state.html"><strong aria-hidden="true">4.1.</strong> State Management</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.2.</strong> Test Lifecycle</div></li></ol></li><li class="chapter-item expanded "><a href="goatfile/index.html"><strong aria-hidden="true">5.</strong> Goatfile</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="goatfile/specification.html"><strong aria-hidden="true">5.1.</strong> Syntax Specification</a></li><li class="chapter-item expanded "><a href="goatfile/import-statement.html"><strong aria-hidden="true">5.2.</strong> Import Statement</a></li><li class="chapter-item expanded "><a href="goatfile/sections.html"><strong aria-hidden="true">5.3.</strong> Sections</a></li><li class="chapter-item expanded "><a href="goatfile/defaults-section.html"><strong aria-hidden="true">5.4.</strong> Defaults Section</a></li><li class="chapter-item expanded "><a href="goatfile/logsections.html"><strong aria-hidden="true">5.5.</strong> Log Sections</a></li><li class="chapter-item expanded "><a href="goatfile/requests/index.html"><strong aria-hidden="true">5.6.</strong> Requests</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="goatfile/requests/header.html"><strong aria-hidden="true">5.6.1.</strong> Method and URL</a></li><li class="chapter-item expanded "><a href="goatfile/requests/options.html"><strong aria-hidden="true">5.6.2.</strong> Options</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.6.3.</strong> Headers</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.6.4.</strong> Query Parameters</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.6.5.</strong> Body</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.6.6.</strong> PreScript</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.6.7.</strong> Script</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.7.</strong> Execute Statement</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> Continuous Integration</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">7.</strong> Project Structure</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">8.</strong> Contributing</div></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -242,6 +242,291 @@ When one request has finished, the state is passed into the next request, and so
 <h2 id="state-with-execute"><a class="header" href="#state-with-execute">State with <code>execute</code></a></h2>
 <p>Executed Goatfiles in another Goatfile via the <code>execute</code> command will handle the executed Goatfile like a separate batch and thus it will create and use a separate state. </p>
 <!-- TODO: Add link to the use statement in Goatfile section, when created. -->
+<div style="break-before: page; page-break-before: always;"></div><h1 id="goatfile"><a class="header" href="#goatfile">Goatfile</a></h1>
+<p>A Goatfile contains the request definitions for a Goat test suite. Goatfiles are written in plain 
+UTF-8 encoded text using the Goatfile syntax.</p>
+<p>Goatfiles have the file extension <code>.goat</code>.</p>
+<p>Below, you can see a really simple example Goatfile.</p>
+<pre><code>### Tests
+
+GET https://api.github.com/repos/{{.repo}}
+
+[Script]
+assert(response.StatusCode === 200, `Invalid response code: ${response.StatusCode}`);
+assert(response.BodyJson.language === &quot;Go&quot;);
+
+---
+
+GET https://api.github.com/repos/{{.repo}}/languages
+
+[Script]
+info('Languages:\n' + JSON.stringify(response.BodyJson, null, 2));
+assert(response.StatusCode === 200, `Invalid response code: ${response.StatusCode}`);
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="syntax-specification"><a class="header" href="#syntax-specification">Syntax Specification</a></h1>
+<p>Goatfiles are built from the following blocks.</p>
+<ul>
+<li><a href="goatfile/./import-statement.html">Import Statement</a></li>
+<li><a href="goatfile/./sections.html">Sections</a></li>
+<li><a href="goatfile/./defaults-section.html">Defaults Section</a></li>
+<li><a href="goatfile/./logsections.html">Log Sections</a></li>
+<li><a href="goatfile/./requests/index.html">Requests</a>
+<ul>
+<li><a href="goatfile/./requests/header.html">Method and URL</a></li>
+<li><a href="goatfile/./requests/options.html">Options</a></li>
+<li><a href="goatfile/">Headers</a></li>
+<li><a href="goatfile/">Query Parameters</a></li>
+<li><a href="goatfile/">Body</a></li>
+<li><a href="goatfile/">PreScript</a></li>
+<li><a href="goatfile/">Script</a></li>
+</ul>
+</li>
+<li><a href="goatfile/">Execute Statement</a></li>
+</ul>
+<p>Below, you can see a simple synopsis of the different building blocks of a Goatfile.</p>
+<pre><code>         Import  |  use ./setup.goat
+                 |
+        Comment  |  // This is a comment!
+                 |
+Section Heading  |  ### Setup
+                 |
+Context Section  |  ##### Upload Tests
+                 |
+   Method &amp; URL  |  POST https://example.com
+                 |  
+        Headers  |  [Header]
+                 |  X-Requested-With: XMLHttpRequest
+                 |  Content-Type: application/json
+                 |  Hash: {{ sha256 .data }}
+                 |
+           Body  |  [Body]
+                 |  ```
+                 |  {
+                 |    &quot;hello&quot;: &quot;world&quot;,
+                 |    &quot;hash&quot;: &quot;{{ sha256 .data }}&quot;,
+                 |    &quot;dontescapethis&quot;: &quot;\{\{ \}\}&quot;
+                 |  }
+                 |  ```
+                 |
+  Option Blocks  |  [QueryParams]
+                 |  page = 2
+                 |  items = 30
+                 |  filters = [&quot;time&quot;, &quot;name&quot;]
+                 |
+                 |  [MultipartFormdata]
+                 |  image = @myimage.jpeg
+                 |
+                 |  [Options]
+                 |  cookiejar = &quot;foo&quot;
+                 |  storecookies = false
+                 |
+         Script  |  [Script]
+                 |  assert(response.status &gt;= 200 &amp;&amp; response.status &lt; 400);
+                 |  assert(response.body[&quot;name&quot;] == &quot;somename&quot;);
+                 |
+                 |  // capture a variable to be used in subsequent responses
+                 |  var id = response.body[&quot;id&quot;];
+                 |
+        Request  |  ---
+      Separator  |
+                 |
+        Execute  |  execute ./testFileUpload (
+                 |    file=&quot;file_a.txt&quot;
+                 |    token=&quot;{{.auth.token}}&quot;
+                 |  ) return (
+                 |    fileId as fileId_a
+                 |  )
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="import-statement"><a class="header" href="#import-statement">Import Statement</a></h1>
+<h3 id="syntax"><a class="header" href="#syntax">Syntax</a></h3>
+<blockquote>
+<p><em>UseExpression</em> :<br />
+<code>use</code> <em>StringLiteral</em></p>
+</blockquote>
+<h3 id="example"><a class="header" href="#example">Example</a></h3>
+<pre><code>use ../path/to/goatfile
+</code></pre>
+<h3 id="explanation"><a class="header" href="#explanation">Explanation</a></h3>
+<p>Foreign Goatfiles can be imported using the <code>use</code> statement.</p>
+<p>Imported Goatfile behave like they are merged with the root Goatfile. So if you import a Goatfile <code>B</code> into a Goatfile <code>A</code>, all actions in all sections of <code>B</code> will be inserted infront of the actions in the sections of <code>A</code>. Meanwhile, the order of the sections <code>Setup</code>, <code>Tests</code> and <code>Teardown</code> stays intact.</p>
+<p>Cyclic or repeated imports are forbidden.</p>
+<p>Schematical Example:</p>
+<p><code>A.goat</code></p>
+<pre><code>use B
+
+### Setup
+
+GET A1
+
+### Tests
+
+GET A2
+
+### Teardown
+
+GET A3
+</code></pre>
+<p><code>B.goat</code></p>
+<pre><code>### Setup
+
+GET B1
+
+### Tests
+
+GET B2
+
+### Teardown
+
+GET B3
+</code></pre>
+<p><em>Result (virtual):</em></p>
+<pre><code>### Setup
+
+GET B1
+GET A1
+
+### Tests
+
+GET B2
+GET A2
+
+### Teardown
+
+GET B3
+GET A3
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="sections"><a class="header" href="#sections">Sections</a></h1>
+<h2 id="syntax-1"><a class="header" href="#syntax-1">Syntax</a></h2>
+<blockquote>
+<p><em>SectionDefinition</em> :<br />
+<em>SectionHeader</em> <code>NL</code>+ <em>SectionContent</em></p>
+<p><em>SectionHeader</em> :<br />
+<code>###</code> <em>StringLiteral</em></p>
+</blockquote>
+<h2 id="example-1"><a class="header" href="#example-1">Example</a></h2>
+<pre><code>### Tests
+
+// ...
+</code></pre>
+<h2 id="explanation-1"><a class="header" href="#explanation-1">Explanation</a></h2>
+<p>A section defines a discrete segment in a Goatfile. This can either be a specialized section like the <code>Defaults</code> section or a request section like <code>setup</code>, <code>tests</code> and <code>teardown</code>. More on these sections can be found in the <a href="goatfile/../explanations/test-lifecycle.html">Test Lifecycle Section</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="defaults-section"><a class="header" href="#defaults-section">Defaults Section</a></h1>
+<h2 id="syntax-2"><a class="header" href="#syntax-2">Syntax</a></h2>
+<blockquote>
+<p><em>DefaultsBlock</em> :<br />
+<code>###</code> <code>defaults</code> <code>NL</code>+ <em>PartialRequestProperties</em>?</p>
+</blockquote>
+<h2 id="example-2"><a class="header" href="#example-2">Example</a></h2>
+<pre><code>### Defaults
+
+[Options]
+storecookies = false
+
+[Header]
+Authorization: basic {{.token}}
+
+[Script]
+assert(response.StatusCode === 200);
+</code></pre>
+<h2 id="explanation-2"><a class="header" href="#explanation-2">Explanation</a></h2>
+<p>The <code>Defaults</code> section body is structured like a request but without the header section. This includes the blocks <code>[Options]</code>, <code>[Header]</code>, <code>[QueryParams]</code>, <code>[Body]</code>, <code>[PreScript]</code> and <code>[Script]</code>. </p>
+<p>Values specified in <code>[Header]</code>, <code>[Options]</code> and <code>[QueryParams]</code> will be merged with the values set in the requests. Values set in the request will overwrite values set in the defaults, if specified in both.</p>
+<p>On the other hand, values specified in <code>[Body]</code>, <code>[PreScript]</code> or <code>[Script]</code> will be used if not specified in the requests. If these blocks are specified in the request, they will overwrite the default values as well.</p>
+<p>Default values will also be applied if imported via a <code>use</code> directive.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="log-sections"><a class="header" href="#log-sections">Log Sections</a></h1>
+<h2 id="syntax-3"><a class="header" href="#syntax-3">Syntax</a></h2>
+<blockquote>
+<p><em>LogSectionDefinition</em> :<br />
+<code>#####</code> <em>Text</em> <code>NL</code></p>
+</blockquote>
+<h2 id="example-3"><a class="header" href="#example-3">Example</a></h2>
+<pre><code>##### User Authentication Tests
+
+// ...
+</code></pre>
+<h2 id="explanation-3"><a class="header" href="#explanation-3">Explanation</a></h2>
+<p>A log section will produce a log output containing the given text to provide a visual separation between requests.</p>
+<p>These sections can be used everywhere where requests can be specified as well.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="requests"><a class="header" href="#requests">Requests</a></h1>
+<h2 id="syntax-4"><a class="header" href="#syntax-4">Syntax</a></h2>
+<blockquote>
+<p><em>RequestDefinition</em> :<br />
+<em>RequestHeader</em> <code>NL</code> (<em>RequestBlock</em> <code>NL</code>)* <em>RequestDelimiter</em> <code>NL</code></p>
+<p><em>RequestHeader</em> :<br />
+<em>StringLiteral</em> <code>WS</code>+ <em>StringLiteral</em></p>
+<p><em>RequestBlock</em> :<br />
+<em>RequestBlockHeader</em> <code>NL</code> <em>RequestBlockContent</em></p>
+<p><em>RequestDelimiter</em> :<br />
+<code>---</code> <code>-</code>*</p>
+</blockquote>
+<h2 id="example-4"><a class="header" href="#example-4">Example</a></h2>
+<pre><code>GET https://example.com/api/users
+
+[Header]
+Accept: application/json
+Authentication: basic {{ .credentials.token }}
+
+[Script]
+assert(response.StatusCode === 200);
+
+---
+</code></pre>
+<h2 id="explanation-4"><a class="header" href="#explanation-4">Explanation</a></h2>
+<p>Define a request to be executed. The request definition starts with the request header consiting of the method followed by the URI (separated by one or more spaces). The request header is the only mandatory field for a valid request definition.</p>
+<p>After that, you can specify more details about the request in different blocks. In the following documentation sections, all available blocks are listed and explained.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="method-and-url"><a class="header" href="#method-and-url">Method and URL</a></h1>
+<h2 id="syntax-5"><a class="header" href="#syntax-5">Syntax</a></h2>
+<blockquote>
+<p><em>RequestHeader</em> :<br />
+<em>StringLiteral</em> <code>WS</code>+ <em>StringLiteral</em></p>
+</blockquote>
+<h2 id="example-5"><a class="header" href="#example-5">Example</a></h2>
+<pre><code>GET https://example.com/api/users
+</code></pre>
+<h2 id="explanation-5"><a class="header" href="#explanation-5">Explanation</a></h2>
+<p>The request header defines the method and URL for a request and is the only mandatory element
+to define a request.</p>
+<p>The method can be any upcase string.</p>
+<p>The URL can be either defined as an unquoted string literal or as a quoted string if spaces are required in the URL. Values in the URL can also be substituted.</p>
+<p>✅ Valid</p>
+<pre><code>GET https://example.com/api/users
+</code></pre>
+<p>✅ Valid</p>
+<pre><code>GET https://example.com/api/users/{{.userId}}
+</code></pre>
+<p>✅ Valid</p>
+<pre><code>GET &quot;https://example.com/api/users/some user&quot;
+</code></pre>
+<p>✅ Valid</p>
+<pre><code>GET &quot;https://example.com/api/users/{{ .userId }}&quot;
+</code></pre>
+<p>❌ Invalid</p>
+<pre><code>GET https://example.com/api/users/{{ .userId }}
+</code></pre>
+<p>❌ Invalid</p>
+<pre><code>GET https://example.com/api/users/some user
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="options"><a class="header" href="#options">Options</a></h1>
+<blockquote>
+<p><em>RequestOptions</em> :<br />
+<code>[Options]</code> <code>NL</code>+ <em>RequestOptionsContent</em></p>
+<p><em>RequestOptionsContent</em> :<br />
+<em>TomlKeyValues</em></p>
+</blockquote>
+<h2 id="example-6"><a class="header" href="#example-6">Example</a></h2>
+<pre><code class="language-toml">[Options]
+cookiejar = &quot;admin&quot;
+condition = {{ if .userId }}
+delay = &quot;5s&quot;
+</code></pre>
+<h2 id="explanation-6"><a class="header" href="#explanation-6">Explanation</a></h2>
+<p>Define additional options to the requests. The format of the contents of this block is <a href="https://toml.io/"><code>TOML</code></a>.</p>
+<p>Below, all available otpions are explained.</p>
+<h3 id="cookiejar"><a class="header" href="#cookiejar"><code>cookiejar</code></a></h3>
+<ul>
+<li><strong>Type</strong>: <code>string</code> | <code>number</code></li>
+<li><strong>Default</strong>: <code>&quot;default&quot;</code></li>
+</ul>
 
                     </main>
 
