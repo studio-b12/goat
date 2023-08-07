@@ -53,6 +53,29 @@ func TestApplyTemplate(t *testing.T) {
 		})
 		assert.Error(t, err)
 	})
+
+	t.Run("template-list", func(t *testing.T) {
+		const raw = `{{ .param }}`
+
+		res, err := ApplyTemplate(raw, map[string]any{
+			"param": []any{"foo", "bar", "bazz", 1, 2, 3.1415},
+		})
+		assert.Nil(t, err)
+		assert.Equal(t, `["foo","bar","bazz",1,2,3.1415]`, res)
+	})
+
+	t.Run("template-map", func(t *testing.T) {
+		const raw = `{{ .param }}`
+
+		res, err := ApplyTemplate(raw, map[string]any{
+			"param": map[string]any{
+				"bar": 123,
+				"foo": "bar",
+			},
+		})
+		assert.Nil(t, err)
+		assert.Equal(t, `{"bar":123,"foo":"bar"}`, res)
+	})
 }
 
 func TestApplyTemplateToArray(t *testing.T) {
