@@ -32,20 +32,19 @@ func TestToHttpRequest(t *testing.T) {
 func TestParseWithParams(t *testing.T) {
 	getReq := func() Request {
 		r := newRequest()
-		r.Method = "{{.method}}"
 		r.URI = "{{.instance}}/api/v1/login"
 		r.Header.Set("Content-Type", "{{.contentType}}")
 		r.Header.Set("Authorization", "bearer {{.token}}")
 		r.QueryParams = map[string]any{"page": "{{.page}}"}
 		r.Options = map[string]any{"condition": "{{.condition}}"}
 		r.Body = StringContent(`{"username": "{{.creds.username}}", "password": "{{.creds.password}}"}`)
+		r.PreScript = StringContent(`var bar = "{{.bar}}"`)
 		r.Script = StringContent(`var foo = "{{.foo}}"`)
 		return r
 	}
 
 	t.Run("general", func(t *testing.T) {
 		params := map[string]any{
-			"method":      "GET",
 			"instance":    "https://example.com",
 			"contentType": "application/json",
 			"token":       "some-token",
@@ -56,11 +55,37 @@ func TestParseWithParams(t *testing.T) {
 				"password": "some-password",
 			},
 			"foo": "bar",
+			"bar": "bazz",
 		}
 
 		r := getReq()
 		err := r.ParseWithParams(params)
 		assert.Nil(t, err, err)
+
+		assert.Equal(t,
+			"https://example.com/api/v1/login",
+			r.URI)
+		assert.Equal(t,
+			"application/json",
+			r.Header.Get("Content-Type"))
+		assert.Equal(t,
+			"bearer some-token",
+			r.Header.Get("Authorization"))
+		assert.Equal(t,
+			"2",
+			r.QueryParams["page"])
+		assert.Equal(t,
+			"true",
+			r.Options["condition"])
+		assert.Equal(t,
+			StringContent(`{"username": "some-username", "password": "some-password"}`),
+			r.Body)
+		assert.Equal(t,
+			StringContent(`var bar = "bazz"`),
+			r.PreScript)
+		assert.Equal(t,
+			StringContent(`var foo = "bar"`),
+			r.Script)
 	})
 }
 
