@@ -45,6 +45,14 @@ func (t Result) Log() {
 			fmt.Sprintf("Ran %d requests: %d succeeded and %d failed", t.All(), t.Successfull(), t.Failed()), c)))
 }
 
+func (t Result) Sum() (res ResultSection) {
+	res.Merge(t.Setup)
+	res.Merge(t.Tests)
+	res.Merge(t.Teardown)
+
+	return res
+}
+
 type ResultSection struct {
 	failed int
 	all    int
