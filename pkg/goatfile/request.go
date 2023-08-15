@@ -10,6 +10,8 @@ import (
 	"github.com/studio-b12/goat/pkg/util"
 )
 
+const conditionOptionName = "condition"
+
 // Request holds the specifications
 // for a HTTP request with options
 // and script commands.
@@ -53,10 +55,32 @@ func (t *Request) ParseWithParams(params any) error {
 
 	var err error
 
+	// Substitute Options
+
+	err = ApplyTemplateToMap(t.Options, params)
+	if err != nil {
+		return err
+	}
+
+	if v, ok := t.Options[conditionOptionName].(bool); ok && !v {
+		return nil
+	}
+
+	// Substitute URI
+
 	t.URI, err = ApplyTemplate(t.URI, params)
 	if err != nil {
 		return err
 	}
+
+	// Substitute QueryParams
+
+	err = ApplyTemplateToMap(t.QueryParams, params)
+	if err != nil {
+		return err
+	}
+
+	// Substitute Header
 
 	for _, vals := range t.Header {
 		for i, v := range vals {
@@ -66,6 +90,8 @@ func (t *Request) ParseWithParams(params any) error {
 			}
 		}
 	}
+
+	// Substitute Body
 
 	switch body := t.Body.(type) {
 	case StringContent:
@@ -82,6 +108,21 @@ func (t *Request) ParseWithParams(params any) error {
 		t.Body = body
 	}
 
+	// Substitute PreScript
+
+	preScriptStr, err := util.ReadReaderToString(t.PreScript.Reader())
+	if err != nil {
+		return errs.WithPrefix("reading preScript failed:", err)
+	}
+
+	preScriptStr, err = ApplyTemplate(preScriptStr, params)
+	if err != nil {
+		return err
+	}
+	t.PreScript = StringContent(preScriptStr)
+
+	// Substitute Script
+
 	scriptStr, err := util.ReadReaderToString(t.Script.Reader())
 	if err != nil {
 		return errs.WithPrefix("reading script failed:", err)
@@ -92,9 +133,6 @@ func (t *Request) ParseWithParams(params any) error {
 		return err
 	}
 	t.Script = StringContent(scriptStr)
-
-	ApplyTemplateToMap(t.QueryParams, params)
-	ApplyTemplateToMap(t.Options, params)
 
 	return nil
 }

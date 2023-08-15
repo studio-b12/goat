@@ -13,12 +13,10 @@ import (
 type SectionName string
 
 const (
-	SectionSetup        = SectionName("setup")
-	SectionSetupEach    = SectionName("setup-each")
-	SectionTests        = SectionName("tests")
-	SectionTeardown     = SectionName("teardown")
-	SectionTeardownEach = SectionName("teardown-each")
-	SectionDefaults     = SectionName("defaults")
+	SectionSetup    = SectionName("setup")
+	SectionTests    = SectionName("tests")
+	SectionTeardown = SectionName("teardown")
+	SectionDefaults = SectionName("defaults")
 )
 
 type optionName string
@@ -40,11 +38,9 @@ type Goatfile struct {
 
 	Defaults *Request
 
-	Setup        []Action
-	SetupEach    []Action
-	Tests        []Action
-	Teardown     []Action
-	TeardownEach []Action
+	Setup    []Action
+	Tests    []Action
+	Teardown []Action
 
 	Path string
 }
@@ -59,10 +55,8 @@ func (t *Goatfile) Merge(with Goatfile) {
 	}
 
 	t.Setup = append(t.Setup, with.Setup...)
-	t.SetupEach = append(t.SetupEach, with.SetupEach...)
 	t.Tests = append(t.Tests, with.Tests...)
 	t.Teardown = append(t.Teardown, with.Teardown...)
-	t.TeardownEach = append(t.TeardownEach, with.TeardownEach...)
 
 	t.Path = with.Path
 }

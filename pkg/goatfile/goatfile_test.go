@@ -32,16 +32,10 @@ func TestMerge(t *testing.T) {
 				testRequest("B", "1"),
 				testRequest("B", "2"),
 			},
-			SetupEach: []Action{
-				testRequest("B", "3"),
-			},
 			Tests: []Action{},
 			Teardown: []Action{
 				testRequest("B", "4"),
 				testRequest("B", "5"),
-			},
-			TeardownEach: []Action{
-				testRequest("B", "6"),
 			},
 		}
 	}
@@ -62,9 +56,6 @@ func TestMerge(t *testing.T) {
 				testRequest("B", "1"),
 				testRequest("B", "2"),
 			},
-			SetupEach: []Action{
-				testRequest("B", "3"),
-			},
 			Tests: []Action{
 				testRequest("A", "4"),
 				testRequest("A", "5"),
@@ -72,9 +63,6 @@ func TestMerge(t *testing.T) {
 			Teardown: []Action{
 				testRequest("B", "4"),
 				testRequest("B", "5"),
-			},
-			TeardownEach: []Action{
-				testRequest("B", "6"),
 			},
 		}, a)
 	})
@@ -95,9 +83,6 @@ func TestMerge(t *testing.T) {
 				testRequest("A", "2"),
 				testRequest("A", "3"),
 			},
-			SetupEach: []Action{
-				testRequest("B", "3"),
-			},
 			Tests: []Action{
 				testRequest("A", "4"),
 				testRequest("A", "5"),
@@ -105,9 +90,6 @@ func TestMerge(t *testing.T) {
 			Teardown: []Action{
 				testRequest("B", "4"),
 				testRequest("B", "5"),
-			},
-			TeardownEach: []Action{
-				testRequest("B", "6"),
 			},
 		}, b)
 	})

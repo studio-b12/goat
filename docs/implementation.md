@@ -127,6 +127,7 @@ Goat also provides some additional functions which are available in Goatfiles.
 - `randomString <integer?>`: Returns a random string with the given length. If no length is passed, the default length is 8 characters.
 - `randomInt <integer?>`: Returns a random integer in the range [0, n) where n is given as parameter. If no parameter is passed, n is the max int value.
 - `timestamp <format?>`: Returns the current timestamp in the given format. If no format is specified, the timestamp is returned as Unix Seconds string.
+- `isset <map[string]any> <string>`: Returns `true` if the given key string is defined and not nil in the given map. Otherwise, `false` is returned.
 
 ## `use` Directive
 

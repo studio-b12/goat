@@ -893,9 +893,6 @@ func TestParse_Sections(t *testing.T) {
 GET https://example1.com
 ---
 GET https://example2.com
-
-### Setup-Each
-GET https://example3.com
 ---
 GET https://example4.com
 
@@ -913,14 +910,6 @@ GET https://example7.com
 ---
 GET https://example8.com
 
----
-
-### Teardown-Each
-
-GET https://example9.com
----
-GET https://example10.com
-
 			`
 
 		p := stringParser(raw)
@@ -931,17 +920,11 @@ GET https://example10.com
 		assert.Equal(t, "https://example1.com", res.Setup[0].(Request).URI)
 		assert.Equal(t, "https://example2.com", res.Setup[1].(Request).URI)
 
-		assert.Equal(t, "https://example3.com", res.SetupEach[0].(Request).URI)
-		assert.Equal(t, "https://example4.com", res.SetupEach[1].(Request).URI)
-
 		assert.Equal(t, "https://example5.com", res.Tests[0].(Request).URI)
 		assert.Equal(t, "https://example6.com", res.Tests[1].(Request).URI)
 
 		assert.Equal(t, "https://example7.com", res.Teardown[0].(Request).URI)
 		assert.Equal(t, "https://example8.com", res.Teardown[1].(Request).URI)
-
-		assert.Equal(t, "https://example9.com", res.TeardownEach[0].(Request).URI)
-		assert.Equal(t, "https://example10.com", res.TeardownEach[1].(Request).URI)
 	})
 
 	t.Run("invalid-1", func(t *testing.T) {
@@ -1117,14 +1100,16 @@ someoption = {{ .param }}
 GET https://example.com
 
 [Options]
-someoption = {{ print {{.param1}} {{.param2}} }}
+someoption1 = {{ print {{.param1}} {{.param2}} }}
+someoption2 = {{ print {{if .param1}}true{{else}}false{{end}} }}
 		`
 
 		p := stringParser(raw)
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(" print {{.param1}} {{.param2}} "), res.Tests[0].(Request).Options["someoption"])
+		assert.Equal(t, ParameterValue(" print {{.param1}} {{.param2}} "), res.Tests[0].(Request).Options["someoption1"])
+		assert.Equal(t, ParameterValue(" print {{if .param1}}true{{else}}false{{end}} "), res.Tests[0].(Request).Options["someoption2"])
 	})
 
 	t.Run("instring-1", func(t *testing.T) {

@@ -1,0 +1,7 @@
+GET {{.host}}/hello
+
+[Options]
+condition = {{isset . "host"}}
+
+[Script]
+assert(response.StatusCode === 200);

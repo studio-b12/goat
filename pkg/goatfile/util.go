@@ -2,6 +2,7 @@ package goatfile
 
 import (
 	"bytes"
+	"encoding/json"
 	"path"
 	"strings"
 	"text/template"
@@ -40,6 +41,10 @@ func ApplyTemplateBuf(raw string, params any) (*bytes.Buffer, error) {
 // If a key in the template is not present in the params,
 // an error will be returned.
 func ApplyTemplate(raw string, params any) (string, error) {
+	if m, ok := params.(map[string]any); ok {
+		transformPrintable(m)
+	}
+
 	out, err := ApplyTemplateBuf(raw, params)
 	if err != nil {
 		return "", err
@@ -119,4 +124,36 @@ func unescapeTemplateDelims(v string) string {
 	v = strings.ReplaceAll(v, "\\{", "{")
 	v = strings.ReplaceAll(v, "\\}", "}")
 	return v
+}
+
+func mustMarshal(v any) string {
+	r, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	return string(r)
+}
+
+type printableList []any
+
+func (t printableList) String() string {
+	return mustMarshal(t)
+}
+
+type printableMap map[string]any
+
+func (t printableMap) String() string {
+	return mustMarshal(t)
+}
+
+func transformPrintable(m map[string]any) {
+	for key, val := range m {
+		switch tval := val.(type) {
+		case []any:
+			m[key] = printableList(tval)
+		case map[string]any:
+			m[key] = printableMap(tval)
+			transformPrintable(tval)
+		}
+	}
 }
