@@ -85,10 +85,15 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 	eng := t.engineMaker()
 	eng.SetState(initialParams)
 
-	return t.executeGoatfile(log, gf, eng)
+	return t.executeGoatfile(log, gf, eng, true)
 }
 
-func (t *Executor) executeGoatfile(log rogu.Logger, gf goatfile.Goatfile, eng engine.Engine) (res Result, err error) {
+func (t *Executor) executeGoatfile(
+	log rogu.Logger,
+	gf goatfile.Goatfile,
+	eng engine.Engine,
+	printSeperators bool,
+) (res Result, err error) {
 	var errsNoAbort errs.Errors
 
 	defer func() {
@@ -99,7 +104,7 @@ func (t *Executor) executeGoatfile(log rogu.Logger, gf goatfile.Goatfile, eng en
 			return
 		}
 
-		if len(gf.Teardown) > 0 {
+		if len(gf.Teardown) > 0 && printSeperators {
 			printSeparator("TEARDOWN")
 		}
 		for _, act := range gf.Teardown {
@@ -138,7 +143,7 @@ func (t *Executor) executeGoatfile(log rogu.Logger, gf goatfile.Goatfile, eng en
 	if t.isSkip(goatfile.SectionSetup) {
 		log.Warn().Msg("skipping setup steps")
 	} else {
-		if len(gf.Setup) > 0 {
+		if len(gf.Setup) > 0 && printSeperators {
 			printSeparator("SETUP")
 		}
 		for _, act := range gf.Setup {
@@ -166,7 +171,7 @@ func (t *Executor) executeGoatfile(log rogu.Logger, gf goatfile.Goatfile, eng en
 	if t.isSkip(goatfile.SectionTests) {
 		log.Warn().Msg("skipping test steps")
 	} else {
-		if len(gf.Tests) > 0 {
+		if len(gf.Tests) > 0 && printSeperators {
 			printSeparator("TESTS")
 		}
 		for _, act := range gf.Tests {
@@ -436,7 +441,7 @@ func (t *Executor) executeExecute(params goatfile.Execute, eng engine.Engine) (R
 	isolatedEng := t.engineMaker()
 	isolatedEng.SetState(params.Params)
 
-	res, err := t.executeGoatfile(log, gf, isolatedEng)
+	res, err := t.executeGoatfile(log, gf, isolatedEng, false)
 	if err != nil {
 		return res, err
 	}
