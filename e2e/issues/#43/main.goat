@@ -1,0 +1,8 @@
+GET {{.instance}}/{{.path}}
+
+[PreScript]
+var path = "{{ .somePath }}"
+
+[Script]
+assert(response.StatusCode === 200);
+assert(response.BodyJson.path === "/someSubstitutedPath", `Path was ${response.BodyJson.path}`);

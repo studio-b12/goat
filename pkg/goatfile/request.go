@@ -28,7 +28,8 @@ type Request struct {
 	Path    string
 	PosLine int
 
-	parsed bool
+	parsed    bool
+	preParsed bool
 }
 
 var _ Action = (*Request)(nil)
@@ -45,10 +46,35 @@ func (t Request) Type() ActionType {
 	return ActionRequest
 }
 
-// ParseWithParams takes the given parameters
+// PreSubstitudeWithParams takes the given parameters and replaces placeholders
+// within specific parts of the request which shall be executed before the
+// actual request is substituted (like PreScript).
+func (t *Request) PreSubstitudeWithParams(params any) error {
+	if t.preParsed {
+		return ErrTemplateAlreadyPreParsed
+	}
+
+	// Substitute PreScript
+
+	preScriptStr, err := util.ReadReaderToString(t.PreScript.Reader())
+	if err != nil {
+		return errs.WithPrefix("reading preScript failed:", err)
+	}
+
+	preScriptStr, err = ApplyTemplate(preScriptStr, params)
+	if err != nil {
+		return err
+	}
+	t.PreScript = StringContent(preScriptStr)
+
+	t.preParsed = true
+	return nil
+}
+
+// SubstitudeWithParams takes the given parameters
 // and replaces placeholders within the request
 // with values from the given params.
-func (t *Request) ParseWithParams(params any) error {
+func (t *Request) SubstitudeWithParams(params any) error {
 	if t.parsed {
 		return ErrTemplateAlreadyParsed
 	}
@@ -107,19 +133,6 @@ func (t *Request) ParseWithParams(params any) error {
 		}
 		t.Body = body
 	}
-
-	// Substitute PreScript
-
-	preScriptStr, err := util.ReadReaderToString(t.PreScript.Reader())
-	if err != nil {
-		return errs.WithPrefix("reading preScript failed:", err)
-	}
-
-	preScriptStr, err = ApplyTemplate(preScriptStr, params)
-	if err != nil {
-		return err
-	}
-	t.PreScript = StringContent(preScriptStr)
 
 	// Substitute Script
 

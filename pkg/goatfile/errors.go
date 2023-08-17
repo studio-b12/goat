@@ -9,6 +9,7 @@ import (
 
 var (
 	ErrTemplateAlreadyParsed       = errors.New("request template has already been parsed")
+	ErrTemplateAlreadyPreParsed    = errors.New("request template has already been pre-parsed")
 	ErrIllegalCharacter            = errors.New("illegal character")
 	ErrUnexpected                  = errors.New("unexpected error")
 	ErrInvalidStringLiteral        = errors.New("invalid string literal")

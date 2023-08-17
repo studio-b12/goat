@@ -29,7 +29,7 @@ func TestToHttpRequest(t *testing.T) {
 	}, httpReq.Header)
 }
 
-func TestParseWithParams(t *testing.T) {
+func TestPreSubstituteWithParams(t *testing.T) {
 	getReq := func() Request {
 		r := newRequest()
 		r.URI = "{{.instance}}/api/v1/login"
@@ -59,7 +59,67 @@ func TestParseWithParams(t *testing.T) {
 		}
 
 		r := getReq()
-		err := r.ParseWithParams(params)
+		err := r.PreSubstitudeWithParams(params)
+		assert.Nil(t, err, err)
+
+		assert.Equal(t,
+			"{{.instance}}/api/v1/login",
+			r.URI)
+		assert.Equal(t,
+			"{{.contentType}}",
+			r.Header.Get("Content-Type"))
+		assert.Equal(t,
+			"bearer {{.token}}",
+			r.Header.Get("Authorization"))
+		assert.Equal(t,
+			"{{.page}}",
+			r.QueryParams["page"])
+		assert.Equal(t,
+			"{{.condition}}",
+			r.Options["condition"])
+		assert.Equal(t,
+			StringContent(`{"username": "{{.creds.username}}", "password": "{{.creds.password}}"}`),
+			r.Body)
+		assert.Equal(t,
+			StringContent(`var bar = "bazz"`),
+			r.PreScript)
+		assert.Equal(t,
+			StringContent(`var foo = "{{.foo}}"`),
+			r.Script)
+	})
+}
+
+func TestSubstituteWithParams(t *testing.T) {
+	getReq := func() Request {
+		r := newRequest()
+		r.URI = "{{.instance}}/api/v1/login"
+		r.Header.Set("Content-Type", "{{.contentType}}")
+		r.Header.Set("Authorization", "bearer {{.token}}")
+		r.QueryParams = map[string]any{"page": "{{.page}}"}
+		r.Options = map[string]any{"condition": "{{.condition}}"}
+		r.Body = StringContent(`{"username": "{{.creds.username}}", "password": "{{.creds.password}}"}`)
+		r.PreScript = StringContent(`var bar = "{{.bar}}"`)
+		r.Script = StringContent(`var foo = "{{.foo}}"`)
+		return r
+	}
+
+	t.Run("general", func(t *testing.T) {
+		params := map[string]any{
+			"instance":    "https://example.com",
+			"contentType": "application/json",
+			"token":       "some-token",
+			"page":        2,
+			"condition":   true,
+			"creds": map[string]any{
+				"username": "some-username",
+				"password": "some-password",
+			},
+			"foo": "bar",
+			"bar": "bazz",
+		}
+
+		r := getReq()
+		err := r.SubstitudeWithParams(params)
 		assert.Nil(t, err, err)
 
 		assert.Equal(t,
@@ -81,7 +141,7 @@ func TestParseWithParams(t *testing.T) {
 			StringContent(`{"username": "some-username", "password": "some-password"}`),
 			r.Body)
 		assert.Equal(t,
-			StringContent(`var bar = "bazz"`),
+			StringContent(`var bar = "{{.bar}}"`),
 			r.PreScript)
 		assert.Equal(t,
 			StringContent(`var foo = "bar"`),

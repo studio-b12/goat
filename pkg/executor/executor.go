@@ -347,6 +347,12 @@ func (t *Executor) executeAction(
 
 func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf goatfile.Goatfile) (err error) {
 	req.Merge(gf.Defaults)
+	state := eng.State()
+
+	err = req.PreSubstitudeWithParams(state)
+	if err != nil {
+		return errs.WithPrefix("failed pre-substituting request with parameters:", err)
+	}
 
 	preScript, err := util.ReadReaderToString(req.PreScript.Reader())
 	if err != nil {
@@ -358,12 +364,12 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf go
 		if err != nil {
 			return errs.WithPrefix("preScript failed:", err)
 		}
+		state = eng.State()
 	}
 
-	state := eng.State()
-	err = req.ParseWithParams(state)
+	err = req.SubstitudeWithParams(state)
 	if err != nil {
-		return errs.WithPrefix("failed infusing request with parameters:",
+		return errs.WithPrefix("failed substituting request with parameters:",
 			ParamsParsingError(err))
 	}
 
