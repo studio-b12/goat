@@ -323,6 +323,32 @@ func TestApplyTemplate_Builtins(t *testing.T) {
 
 		assert.InDelta(t, now, resTime.Unix(), 1)
 	})
+
+	t.Run("template-builtin-isset", func(t *testing.T) {
+		const raw = `{{isset . "somekey"}}`
+
+		res, err := ApplyTemplate(raw, map[string]any{"anotherkey": "anotherval"})
+		assert.Nil(t, err)
+		assert.Equal(t, res, "false")
+
+		res, err = ApplyTemplate(raw, map[string]any{"somekey": "someval"})
+		assert.Nil(t, err)
+		assert.Equal(t, res, "true")
+	})
+
+	t.Run("template-builtin-json", func(t *testing.T) {
+		res, err := ApplyTemplate(`{{json .foo}}`, map[string]any{"foo": map[string]any{"bar": 1, "bazz": 2}})
+		assert.Nil(t, err)
+		assert.Equal(t, res, `{"bar":1,"bazz":2}`)
+
+		res, err = ApplyTemplate(`{{json .foo "  "}}`, map[string]any{"foo": map[string]any{"bar": 1, "bazz": 2}})
+		assert.Nil(t, err)
+		assert.Equal(t, res, "{\n  \"bar\": 1,\n  \"bazz\": 2\n}")
+
+		res, err = ApplyTemplate(`{{json 1}}`, nil)
+		assert.Nil(t, err)
+		assert.Equal(t, res, "1")
+	})
 }
 
 func TestExtend(t *testing.T) {

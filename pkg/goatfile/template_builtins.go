@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"hash"
 	"io"
@@ -28,6 +29,7 @@ var builtinFuncsMap = template.FuncMap{
 	"randomInt":    builtin_randomInt,
 	"timestamp":    builtin_timestamp,
 	"isset":        builtin_isset,
+	"json":         builtin_json,
 }
 
 func builtin_base64(v string) string {
@@ -84,4 +86,23 @@ func builtin_timestamp(formatOpt ...string) string {
 func builtin_isset(m map[string]any, key string) bool {
 	v, ok := m[key]
 	return ok && v != nil
+}
+
+func builtin_json(v any, indent ...string) string {
+	var (
+		err error
+		res []byte
+	)
+
+	if len(indent) > 0 {
+		res, err = json.MarshalIndent(v, "", indent[0])
+	} else {
+		res, err = json.Marshal(v)
+	}
+
+	if err != nil {
+		panic("failed encoding json: " + err.Error())
+	}
+
+	return string(res)
 }
