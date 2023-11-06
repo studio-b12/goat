@@ -23,11 +23,17 @@ func NewGoja() Engine {
 
 	t.Set("assert", t.builtin_assert)
 	t.Set("debug", t.builtin_debug)
+	t.Set("debugf", t.builtin_debugf)
 	t.Set("info", t.builtin_info)
+	t.Set("infof", t.builtin_infof)
 	t.Set("warn", t.builtin_warn)
+	t.Set("warnf", t.builtin_warnf)
 	t.Set("error", t.builtin_error)
+	t.Set("errorf", t.builtin_errorf)
 	t.Set("fatal", t.builtin_fatal)
+	t.Set("fatalf", t.builtin_fatalf)
 	t.Set("print", t.builtin_print)
+	t.Set("printf", t.builtin_printf)
 	t.Set("println", t.builtin_println)
 
 	return &t
