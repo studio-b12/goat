@@ -2,16 +2,14 @@
 
 # New Features
 
-- A new builtin template function has been added called `isset` which takes a map as first parameter and a map key string as second parameter and returns true if the key is set in the map.
+- A new template function `json` has been added which encodes any passed object into a JSON string (e.g. `{{ json .myObject }}`).
+- 
+- For each in-script logging function, a formatted equivalent has been added (e.g. `infof("Hello, %s!", "world")`).
 
 # Minor Changes and Bug Fixes
 
-- Request conditions are now substituted and checked before continuing the request substitution (see #41).
+- Variables set in the `PreScript` section are now available for substitution in all other parts of the request like URL, options, header, body or script. [#43]
 
-- The sections `Setup-Each` and `Teardown-Each` have been removed (see #37).
+- Section log lines are now hidden when a Goatfile is executed via the `execute` instruction.
 
-- The `PreScript` block will now – as expected – also get substituted as same as the `Script` section (see #35).
-
-- When an array or map value gets substituted, the representation will now be in JSON format (see #36).
-
-- The execution status summary at the end of the end of the program execution does no more count log actions as requests and properly summs up request summaries from executed Goatfiles.
+- Some more debugging information has been added visible when using the `trace` log level.
