@@ -322,6 +322,7 @@ func (t *Executor) executeAction(
 	case goatfile.ActionRequest:
 		res.Inc()
 		req := act.(goatfile.Request)
+		log.Trace().Fields("options", req.Options).Msg("Request Options")
 		err = t.executeRequest(eng, req, gf)
 		if err != nil {
 			res.IncFailed()
