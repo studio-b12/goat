@@ -26,6 +26,8 @@ mocks/
 !internal/embedded/embeds/**
 
 .vscode/
+.idea/
+
 params.yml
 
 bin/
