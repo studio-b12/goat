@@ -1,17 +1,17 @@
 <!DOCTYPE HTML>
-<html lang="en" class="sidebar-visible no-js light">
+<html lang="en" class="light" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
         <title>Goat</title>
-        <meta name="robots" content="noindex" />
+        <meta name="robots" content="noindex">
 
 
         <!-- Custom HTML head -->
         
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#ffffff">
 
         <link rel="icon" href="favicon.svg">
         <link rel="shortcut icon" href="favicon.png">
@@ -32,7 +32,7 @@
         <!-- Custom theme stylesheets -->
 
     </head>
-    <body>
+    <body class="sidebar-visible no-js">
     <div id="body-container">
         <!-- Provide site root to javascript -->
         <script>
@@ -62,29 +62,34 @@
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
             var html = document.querySelector('html');
-            html.classList.remove('no-js')
             html.classList.remove('light')
             html.classList.add(theme);
-            html.classList.add('js');
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
         </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
-            var html = document.querySelector('html');
+            var body = document.querySelector('body');
             var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
             } else {
                 sidebar = 'hidden';
             }
-            html.classList.remove('sidebar-visible');
-            html.classList.add("sidebar-" + sidebar);
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction/index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="introduction/glossary.html"><strong aria-hidden="true">1.1.</strong> Glossary</a></li></ol></li><li class="chapter-item expanded "><a href="getting-started/index.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="command-line-tool/index.html"><strong aria-hidden="true">3.</strong> Command Line Tool</a></li><li class="chapter-item expanded "><a href="explanations/index.html"><strong aria-hidden="true">4.</strong> How does it work?</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explanations/state.html"><strong aria-hidden="true">4.1.</strong> State Management</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.2.</strong> Test Lifecycle</div></li></ol></li><li class="chapter-item expanded "><a href="goatfile/index.html"><strong aria-hidden="true">5.</strong> Goatfile</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="goatfile/specification.html"><strong aria-hidden="true">5.1.</strong> Syntax Specification</a></li><li class="chapter-item expanded "><a href="goatfile/import-statement.html"><strong aria-hidden="true">5.2.</strong> Import Statement</a></li><li class="chapter-item expanded "><a href="goatfile/sections.html"><strong aria-hidden="true">5.3.</strong> Sections</a></li><li class="chapter-item expanded "><a href="goatfile/defaults-section.html"><strong aria-hidden="true">5.4.</strong> Defaults Section</a></li><li class="chapter-item expanded "><a href="goatfile/logsections.html"><strong aria-hidden="true">5.5.</strong> Log Sections</a></li><li class="chapter-item expanded "><a href="goatfile/requests/index.html"><strong aria-hidden="true">5.6.</strong> Requests</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="goatfile/requests/method-and-url.html"><strong aria-hidden="true">5.6.1.</strong> Method and URL</a></li><li class="chapter-item expanded "><a href="goatfile/requests/options.html"><strong aria-hidden="true">5.6.2.</strong> Options</a></li><li class="chapter-item expanded "><a href="goatfile/requests/header.html"><strong aria-hidden="true">5.6.3.</strong> Headers</a></li><li class="chapter-item expanded "><a href="goatfile/requests/query-params.html"><strong aria-hidden="true">5.6.4.</strong> Query Parameters</a></li><li class="chapter-item expanded "><a href="goatfile/requests/body.html"><strong aria-hidden="true">5.6.5.</strong> Body</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.6.6.</strong> PreScript</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.6.7.</strong> Script</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.7.</strong> Execute Statement</div></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">6.</strong> Continuous Integration</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">7.</strong> Project Structure</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">8.</strong> Contributing</div></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction/index.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="introduction/glossary.html"><strong aria-hidden="true">1.1.</strong> Glossary</a></li></ol></li><li class="chapter-item expanded "><a href="getting-started/index.html"><strong aria-hidden="true">2.</strong> Getting Started</a></li><li class="chapter-item expanded "><a href="command-line-tool/index.html"><strong aria-hidden="true">3.</strong> Command Line Tool</a></li><li class="chapter-item expanded "><a href="explanations/index.html"><strong aria-hidden="true">4.</strong> How does it work?</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="explanations/state.html"><strong aria-hidden="true">4.1.</strong> State Management</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">4.2.</strong> Test Lifecycle</div></li></ol></li><li class="chapter-item expanded "><a href="goatfile/index.html"><strong aria-hidden="true">5.</strong> Goatfile</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="goatfile/specification.html"><strong aria-hidden="true">5.1.</strong> Syntax Specification</a></li><li class="chapter-item expanded "><a href="goatfile/import-statement.html"><strong aria-hidden="true">5.2.</strong> Import Statement</a></li><li class="chapter-item expanded "><a href="goatfile/sections.html"><strong aria-hidden="true">5.3.</strong> Sections</a></li><li class="chapter-item expanded "><a href="goatfile/defaults-section.html"><strong aria-hidden="true">5.4.</strong> Defaults Section</a></li><li class="chapter-item expanded "><a href="goatfile/logsections.html"><strong aria-hidden="true">5.5.</strong> Log Sections</a></li><li class="chapter-item expanded "><a href="goatfile/requests/index.html"><strong aria-hidden="true">5.6.</strong> Requests</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="goatfile/requests/method-and-url.html"><strong aria-hidden="true">5.6.1.</strong> Method and URL</a></li><li class="chapter-item expanded "><a href="goatfile/requests/options.html"><strong aria-hidden="true">5.6.2.</strong> Options</a></li><li class="chapter-item expanded "><a href="goatfile/requests/header.html"><strong aria-hidden="true">5.6.3.</strong> Headers</a></li><li class="chapter-item expanded "><a href="goatfile/requests/query-params.html"><strong aria-hidden="true">5.6.4.</strong> Query Parameters</a></li><li class="chapter-item expanded "><a href="goatfile/requests/body.html"><strong aria-hidden="true">5.6.5.</strong> Body</a></li><li class="chapter-item expanded "><a href="goatfile/requests/prescript.html"><strong aria-hidden="true">5.6.6.</strong> PreScript</a></li><li class="chapter-item expanded "><a href="goatfile/requests/script.html"><strong aria-hidden="true">5.6.7.</strong> Script</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.7.</strong> Execute Statement</div></li></ol></li><li class="chapter-item expanded "><a href="scripting/index.html"><strong aria-hidden="true">6.</strong> Scripting</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="scripting/builtins.html"><strong aria-hidden="true">6.1.</strong> Builtins</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">7.</strong> Continuous Integration</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">8.</strong> Project Structure</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">9.</strong> Contributing</div></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -117,9 +122,9 @@
                                 <div id="menu-bar-hover-placeholder"></div>
                 <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
                             <i class="fa fa-bars"></i>
-                        </button>
+                        </label>
                         <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
                             <i class="fa fa-paint-brush"></i>
                         </button>
@@ -612,7 +617,7 @@ token = &quot;{{.apitoken}}&quot;
 </code></pre>
 </blockquote>
 <p>Parameter values can be subsituted.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="header-1"><a class="header" href="#header-1">Header</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="body"><a class="header" href="#body">Body</a></h1>
 <blockquote>
 <p><em>RequestOptions</em> :<br />
 <code>[Body]</code> <code>NL</code>+ <em>RequestBodyContent</em></p>
@@ -641,6 +646,216 @@ token = &quot;{{.apitoken}}&quot;
 </code></pre>
 <h2 id="explanation-9"><a class="header" href="#explanation-9">Explanation</a></h2>
 <p>Define HTTP headers sent with the request in the <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#headers">HTTP conform header representation</a>.</p>
+<p>If you want to use the parameter braces (<code>{{</code>, <code>}}</code>) without substitution, you can escape them using a backslash.</p>
+<p>Example:</p>
+<pre><code class="language-toml">[Body]
+```
+{
+  &quot;user&quot;: {
+    &quot;name&quot;: &quot;\{\{This will not be substituted\}\}&quot;,
+    &quot;favorite_programming_langs&quot;: [
+      &quot;Go&quot;,
+      &quot;Rust&quot;
+    ],
+  }
+}
+```
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="prescript"><a class="header" href="#prescript">PreScript</a></h1>
+<blockquote>
+<p><em>RequestOptions</em> :<br />
+<code>[PreScript]</code> <code>NL</code>+ <em>RequestPreScriptContent</em></p>
+<p><em>RequestPreScriptContent</em> :<br />
+<em>BlockDelimitedContent</em> | <em>UndelimitedContent</em></p>
+<p><em>BlockDelimitedContent</em> :<br />
+<em>BlockDelimiter</em> <code>NL</code> <code>/.*/</code> <code>NL</code> <em>BlockDelimiter</em></p>
+<p><em>UndelimitedContent</em> :<br />
+(<code>/.*/</code> <code>NL</code>)* <code>NL</code></p>
+<p><em>BlockDelimiter</em> :<br />
+<code>```</code></p>
+</blockquote>
+<h2 id="example-10"><a class="header" href="#example-10">Example</a></h2>
+<pre><code class="language-toml">[PreScript]
+```
+var fileName = requestedFile.Metadata.Name;
+```
+</code></pre>
+<h2 id="explanation-10"><a class="header" href="#explanation-10">Explanation</a></h2>
+<p>A script section which is evaluated before the actual request is substituted and performed. This can be used to put values from previous responses into variables which can then be later on used in the request parameters.</p>
+<p>Example:</p>
+<pre><code>POST http://example.com/api/user
+
+[Body]
+// ...
+
+[Script]
+assert(response.StatusCode === 201);
+var user = response.BodyJson;
+
+---
+
+GET http://example.com/api/user/{{.userid}}
+
+[PreScript]
+var userid = user.id;
+</code></pre>
+<p><code>PreScript</code> will always be executed before the request parameters are substituted. So you can use the results in various fields like <code>[Options]</code> or <code>[Body]</code>, <code>Header</code> or <code>[Script]</code>.</p>
+<p>Scripts are written in ES5.1 conform JavaScript. More on that can be found in the <a href="goatfile/requests/./script.html">Script</a> section documentation.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="script"><a class="header" href="#script">Script</a></h1>
+<blockquote>
+<p><em>RequestOptions</em> :<br />
+<code>[Script]</code> <code>NL</code>+ <em>RequestPreScriptContent</em></p>
+<p><em>RequestPreScriptContent</em> :<br />
+<em>BlockDelimitedContent</em> | <em>UndelimitedContent</em></p>
+<p><em>BlockDelimitedContent</em> :<br />
+<em>BlockDelimiter</em> <code>NL</code> <code>/.*/</code> <code>NL</code> <em>BlockDelimiter</em></p>
+<p><em>UndelimitedContent</em> :<br />
+(<code>/.*/</code> <code>NL</code>)* <code>NL</code></p>
+<p><em>BlockDelimiter</em> :<br />
+<code>```</code></p>
+</blockquote>
+<h2 id="example-11"><a class="header" href="#example-11">Example</a></h2>
+<pre><code class="language-toml">[Script]
+```
+assert(response.StatusCode === 200, `Response status code was ${response.StatusCode}`);
+assert(response.BodyJson.UserName === &quot;Foo Bar&quot;);
+```
+</code></pre>
+<h2 id="explanation-11"><a class="header" href="#explanation-11">Explanation</a></h2>
+<p>A script section which is executed after a request has been performed and responded to. This is generally used to assert response values like status codes, header values or body content.</p>
+<p>Scripts are written in ES5.1 conform JavaScript.</p>
+<p>The context of the script always contains the current values in the batch state as global variables.</p>
+<p>A special variable set in each <code>[Script]</code> section is the <code>response</code> variable, which contains all information about the request response. The <code>Response</code> object contains the following fields.</p>
+<pre><code class="language-go">type Response struct {
+	StatusCode    int
+	Status        string
+	Proto         string
+	ProtoMajor    int
+	ProtoMinor    int
+	Header        map[string][]string
+	ContentLength int64
+	Body          string
+	BodyJson      any
+}
+</code></pre>
+<p><code>BodyJson</code> is a special field containing the response body content as an object which will be populated when the response body can be parsed as a JSON object.</p>
+<p>In any script section, you can used built-in functions like <code>assert</code>, which are documented <a href="goatfile/requests/../../scripting/builtins.html">here</a>.</p>
+<p>When a script section throws an un-catched exception, the test will be evaluated as <em>failed</em>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="scripting"><a class="header" href="#scripting">Scripting</a></h1>
+<p>Scripting sections like <code>[Script]</code> and <code>[PreScript]</code> use a dedicated scripting micro-engine for maximum flexibility in your test setup and procedures.</p>
+<p>Goat uses ES5.1 conform JavaScript interpreted by the <a href="https://github.com/dop251/goja">goja</a> micro-engine.</p>
+<p>In each script instance, you have access to the current state values via the global environment variables. Also, you can define global variables using the <code>var</code> statement to define values which will be set to the state after successful script execution.</p>
+<p>Example:</p>
+<blockquote>
+<p>Initial State</p>
+<pre><code class="language-toml">foo = 1
+</code></pre>
+</blockquote>
+<blockquote>
+<p>Script Execution</p>
+<pre><code class="language-js">var bar = foo * 2;
+</code></pre>
+</blockquote>
+<blockquote>
+<p>Resulting State</p>
+<pre><code class="language-toml">foo = 1
+bar = 2
+</code></pre>
+</blockquote>
+<p>Also, some <a href="scripting/./builtins.html">builtins</a> are available in each script instance.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="builtins"><a class="header" href="#builtins">Builtins</a></h1>
+<p>The following builtin functions are available in each script instance.</p>
+<h2 id="assert"><a class="header" href="#assert"><code>assert</code></a></h2>
+<pre><code class="language-ts">function assert(expression: bool, fail_message?: string): void;
+</code></pre>
+<p>Takes an <code>expression</code> which, when evaluated to <code>false</code>, will throw an assert exception. You can pass an additional <code>fail_message</code> which will be shown in the exception. This can be used to assert values in responses and fail test execution if they are false.</p>
+<p><strong>Example</strong></p>
+<pre><code class="language-js">assert(response.StatusCode &gt;= 400, `Status code was ${response.StatusCode}`);
+</code></pre>
+<h2 id="print"><a class="header" href="#print"><code>print</code></a></h2>
+<pre><code class="language-ts">function print(...message: string[]): void;
+</code></pre>
+<p>Prints the given <code>message</code> to the terminal without a leading new line.</p>
+<p><strong>Example</strong></p>
+<pre><code class="language-js">print(&quot;Hello world!&quot;);
+</code></pre>
+<h2 id="println"><a class="header" href="#println"><code>println</code></a></h2>
+<pre><code class="language-ts">function println(...message: string[]): void;
+</code></pre>
+<p>Prints the given <code>message</code> to the terminal with a leading new line.</p>
+<p><strong>Example</strong></p>
+<pre><code class="language-js">println(&quot;Hello world!&quot;);
+</code></pre>
+<h2 id="info"><a class="header" href="#info"><code>info</code></a></h2>
+<pre><code class="language-ts">function info(...message: string[]): void;
+</code></pre>
+<p>Logs an <em>info</em> log entry to the output logger(s) with the given <code>message</code>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="language-js">info(&quot;Hello world!&quot;);
+</code></pre>
+<h2 id="warn"><a class="header" href="#warn"><code>warn</code></a></h2>
+<pre><code class="language-ts">function warn(...message: string[]): void;
+</code></pre>
+<p>Logs an <em>warn</em> log entry to the output logger(s) with the given <code>message</code>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="language-js">warn(&quot;Hello world!&quot;);
+</code></pre>
+<h2 id="error"><a class="header" href="#error"><code>error</code></a></h2>
+<pre><code class="language-ts">function error(...message: string[]): void;
+</code></pre>
+<p>Logs an <em>error</em> log entry to the output logger(s) with the given <code>message</code>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="language-js">error(&quot;Hello world!&quot;);
+</code></pre>
+<h2 id="fatal"><a class="header" href="#fatal"><code>fatal</code></a></h2>
+<pre><code class="language-ts">function fatal(...message: string[]): void;
+</code></pre>
+<p>Logs an <em>fatal</em> log entry to the output logger(s) with the given <code>message</code>. This will also abort the batch execution.</p>
+<p><strong>Example</strong></p>
+<pre><code class="language-js">fatal(&quot;Hello world!&quot;);
+</code></pre>
+<h2 id="debug"><a class="header" href="#debug"><code>debug</code></a></h2>
+<pre><code class="language-ts">function debug(...message: string[]): void;
+</code></pre>
+<p>Logs an <em>debug</em> log entry to the output logger(s) with the given <code>message</code>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="language-js">debug(&quot;Hello world!&quot;);
+</code></pre>
+<h2 id="infof"><a class="header" href="#infof"><code>infof</code></a></h2>
+<pre><code class="language-ts">function infof(format: string, ...values: any[]): void;
+</code></pre>
+<p>Logs an <em>info</em> log entry to the output logger(s) with the given <code>format</code> formatted with the given <code>values</code>. Formatting is handled according to <a href="https://pkg.go.dev/fmt">Go's formatting implementation</a>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="language-js">infof(&quot;Hello %s!&quot;, &quot;World&quot;);
+</code></pre>
+<h2 id="warnf"><a class="header" href="#warnf"><code>warnf</code></a></h2>
+<pre><code class="language-ts">function warnf(format: string, ...values: any[]): void;
+</code></pre>
+<p>Logs an <em>warn</em> log entry to the output logger(s) with the given <code>format</code> formatted with the given <code>values</code>. Formatting is handled according to <a href="https://pkg.go.dev/fmt">Go's formatting implementation</a>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="language-js">warnf(&quot;Hello %s!&quot;, &quot;World&quot;);
+</code></pre>
+<h2 id="errorf"><a class="header" href="#errorf"><code>errorf</code></a></h2>
+<pre><code class="language-ts">function errorf(format: string, ...values: any[]): void;
+</code></pre>
+<p>Logs an <em>error</em> log entry to the output logger(s) with the given <code>format</code> formatted with the given <code>values</code>. Formatting is handled according to <a href="https://pkg.go.dev/fmt">Go's formatting implementation</a>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="language-js">errorf(&quot;Hello %s!&quot;, &quot;World&quot;);
+</code></pre>
+<h2 id="fatalf"><a class="header" href="#fatalf"><code>fatalf</code></a></h2>
+<pre><code class="language-ts">function fatalf(format: string, ...values: any[]): void;
+</code></pre>
+<p>Logs an <em>fatal</em> log entry to the output logger(s) with the given <code>format</code> formatted with the given <code>values</code>. Formatting is handled according to <a href="https://pkg.go.dev/fmt">Go's formatting implementation</a>. This will also abort the batch execution.</p>
+<p><strong>Example</strong></p>
+<pre><code class="language-js">fatalf(&quot;Hello %s!&quot;, &quot;World&quot;);
+</code></pre>
+<h2 id="debugf"><a class="header" href="#debugf"><code>debugf</code></a></h2>
+<pre><code class="language-ts">function debugf(format: string, ...values: any[]): void;
+</code></pre>
+<p>Logs an <em>debug</em> log entry to the output logger(s) with the given <code>format</code> formatted with the given <code>values</code>. Formatting is handled according to <a href="https://pkg.go.dev/fmt">Go's formatting implementation</a>.</p>
+<p><strong>Example</strong></p>
+<pre><code class="language-js">debugf(&quot;Hello %s!&quot;, &quot;World&quot;);
+</code></pre>
 
                     </main>
 
