@@ -22,6 +22,8 @@
     - [PreScript](./goatfile/requests/prescript.md)
     - [Script](./goatfile/requests/script.md)
   - [Execute Statement]()
+- [Templating](./templating/index.md)
+  - [Builtins](./templating/builtins.md)
 - [Scripting](./scripting/index.md)
   - [Builtins](./scripting/builtins.md)
 - [Continuous Integration]()

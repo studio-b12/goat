@@ -49,7 +49,7 @@ type Response struct {
 }
 ```
 
-`BodyJson` is a special field containing the response body content as an object which will be populated when the response body can be parsed as a JSON object.
+`BodyJson` is a special field containing the response body content as a JavaScript object which will be populated when the response body can be parsed as a JSON object.
 
 In any script section, you can used built-in functions like `assert`, which are documented [here](../../scripting/builtins.md).
 
