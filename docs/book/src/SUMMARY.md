@@ -6,7 +6,7 @@
 - [Command Line Tool](./command-line-tool/index.md)
 - [How does it work?](./explanations/index.md)
   - [State Management](./explanations/state.md)
-  - [Test Lifecycle]()
+  - [Lifecycle](./explanations/lifecycle.md)
 - [Goatfile](./goatfile/index.md)
   - [Syntax Specification](./goatfile/specification.md)
   - [Import Statement](./goatfile/import-statement.md)

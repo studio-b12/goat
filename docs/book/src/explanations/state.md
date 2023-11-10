@@ -9,12 +9,10 @@ Below, you can see a very simple example of how a state lifecycle could look lik
 
 ![](../assets/simple-state.excalidraw.svg)
 
-## State with `use`
+## State with [`use`](../goatfile/import-statement.md)
 
-Because `use` effectively merges the imported Goatfile together with the root Goatfile to a single batch execution, state is shared between them. So if you define a variable in a Goatfile imported via `use`, the variable will be accessible in subsequent imported Goatfiles as well as in the root Goatfile.
+Because [`use`](../goatfile/import-statement.md) effectively merges the imported Goatfile together with the root Goatfile to a single batch execution, state is shared between them. So if you define a variable in a Goatfile imported via [`use`](../goatfile/import-statement.md), the variable will be accessible in subsequent imported Goatfiles as well as in the root Goatfile.
 
-## State with `execute`
+## State with [`execute`](../goatfile/execute-statement.md)
 
-Executed Goatfiles in another Goatfile via the `execute` command will handle the executed Goatfile like a separate batch and thus it will create and use a separate state. 
-
-<!-- TODO: Add link to the use statement in Goatfile section, when created. -->
+Executed Goatfiles in another Goatfile via the [`execute`](../goatfile/execute-statement.md) command will handle the executed Goatfile like a separate batch and thus it will create and use a separate state. 
