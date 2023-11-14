@@ -7,7 +7,7 @@ You can pass one or multiple Goatfiles or directories as positional argument. Fo
 goat issue_32.goat tests/integrationtests
 ```
 
-When passing in a directory, Goat will look for any `.goat` file recursively. Files and directories prefixed with an underscore (`_`) are ignored. This is especially useful for Goatfiles which are only supposed to be imported or executed in other Goatfiles. If you want to read more about this, take a look into the [Project Structure section](../project-structure.md). 
+When passing in a directory, Goat will look for any `*.goat` file recursively. Files and directories prefixed with an underscore (`_`) are ignored. This is especially useful for Goatfiles which are only supposed to be imported or executed in other Goatfiles. If you want to read more about this, take a look into the [Project Structure section](../project-structure.md). 
 
 ## Flags
 

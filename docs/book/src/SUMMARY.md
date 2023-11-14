@@ -26,6 +26,6 @@
   - [Builtins](./templating/builtins.md)
 - [Scripting](./scripting/index.md)
   - [Builtins](./scripting/builtins.md)
+- [Project Structure](./project-structure/index.md)
 - [Continuous Integration]()
-- [Project Structure]()
 - [Contributing]()
