@@ -64,3 +64,83 @@ apikey = "some api key"
 
 ## Documentation
 
+To simplify the usage of our Goatfiles, we employ a system of documentation what a spefici Goatfile does, which parameters it expects and – if it is a Goatfile meant to be execuetd or used in other Goatfiles – which state variables it creates which can be further used or captured in an exec's return statement.
+
+The documentation is prefixed with three forward slashes and sits on the very top of the Goatfile. First, stating the purpose of the file followed by required parameters. After that, you can specify the variables created in the execution in the same manner.
+
+Lets take the following as an example for a Goatfile which can be imported in your test to log in two users with two different privilege groups.
+```
+/// Logs in with a `low` and an `admin` user to the SSP and stores
+/// the session in the `default` cookiejar for the `low` user and
+/// in the `admin` cookiejar for the `admin` user.
+/// 
+/// 
+/// Required Parameters
+/// -----------------------------------------------------------------------
+/// instance:                       The root address of the API instance.
+/// credentials.low.username:       Username of the `low` user
+/// credentials.low.password:       Password of the `low` user
+/// credentials.admin.username:     Username of the `admin` user
+/// credentials.admin.password:     Password of the `admin` user
+/// 
+/// 
+
+### Setup
+
+POST {{.instance}}/api/auth/login
+
+[Header]
+Content-Type: application/json
+
+[Body]
+{
+  "username": "{{.credentials.low.username}}",
+  "password": "{{.credentials.low.password}}"
+}
+
+[Script]
+assert(response.StatusCode == 200, `Status code was ${response.StatusCode}`);
+
+---
+
+POST {{.instance}}/api/auth/login
+
+[Options]
+cookiejar = "admin"
+
+[Header]
+Content-Type: application/json
+
+
+[Body]
+{
+  "username": "{{.credentials.admin.username}}",
+  "password": "{{.credentials.admin.password}}"
+}
+
+[Script]
+assert(response.StatusCode == 200, `Status code was ${response.StatusCode}`);
+
+---
+```
+
+Here you can find an example for a Goatfile which is created to be used with the `execute` statement in another Goatfile.
+
+```
+/// Creates a new user.
+/// 
+/// 
+/// Parameters
+/// -----------------------------------------------------------------------
+/// instance:   The root address of the API instance.
+/// username:   User name of the new user.
+/// password:   Password of the new user.
+/// 
+///
+/// Returns
+/// -----------------------------------------------------------------------
+/// userid:     The ID of the new user.
+
+
+// ...
+```
