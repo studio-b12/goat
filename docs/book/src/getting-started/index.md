@@ -6,6 +6,12 @@
 
 First of all, you need to install the `goat` tool. It is distributed as a single binary without any dependencies. So simply download the [**latest release binaries from GitHub**](https://github.com/studio-b12/goat/releases) fitting your system configuration.
 
+You can also use the provided [installation script](https://github.com/studio-b12/goat/blob/main/scripts/download.sh), if you want.
+
+```bash
+$ curl -Ls https://raw.githubusercontent.com/studio-b12/goat/main/scripts/download.sh | bash -
+```
+
 ### Installation with `go install`
 
 Alternatively, if you have the Go toolchain installed on your system, you can also simply use `go install` to build and install the tool for your system. This is also very useful if no pre-built binary is available for your specific system configuration.

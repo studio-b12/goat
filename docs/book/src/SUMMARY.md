@@ -27,5 +27,3 @@
 - [Scripting](./scripting/index.md)
   - [Builtins](./scripting/builtins.md)
 - [Project Structure](./project-structure/index.md)
-- [Continuous Integration]()
-- [Contributing]()
