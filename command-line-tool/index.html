@@ -180,20 +180,67 @@
 <h2 id="flags"><a class="header" href="#flags">Flags</a></h2>
 <p>The following sections provide further information about the various flags which can be passed to <code>goat</code>.</p>
 <ul>
-<li><code>-a ARGS, --args ARGS</code> - Pass params as key value arguments into the execution</li>
-<li><code>--delay DELAY, -d DELAY</code> - Delay requests by the given duration</li>
-<li><code>--dry</code> - Only parse the goatfile(s) without executing any requests</li>
-<li><code>--gradual, -g</code> - Advance the requests maually</li>
-<li><code>--json</code> - Use JSON format instead of pretty console format for logging</li>
-<li><code>--loglevel LOGLEVEL, -l LOGLEVEL</code> - Logging level</li>
-<li><code>--new</code> - Create a new base Goatfile</li>
-<li><code>--no-abort</code> - Do not abort batch execution on error</li>
-<li><code>--no-color</code> - Supress colored log output</li>
-<li><code>--params PARAMS, -p PARAMS</code> - Params file location(s)</li>
-<li><code>--silent, -s</code> - Disables all logging output</li>
-<li><code>--skip SKIP</code> - Section(s) to be skipped during execution</li>
-<li><code>--help, -h</code> - display this help and exit</li>
-<li><code>--version</code> - display version and exit</li>
+<li>
+<p><strong><code>-a ARGS</code>, <code>--args ARGS</code></strong><br />
+Pass params as key value arguments into the execution. If you want to pass multiple args, specify each pair with its own parameter.<br />
+<em>Example: <code>-a hello=world -a user.name=foo -a &quot;user.password=bar bazz&quot;</code></em></p>
+</li>
+<li>
+<p><strong><code>--delay DELAY</code>, <code> -d DELAY</code></strong><br />
+Delay all requests by the given duration. The duration is formatted according to the format of Go's <a href="https://pkg.go.dev/time#ParseDuration"><code>time.ParseDuration</code></a> function.<br />
+<em>Example: <code>-d 1s30ms</code></em></p>
+</li>
+<li>
+<p><strong><code>--dry</code></strong><br />
+Only parse the goatfile(s) without executing any requests.</p>
+</li>
+<li>
+<p><strong><code>--gradual</code>, <code> -g</code></strong><br />
+Advance the requests maually.</p>
+</li>
+<li>
+<p><strong><code>--json</code></strong><br />
+Use JSON format instead of pretty console format for logging.</p>
+</li>
+<li>
+<p><strong><code>--loglevel LOGLEVEL</code>, <code> -l LOGLEVEL</code></strong><br />
+Logging level. <a href="https://github.com/zekroTJA/rogu#levels">Here</a> you can see which values you can use for log levels.<br />
+<em>Example: <code>-l trace</code></em></p>
+</li>
+<li>
+<p><strong><code>--new</code></strong><br />
+Create a new base Goatfile.</p>
+</li>
+<li>
+<p><strong><code>--no-abort</code></strong><br />
+Do not abort the batch execution on error.</p>
+</li>
+<li>
+<p><strong><code>--no-color</code></strong><br />
+Supress colored log output.</p>
+</li>
+<li>
+<p><strong><code>--params PARAMS</code>, <code> -p PARAMS</code></strong><br />
+Pass parameters in parameter files. These can be either TOML, YAML or JSON files. If you want to pass multiple parameter files, specify each one with its own parameter.<br />
+<em>Example: <code>-p ./local.toml -p ~/credentials.yaml</code></em></p>
+</li>
+<li>
+<p><strong><code>--silent</code>, <code> -s</code></strong><br />
+Disables all logging output. Only <code>print</code> and <code>println</code> statements will be printed. This is especially useful if you want to use Goatfiles inwith other scripts.</p>
+</li>
+<li>
+<p><strong><code>--skip SKIP</code></strong><br />
+Section(s) to be skipped during execution.<br />
+<em>Example: <code>--skip teardown</code></em></p>
+</li>
+<li>
+<p><strong><code>--help</code>, <code> -h</code></strong><br />
+Display the help message.</p>
+</li>
+<li>
+<p><strong><code>--version</code></strong><br />
+Display the installed version.</p>
+</li>
 </ul>
 
                     </main>
