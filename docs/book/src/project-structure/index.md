@@ -6,16 +6,16 @@ When you write extensive integration tests for your products, you can use differ
 
 As you might know, you can extract often used snippets into their own Goatfiles which then can be re-used in other files either via the [`use`](../goatfile/import-statement.md) or via the [`execute`](../goatfile/execute-statement.md) statement.
 
-If you have multiple projects which share similar backend logic, the best approach is to collect shared routines in a separate dependency. For example, you could create a separate git repository with some utility Goatfiles which is then added as a git sub-module to your main projects. Make sure to prefix the name of the target directory in your projects with an underscore (`_`), so that the Goat CLI will not try to execute them by accident. 
+If you have multiple projects which share similar backend logic, the best approach is to collect shared routines in a separate dependency. For example, you could create a separate Git repository with some utility Goatfiles, which is then added as a Git sub-module to your main projects. Make sure to prefix the name of the target directory in your projects with an underscore (`_`), so that the Goat CLI will not try to execute them by accident. 
 
 Example use-cases for that could be
 - logging in with one or more user accounts
 - setting default headers for all requests
-- encapsuling common procedures like creating and cleaning up entities
+- encapsulating common procedures like creating and cleaning up entities
 
 ## File Structure
 
-In our projects at B12 Touch, we employ the following file structure for API integration tests in all our projects. Maybe you can use this for inspiration for your own structure.
+In our projects, we employ the following file structure for API integration tests in all our projects. Maybe you can use this for inspiration for your own structure.
 
 ```
 integrationtests/
@@ -43,7 +43,7 @@ As you can see, we have a directory called `integrationtests/` in all of our pro
 
 `tests/` contains the actual integration tests grouped by features. These tests should always pass against the latest dev state, otherwise something might be broken.
 
-We use some user-secific parameters passed into the tests which are stored in different `*.toml` files in the `integrationtests/` directory. These should be specified in the projects `.gitignore` because every developer might have their own parameters like API keys or user credentials. You could also put a parameter file for automatic tests in there (like the `ci.toml` in our example) which is commited into the repository. The `params.toml.template` is a template file to base custom parameter files on. This is handy because the integration tests expect specific parameters to work with. An example `params.toml.template` could look as following.
+We use some user-specific parameters passed into the tests which are stored in different `*.toml` files in the `integrationtests/` directory. These should be specified in the projects `.gitignore`, because every developer might have their own parameters like API keys or user credentials. You could also put a parameter file for automatic tests in there (like the `ci.toml` in our example) which is commited into the repository. The `params.toml.template` is a template file to base custom parameter files on. This is handy because the integration tests expect specific parameters to work with. An example `params.toml.template` could look as following.
 
 ```toml
 # The server instance to connect to.
@@ -64,7 +64,7 @@ apikey = "some api key"
 
 ## Documentation
 
-To simplify the usage of our Goatfiles, we employ a system of documentation what a spefici Goatfile does, which parameters it expects and – if it is a Goatfile meant to be execuetd or used in other Goatfiles – which state variables it creates which can be further used or captured in an exec's return statement.
+To simplify the usage of our Goatfiles, we employ a system of documentation what a Goatfile does, which parameters it expects and – if it is a Goatfile meant to be execuetd or used in other Goatfiles – which state variables it creates which can be further used or captured in an `exec`'s return statement.
 
 The documentation is prefixed with three forward slashes and sits on the very top of the Goatfile. First, stating the purpose of the file followed by required parameters. After that, you can specify the variables created in the execution in the same manner.
 

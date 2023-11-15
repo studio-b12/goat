@@ -9,6 +9,7 @@
   - [Lifecycle](./explanations/lifecycle.md)
 - [Goatfile](./goatfile/index.md)
   - [Syntax Specification](./goatfile/specification.md)
+  - [Comments](./goatfile/comments.md)
   - [Import Statement](./goatfile/import-statement.md)
   - [Execute Statement](./goatfile/execute-statement.md)
   - [Sections](./goatfile/sections.md)

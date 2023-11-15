@@ -4,9 +4,9 @@
 
 ### Pre-Built Binaries 
 
-First of all, you need to install the `goat` tool. It is distributed as a single binary without any dependencies. So simply download the [**latest release binaries from GitHub**](https://github.com/studio-b12/goat/releases) fitting your system configuration.
+First of all, you need to install the `goat` CLI tool. It is distributed as a single binary without any dependencies. So simply download the [**latest release binaries from GitHub**](https://github.com/studio-b12/goat/releases) fitting your system configuration.
 
-You can also use the provided [installation script](https://github.com/studio-b12/goat/blob/main/scripts/download.sh), if you want.
+You can also use the provided [installation script](https://github.com/studio-b12/goat/blob/main/scripts/download.sh), if you want an easy on-line setup.
 
 ```bash
 $ curl -Ls https://raw.githubusercontent.com/studio-b12/goat/main/scripts/download.sh | bash -

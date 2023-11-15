@@ -2,19 +2,20 @@
 
 Goatfiles are built from the following blocks.
 
+- [Comments](./comments.md)
 - [Import Statement](./import-statement.md)
+- [Execute Statement](./execute-statement.md)
 - [Sections](./sections.md)
 - [Defaults Section](./defaults-section.md)
 - [Log Sections](./logsections.md)
 - [Requests](./requests/index.md)
-  - [Method and URL](./requests/header.md)
+  - [Method and URL](./requests/method-and-url.md)
   - [Options](./requests/options.md)
-  - [Headers]()
-  - [Query Parameters]()
-  - [Body]()
-  - [PreScript]()
-  - [Script]()
-- [Execute Statement]()
+  - [Headers](./requests/header.md)
+  - [Query Parameters](./requests/query-params.md)
+  - [Body](./requests/body.md)
+  - [PreScript](./requests/prescript.md)
+  - [Script](./requests/script.md)
 
 Below, you can see a simple synopsis of the different building blocks of a Goatfile.
 

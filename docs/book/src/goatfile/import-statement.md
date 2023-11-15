@@ -15,9 +15,9 @@ use ../path/to/goatfile
 
 Foreign Goatfiles can be imported using the `use` statement.
 
-Imported Goatfile behave like they are merged with the root Goatfile. So if you import a Goatfile `B` into a Goatfile `A`, all actions in all sections of `B` will be inserted infront of the actions in the sections of `A`. Meanwhile, the order of the sections `Setup`, `Tests` and `Teardown` stays intact.
+Imported Goatfile behave like they are merged with the root Goatfile. So when you import a Goatfile `B` into a Goatfile `A`, all actions in all sections of `B` will be inserted **infront** of the actions in the sections of `A`. Meanwhile, the order of the sections `Setup`, `Tests` and `Teardown` stays intact.
 
-Cyclic or repeated imports are forbidden.
+Cyclic or repeated imports are not allowed.
 
 Schematical Example:
 

@@ -24,3 +24,5 @@ GET https://api.github.com/repos/{{.repo}}/languages
 info('Languages:\n' + JSON.stringify(response.BodyJson, null, 2));
 assert(response.StatusCode === 200, `Invalid response code: ${response.StatusCode}`);
 ```
+
+More conclusive examples can be found [here](https://github.com/studio-b12/goat/tree/main/examples).

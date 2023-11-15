@@ -7,25 +7,25 @@ You can pass one or multiple Goatfiles or directories as positional argument. Fo
 goat issue_32.goat tests/integrationtests
 ```
 
-When passing in a directory, Goat will look for any `*.goat` file recursively. Files and directories prefixed with an underscore (`_`) are ignored. This is especially useful for Goatfiles which are only supposed to be imported or executed in other Goatfiles. If you want to read more about this, take a look into the [Project Structure section](../project-structure.md). 
+When passing in a directory, Goat will look for any `*.goat` files recursively. Files and directories prefixed with an underscore (`_`) are ignored. This is especially useful for Goatfiles which are only supposed to be imported or executed in other Goatfiles. If you want to read more about this, take a look into the [Project Structure section](../project-structure/index.md). 
 
 ## Flags
 
-The following sections provide further information about the various flags which can be passed to `goat`.
+Following, further information is provided about the various flags which can be passed to the `goat` CLI.
 
 - **`-a ARGS`, `--args ARGS`**  
-  Pass params as key value arguments into the execution. If you want to pass multiple args, specify each pair with its own parameter.  
+  Pass params as key-value pair into the execution. If you want to pass multiple args, specify each pair with its own parameter.  
   *Example: `-a hello=world -a user.name=foo -a "user.password=bar bazz"`*
 
 - **`--delay DELAY`, ` -d DELAY`**  
   Delay all requests by the given duration. The duration is formatted according to the format of Go's [`time.ParseDuration`](https://pkg.go.dev/time#ParseDuration) function.  
-  *Example: `-d 1s30ms`*
+  *Example: `-d 1m30s`*
 
 - **`--dry`**  
-  Only parse the goatfile(s) without executing any requests.
+  Only parse the Goatfile(s) without executing any requests.
 
 - **`--gradual`, ` -g`**  
-  Advance the requests maually.
+  Advance the execution of each requests maually via key-presses.
 
 - **`--json`**  
   Use JSON format instead of pretty console format for logging.
@@ -35,7 +35,7 @@ The following sections provide further information about the various flags which
   *Example: `-l trace`*
 
 - **`--new`**  
-  Create a new base Goatfile.
+  Create a new base Goatfile. When a file directory name is passed as positional parameter, the new Goatfile will be created under that directory name.
 
 - **`--no-abort`**  
   Do not abort the batch execution on error.
@@ -48,7 +48,7 @@ The following sections provide further information about the various flags which
   *Example: `-p ./local.toml -p ~/credentials.yaml`*
 
 - **`--silent`, ` -s`**  
-  Disables all logging output. Only `print` and `println` statements will be printed. This is especially useful if you want to use Goatfiles inwith other scripts.
+  Disables all logging output. Only `print` and `println` statements will be printed. This is especially useful if you want to use Goatfiles within other scripts.
 
 - **`--skip SKIP`**  
   Section(s) to be skipped during execution.  

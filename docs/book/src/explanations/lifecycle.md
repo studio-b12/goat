@@ -2,6 +2,18 @@
 
 In this document, you will learn the basics on how excatly batches and requests are executed and when which section of a batch or test is evaluated.
 
+## Sections
+
+First of all, a batch consists of four logical sections.
+
+- **`Default`**: Contains default request parameters which are passed on to each executed reqeust in the batch. This is the only section which does not actually execute actions and supports partial request fields.
+
+- **`Setup`**: Contains actions which should be executed before the actual test steps are ran.
+
+- **`Tests`**: The actual test actions.
+
+- **`Teardown`**: Steps ran after the test executions to clean up stuff form the `Setup` and `Test` sections.
+
 ## Batch Lifecycle
 
 Below, you can find a simplified scematic of how a single test batch is executed.
