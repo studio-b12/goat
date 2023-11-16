@@ -1,9 +1,9 @@
 # Script
 
 > *RequestOptions* :  
-> `[Script]` `NL`+ *RequestPreScriptContent*
+> `[Script]` `NL`+ *RequestScriptContent*
 >
-> *RequestPreScriptContent* :  
+> *RequestScriptContent* :  
 > *BlockDelimitedContent* | *UndelimitedContent*
 >
 > *BlockDelimitedContent* :  
@@ -27,7 +27,7 @@ assert(response.BodyJson.UserName === "Foo Bar");
 
 ## Explanation
 
-A script section which is executed after a request has been performed and responded to. This is generally used to assert response values like status codes, header values or body content.
+A script section which is executed after a request has been performed and a response has been received. This is generally used to assert response values like status codes, header values or body content.
 
 Scripts are written in ES5.1 conform JavaScript.
 
@@ -49,8 +49,8 @@ type Response struct {
 }
 ```
 
-`BodyJson` is a special field containing the response body content as a JavaScript object which will be populated when the response body can be parsed as a JSON object.
+`BodyJson` is a special field containing the response body content as a JavaScript object which will be populated if the response body can be parsed as a JSON object.
 
-In any script section, you can used built-in functions like `assert`, which are documented [here](../../scripting/builtins.md).
+In any script section, a number of built-in functions like `assert` can be used, which are documented [here](../../scripting/builtins.md).
 
-When a script section throws an un-catched exception, the test will be evaluated as *failed*.
+If a script section throws an uncaught exception, the test will be evaluated as *failed*.

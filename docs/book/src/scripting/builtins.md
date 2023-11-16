@@ -1,6 +1,6 @@
 # Builtins
 
-The following builtin functions are available in each script instance.
+The following built-in functions are available in each script instance.
 
 ## `assert`
 
@@ -8,7 +8,7 @@ The following builtin functions are available in each script instance.
 function assert(expression: bool, fail_message?: string): void;
 ```
 
-Takes an `expression` which, when evaluated to `false`, will throw an assert exception. You can pass an additional `fail_message` which will be shown in the exception. This can be used to assert values in responses and fail test execution if they are false.
+Takes an `expression` which, when evaluated to `false`, will throw an assert exception. You can pass an additional `fail_message` which will be shown in the exception. This can be used to assert values in responses and fail test execution if they are invalid.
 
 **Example**
 
@@ -64,7 +64,7 @@ info("Hello world!");
 function warn(...message: string[]): void;
 ```
 
-Logs an *warn* log entry to the output logger(s) with the given `message`.
+Logs a *warn* log entry to the output logger(s) with the given `message`.
 
 **Example**
 
@@ -92,7 +92,7 @@ error("Hello world!");
 function fatal(...message: string[]): void;
 ```
 
-Logs an *fatal* log entry to the output logger(s) with the given `message`. This will also abort the batch execution.
+Logs a *fatal* log entry to the output logger(s) with the given `message`. This will also abort the batch execution.
 
 **Example**
 
@@ -106,7 +106,7 @@ fatal("Hello world!");
 function debug(...message: string[]): void;
 ```
 
-Logs an *debug* log entry to the output logger(s) with the given `message`.
+Logs a *debug* log entry to the output logger(s) with the given `message`.
 
 **Example**
 
@@ -134,7 +134,7 @@ infof("Hello %s!", "World");
 function warnf(format: string, ...values: any[]): void;
 ```
 
-Logs an *warn* log entry to the output logger(s) with the given `format` formatted with the given `values`. Formatting is handled according to [Go's formatting implementation](https://pkg.go.dev/fmt).
+Logs a *warn* log entry to the output logger(s) with the given `format` formatted with the given `values`. Formatting is handled according to [Go's formatting implementation](https://pkg.go.dev/fmt).
 
 **Example**
 
@@ -162,7 +162,7 @@ errorf("Hello %s!", "World");
 function fatalf(format: string, ...values: any[]): void;
 ```
 
-Logs an *fatal* log entry to the output logger(s) with the given `format` formatted with the given `values`. Formatting is handled according to [Go's formatting implementation](https://pkg.go.dev/fmt). This will also abort the batch execution.
+Logs a *fatal* log entry to the output logger(s) with the given `format` formatted with the given `values`. Formatting is handled according to [Go's formatting implementation](https://pkg.go.dev/fmt). This will also abort the batch execution.
 
 **Example**
 
@@ -176,7 +176,7 @@ fatalf("Hello %s!", "World");
 function debugf(format: string, ...values: any[]): void;
 ```
 
-Logs an *debug* log entry to the output logger(s) with the given `format` formatted with the given `values`. Formatting is handled according to [Go's formatting implementation](https://pkg.go.dev/fmt).
+Logs a *debug* log entry to the output logger(s) with the given `format` formatted with the given `values`. Formatting is handled according to [Go's formatting implementation](https://pkg.go.dev/fmt).
 
 **Example**
 

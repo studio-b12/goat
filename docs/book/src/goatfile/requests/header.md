@@ -20,6 +20,6 @@ X-Some-Custom-Header: foo bar bazz
 
 ## Explanation
 
-Define HTTP headers sent with the request in the [HTTP conform header representation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#headers).
+Define HTTP headers sent with the request in [HTTP conform header representation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#headers).
 
-Values in the header value field can be substituted.
+Template parameters in the headers' value fields will be substituted.

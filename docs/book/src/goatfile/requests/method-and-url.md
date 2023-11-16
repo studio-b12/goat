@@ -16,9 +16,9 @@ GET https://example.com/api/users
 The request header defines the method and URL for a request and is the only mandatory element
 to define a request.
 
-The method can be any upcase string.
+The method can be any uppercase string.
 
-The URL can be either defined as an unquoted string literal or as a quoted string if spaces are required in the URL. Values in the URL can also be substituted.
+The URL can either be defined as an unquoted string literal or as a quoted string if spaces are required in the URL. Template substitution is supported.
 
 ✅ Valid
 ```

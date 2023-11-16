@@ -1,9 +1,9 @@
 # QueryParams
 
-> *RequestOptions* :  
-> `[Options]` `NL`+ *RequestOptionsContent*
+> *QueryParams* :  
+> `[QueryParams]` `NL`+ *QueryParamsContent*
 >
-> *RequestOptionsContent* :  
+> *QueryParamsContent* :  
 > *TomlKeyValues*
 
 ## Example
@@ -20,11 +20,11 @@ token = "{{.apitoken}}"
 
 Define additional query parameters which will be appended to the request URL. The format of the contents of this block is [`TOML`](https://toml.io/).
 
-An array of values will be representet as a repetition of the same query parameter with the different contained values assigned.
+An array of values will be represented as a repetition of the same query parameter with the different contained values assigned.
 
 > The example from above results in the following query parameters.
 > ```
 > page=5&count=100&field=username&field=age&field=id
 > ```
 
-Parameter values can be subsituted.
+Template parameters in parameter values will be substituted.

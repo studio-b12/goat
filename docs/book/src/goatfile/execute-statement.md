@@ -9,7 +9,7 @@
 > `(` (*KeyValuePair* (`WS`|`NL`)+ )* `)` *ReturnStatement*?
 >
 > *ReturnStatement* :  
-> `(` (*ReturnStatement* (`WS`|`NL`)+ )* `)`
+> `(` (*ReturnPair* (`WS`|`NL`)+ )* `)`
 >
 > *ReturnPair* :  
 > *StringLiteral* `as` *StringLiteral*
@@ -30,8 +30,8 @@ execute "../utils/login" (
 
 ### Explanation
 
-The `execute` statement allows to run a foreign Goatfile inside another Goatfile **in it's own state context**. Parameters for the executed Goatfile can be passed and values in the resulting state can be taken over into the calling Goatfile's state.
+The `execute` statement allows to run an external Goatfile inside another Goatfile **in its own state context**. Parameters for the executed Goatfile can be passed and values in the resulting state can be taken over into the calling Goatfile's state.
 
-In contrast to the `use` directive, the executed Goatfile `A` is ran like a completely separate Goatfile execution with its own isolated state which does not share any values with the state of the executing file `B`. All parameters which shall be available in `A` must be passed as a list of key-value pairs. Resulting state values of `A` can then be captured to the state of `B` by listing them in the `return` statement with the name of the parameter in the state of `A` and the name the value shall be acessible in `B`.
+In contrast to the `use` directive, the executed Goatfile `A` is run like a completely separate Goatfile execution with its own isolated state which does not share any values with the state of the executing file `B`. All parameters which shall be available in `A` must be passed as a list of key-value pairs. Resulting state values of `A` can then be captured by the state of `B` by listing them in the `return` statement with the name of the parameter in the state of `A` and the name the value shall be accessible under in `B`.
 
-Goatfiles executed are parsed in place, so they are only statically checked once they are executed within the executing Goatfile.
+Executed Goatfiles are parsed in place, so they are only statically checked once they are executed within the executing Goatfile.

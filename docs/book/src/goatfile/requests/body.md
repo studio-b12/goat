@@ -34,9 +34,9 @@
 
 ## Explanation
 
-Define HTTP headers sent with the request in the [HTTP conform header representation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages#headers).
+Define the data to be transmitted with the request.
 
-If you want to use the parameter braces (`{{`, `}}`) without substitution, you can escape them using a backslash.
+If you want to use the template parameter braces (`{{`, `}}`) without substitution, you can escape them using a backslash.
 
 Example:
 ````toml

@@ -6,7 +6,7 @@ These values are substituted using the powerful templating engine of Go. We will
 
 ## Syntax
 
-Template parameters in Goatfiles are defined inside double-braces (`{{ }}`). Variables from the state are referenced using a dot-notation. Let's take a look at the following example.
+Template parameters in Goatfiles are defined inside double-braces (`{{ }}`). Variables from the state are referenced using a dot notation. Let's take a look at the following example.
 
 We have the following state.
 ```yml
@@ -17,7 +17,7 @@ credentials:
   password: "password"
 ```
 
-Now, we can reference the values in our state as following.
+Now, we can reference the values in our state as follows:
 
 ```
 POST {{.instance}}/api/v1/auth/login
@@ -29,9 +29,9 @@ POST {{.instance}}/api/v1/auth/login
 }
 ```
 
-Functions can be called using the name of the function followed by the parameters separated by spaces. Lets take a look at the followign example.
+Functions can be called using the name of the function followed by the parameters separated by spaces. Lets take a look at an example.
 
-Weassume the following state.
+We assume the following state:
 ```yaml
 name: "Max"
 ```
@@ -42,4 +42,4 @@ name: "Max"
 
 This will result in the string value `"Hello, Max!"`.
 
-There are also a lot of [builtin functions](./builtins.md) you can use in your Goatfiles.
+There are also a lot of [built-in functions](./builtins.md) you can use in your Goatfiles.

@@ -1,4 +1,4 @@
-# Log Sections
+# Log Section
 
 ## Syntax
 

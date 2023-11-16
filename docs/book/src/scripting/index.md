@@ -4,7 +4,7 @@ Scripting sections like `[Script]` and `[PreScript]` use a dedicated scripting m
 
 Goat uses ES5.1 conform JavaScript interpreted by the [goja](https://github.com/dop251/goja) micro-engine.
 
-In each script instance, you have access to the current state values via the global environment variables. Also, you can define global variables using the `var` statement to define values which will be set to the state after successful script execution.
+In each script instance, you have access to the current state values via the global environment variables. Also, you can define global variables using the `var` statement to define values which will be saved in the state after successful script execution.
 
 Example:
 
@@ -24,4 +24,4 @@ Example:
 > bar = 2
 > ```
 
-Also, some [builtins](./builtins.md) are available in each script instance.
+Also, some [built-in functions](./builtins.md) are available in each script instance.

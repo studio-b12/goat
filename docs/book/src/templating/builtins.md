@@ -1,6 +1,6 @@
-# Builtins
+# Built-ins
 
-The following builtin functions are available in templates used in Goatfiles.
+The following built-in functions are available in templates used in Goatfiles.
 
 ## `base64`
 
@@ -22,7 +22,7 @@ Returns the input `value` as base64 encoded string.
 base64url <value: string> -> string
 ```
 
-Returns the input `value` as base64 URL encoded string.
+Returns the input `value` as base64url encoded string.
 
 **Example:**
 
@@ -120,7 +120,7 @@ Returns a random integer in the range `[0, n)` where `n` is given as parameter. 
 timestamp <format?: string> -> string
 ```
 
-Returns the current timestamo in the given format. The format is specified in [Go's time format](https://pkg.go.dev/time). If no format is given, the time is returned as Unix seconds string.
+Returns the current timestamp in the given format. The format is specified in [Go's time format](https://pkg.go.dev/time). If no format is given, the time is returned as a Unix seconds string.
 
 **Example:**
 

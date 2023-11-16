@@ -2,13 +2,13 @@
 
 Goatfiles are built from the following blocks.
 
-- [Comments](./comments.md)
+- [Comment](./comments.md)
 - [Import Statement](./import-statement.md)
 - [Execute Statement](./execute-statement.md)
-- [Sections](./sections.md)
+- [Section](./sections.md)
 - [Defaults Section](./defaults-section.md)
-- [Log Sections](./logsections.md)
-- [Requests](./requests/index.md)
+- [Log Section](./logsections.md)
+- [Request](./requests/index.md)
   - [Method and URL](./requests/method-and-url.md)
   - [Options](./requests/options.md)
   - [Headers](./requests/header.md)

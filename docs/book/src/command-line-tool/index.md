@@ -2,7 +2,7 @@
 
 The `goat` command is used to create, validate and execute Goatfiles.
 
-You can pass one or multiple Goatfiles or directories as positional argument. For example:
+You can pass one or multiple Goatfiles or directories as positional arguments. For example:
 ```
 goat issue_32.goat tests/integrationtests
 ```
@@ -11,10 +11,10 @@ When passing in a directory, Goat will look for any `*.goat` files recursively. 
 
 ## Flags
 
-Following, further information is provided about the various flags which can be passed to the `goat` CLI.
+In the following, further information is provided about the various flags which can be passed to the `goat` CLI.
 
 - **`-a ARGS`, `--args ARGS`**  
-  Pass params as key-value pair into the execution. If you want to pass multiple args, specify each pair with its own parameter.  
+  Pass params into the execution as key-value pairs. If you want to pass multiple args, specify each pair with its own parameter.  
   *Example: `-a hello=world -a user.name=foo -a "user.password=bar bazz"`*
 
 - **`--delay DELAY`, ` -d DELAY`**  
@@ -25,7 +25,7 @@ Following, further information is provided about the various flags which can be 
   Only parse the Goatfile(s) without executing any requests.
 
 - **`--gradual`, ` -g`**  
-  Advance the execution of each requests maually via key-presses.
+  Advance the execution of each request manually via key-presses.
 
 - **`--json`**  
   Use JSON format instead of pretty console format for logging.
@@ -41,14 +41,14 @@ Following, further information is provided about the various flags which can be 
   Do not abort the batch execution on error.
 
 - **`--no-color`**  
-  Supress colored log output.
+  Suppress colored log output.
 
 - **`--params PARAMS`, ` -p PARAMS`**  
-  Pass parameters in parameter files. These can be either TOML, YAML or JSON files. If you want to pass multiple parameter files, specify each one with its own parameter.  
+  Pass parameters defined in parameter files. These can be either TOML, YAML or JSON files. If you want to pass multiple parameter files, specify each one with its own parameter.  
   *Example: `-p ./local.toml -p ~/credentials.yaml`*
 
 - **`--silent`, ` -s`**  
-  Disables all logging output. Only `print` and `println` statements will be printed. This is especially useful if you want to use Goatfiles within other scripts.
+  Disable all logging output. Only `print` and `println` statements will be printed. This is especially useful if you want to use Goatfiles within other scripts.
 
 - **`--skip SKIP`**  
   Section(s) to be skipped during execution.  

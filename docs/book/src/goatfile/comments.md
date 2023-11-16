@@ -1,4 +1,4 @@
-# Comments
+# Comment
 
 ## Syntax
 
