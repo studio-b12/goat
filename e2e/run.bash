@@ -16,8 +16,8 @@ function run_test_folder {
 
 # -----------------------------------------------------------------
 
-which "echo-server" &> /dev/null || {
-    go install github.com/zekroTJA/echo/cmd/echo@latest
+[ -f "$HOME/go/bin/echo" ] || {
+    GOPATH="$HOME/go" go install github.com/zekroTJA/echo/cmd/echo@latest
 }
 
 which "goat" &> /dev/null || {
