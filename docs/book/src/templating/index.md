@@ -42,4 +42,5 @@ name: "Max"
 
 This will result in the string value `"Hello, Max!"`.
 
-There are also a lot of [built-in functions](./builtins.md) you can use in your Goatfiles.
+> As you can see, you can use the [built-in templating functions provided by Go](https://pkg.go.dev/text/template#hdr-Functions).  
+> There are also a lot of [built-in functions provided by Goat](./builtins.md) which you can use in your Goatfiles.

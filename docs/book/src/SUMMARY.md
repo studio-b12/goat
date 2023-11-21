@@ -8,7 +8,6 @@
   - [State Management](./explanations/state.md)
   - [Lifecycle](./explanations/lifecycle.md)
 - [Goatfile](./goatfile/index.md)
-  - [Syntax Specification](./goatfile/specification.md)
   - [Comment](./goatfile/comments.md)
   - [Import Statement](./goatfile/import-statement.md)
   - [Execute Statement](./goatfile/execute-statement.md)
