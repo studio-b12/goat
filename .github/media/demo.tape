@@ -1,5 +1,12 @@
+Output .github/media/demo.gif
+
 Set FontSize 30
 Set Padding 30
 Set WindowBar Colorful
 
-Type "goat -a \"repo=studio-b12/gowebdav\" examples/github"
+Set Width 2800
+Set Height 600
+
+Type@30ms 'goat examples/restful-api'
+Enter
+Sleep 7s
