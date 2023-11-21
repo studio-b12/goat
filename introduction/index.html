@@ -171,8 +171,41 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>Hey and welcome to the Goat documentation!</p>
+                        <h1 id="-goat"><a class="header" href="#-goat">🐐 Goat</a></h1>
+<p>goat <em>(<strong>Go</strong> <strong>A</strong>PI <strong>T</strong>ester)</em>, a CLI tool to simplify and automate integration testing of HTTP APIs by using script files.</p>
+<p><img src="../assets/demo.gif" alt="" /></p>
+<blockquote>
+<p>Example Goatfile</p>
+<pre><code>use util/login
+
+### Setup
+
+LOGIN {{.instance}}/api/v1/auth
+
+[Header]
+Content-Type: application/json
+
+[Body]
+{ 
+    &quot;username&quot;: &quot;{{.username}}&quot;,
+    &quot;password&quot;: &quot;{{.password}}&quot;
+}
+
+[Script]
+assert(response.StatusCode == 200, `Status code was ${response.StatusCode}`);
+
+---
+
+### Tests
+
+GET {{.instance}}/api/v1/list
+
+[Script]
+assert(response.StatusCode == 200, `Status code was ${response.StatusCode}`);
+print(response.Body);
+</code></pre>
+</blockquote>
+<h2 id="-hey-and-welcome-to-the-goat-documentation"><a class="header" href="#-hey-and-welcome-to-the-goat-documentation">📖 Hey and welcome to the Goat documentation!</a></h2>
 <p>Here you will learn how to use the Goat CLI tool and how to write Goatfiles.</p>
 <p>For better understanding and conciseness, we highly suggest to take a look at the <a href="/introduction/glossary.html">Glossary</a> before continuing into the documentation.</p>
 
