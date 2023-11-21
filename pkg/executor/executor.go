@@ -195,7 +195,11 @@ func (t *Executor) executeFromPathes(pathes []string, initialParams engine.State
 	var goatfiles []goatfile.Goatfile
 
 	for _, path := range pathes {
-		err := filepath.WalkDir(path, func(path string, d fs.DirEntry, _ error) error {
+		err := filepath.WalkDir(path, func(path string, d fs.DirEntry, e error) error {
+			if e != nil {
+				return e
+			}
+
 			if d.IsDir() && strings.HasPrefix(d.Name(), "_") {
 				return fs.SkipDir
 			}
