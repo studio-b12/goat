@@ -13,6 +13,7 @@ func TestParseKVArgs(t *testing.T) {
 			"foo=bar",
 			"bar=bazz=fuzz",
 			"creds.token=basic 1237934hsdf98",
+			"empty=",
 		}
 		exp := map[string]any{
 			"foo": "bar",
@@ -20,9 +21,11 @@ func TestParseKVArgs(t *testing.T) {
 			"creds": map[string]any{
 				"token": "basic 1237934hsdf98",
 			},
+			"empty": "",
 		}
 
-		ParseKVArgs(kv, s)
+		err := ParseKVArgs(kv, s)
+		assert.Nil(t, err)
 		assert.Equal(t, exp, s)
 	})
 
@@ -38,6 +41,7 @@ func TestParseKVArgs(t *testing.T) {
 			"bar=bazz=fuzz",
 			"creds.token=basic 1237934hsdf98",
 			"headers.User-Agent=test v123",
+			"empty=",
 		}
 		exp := map[string]any{
 			"hello": "world",
@@ -46,13 +50,34 @@ func TestParseKVArgs(t *testing.T) {
 			"creds": map[string]any{
 				"token": "basic 1237934hsdf98",
 			},
+			"empty": "",
 			"headers": map[string]any{
 				"Content-Type": "application/json",
 				"User-Agent":   "test v123",
 			},
 		}
 
-		ParseKVArgs(kv, s)
+		err := ParseKVArgs(kv, s)
+		assert.Nil(t, err)
 		assert.Equal(t, exp, s)
+	})
+
+	t.Run("invalid-1", func(t *testing.T) {
+		s := map[string]any{}
+		kv := []string{"invalid"}
+
+		err := ParseKVArgs(kv, s)
+		assert.ErrorIs(t, err, ErrInvalidKeyValuePair)
+	})
+
+	t.Run("invalid-2", func(t *testing.T) {
+		s := map[string]any{}
+		kv := []string{
+			"foo.bar=bazz",
+			"foo.invalid",
+		}
+
+		err := ParseKVArgs(kv, s)
+		assert.ErrorIs(t, err, ErrInvalidKeyValuePair)
 	})
 }

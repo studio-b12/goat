@@ -86,7 +86,11 @@ func main() {
 		return
 	}
 
-	config.ParseKVArgs(args.Arg, state)
+	err = config.ParseKVArgs(args.Arg, state)
+	if err != nil {
+		log.Fatal().Err(err).Msg("argument parsing failed")
+		return
+	}
 
 	engineMaker := engine.NewGoja
 	req := requester.NewHttpWithCookies()
