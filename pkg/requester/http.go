@@ -1,6 +1,7 @@
 package requester
 
 import (
+	"crypto/tls"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -49,6 +50,9 @@ func NewHttpWithCookies(client ...*http.Client) *HttpWithCookies {
 		t.client = client[0]
 	} else {
 		t.client = http.DefaultClient
+		t.client.Transport = &http.Transport{TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		}}
 	}
 
 	t.cookieJars = make(map[any]http.CookieJar)
