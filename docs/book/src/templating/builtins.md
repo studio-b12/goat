@@ -8,7 +8,7 @@ The following built-in functions are available in templates used in Goatfiles.
 base64 <value: string> -> string
 ```
 
-Returns the input `value` as base64 encoded string.
+Returns the input `value` as base64 encoded string with padding.
 
 **Example:**
 
@@ -22,13 +22,42 @@ Returns the input `value` as base64 encoded string.
 base64url <value: string> -> string
 ```
 
-Returns the input `value` as base64url encoded string.
+Returns the input `value` as base64url encoded string with padding.
 
 **Example:**
 
 ```
 {{ base64url "hello world" }}
 ```
+
+## `base64Unpadded`
+
+```
+base64Unpadded <value: string> -> string
+```
+
+Returns the input `value` as base64 encoded string without padding.
+
+**Example:**
+
+```
+{{ base64Unpadded "hello world" }}
+```
+
+## `base64urlUnpadded`
+
+```
+base64urlUnpadded <value: string> -> string
+```
+
+Returns the input `value` as base64url encoded string without padding.
+
+**Example:**
+
+```
+{{ base64urlUnpadded "hello world" }}
+```
+
 
 ## `md5`
 
