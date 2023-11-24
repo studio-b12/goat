@@ -20,9 +20,9 @@ var rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 var builtinFuncsMap = template.FuncMap{
 	"base64":            builtin_base64,
-	"base64url":         builtin_base64Url,
+	"base64Url":         builtin_base64Url,
 	"base64Unpadded":    builtin_base64Unpadded,
-	"base64urlUnpadded": builtin_base64UrlUnpadded,
+	"base64UrlUnpadded": builtin_base64UrlUnpadded,
 	"md5":               builtin_hasher(md5.New()),
 	"sha1":              builtin_hasher(sha1.New()),
 	"sha256":            builtin_hasher(sha256.New()),

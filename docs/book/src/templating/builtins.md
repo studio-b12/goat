@@ -16,10 +16,10 @@ Returns the input `value` as base64 encoded string with padding.
 {{ base64 "hello world" }}
 ```
 
-## `base64url`
+## `base64Url`
 
 ```
-base64url <value: string> -> string
+base64Url <value: string> -> string
 ```
 
 Returns the input `value` as base64url encoded string with padding.
@@ -27,7 +27,7 @@ Returns the input `value` as base64url encoded string with padding.
 **Example:**
 
 ```
-{{ base64url "hello world" }}
+{{ base64Url "hello world" }}
 ```
 
 ## `base64Unpadded`
@@ -44,10 +44,10 @@ Returns the input `value` as base64 encoded string without padding.
 {{ base64Unpadded "hello world" }}
 ```
 
-## `base64urlUnpadded`
+## `base64UrlUnpadded`
 
 ```
-base64urlUnpadded <value: string> -> string
+base64UrlUnpadded <value: string> -> string
 ```
 
 Returns the input `value` as base64url encoded string without padding.
@@ -55,7 +55,7 @@ Returns the input `value` as base64url encoded string without padding.
 **Example:**
 
 ```
-{{ base64urlUnpadded "hello world" }}
+{{ base64UrlUnpadded "hello world" }}
 ```
 
 
