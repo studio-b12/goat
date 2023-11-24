@@ -118,8 +118,10 @@ As you can read in these Docs, you can also perform functions on parameters. As 
 
 Goat also provides some additional functions which are available in Goatfiles.
 
-- `base64 <string>`: Returns the input strings as base64 encoded string.
-- `base64url <string>`: Returns the input strings as base64 URL encoded string.
+- `base64 <string>`: Returns the input strings as base64 encoded string with padding.
+- `base64Url <string>`: Returns the input strings as base64 URL encoded string with padding.
+- `base64Unpadded <string>`: Returns the input strings as base64 encoded string without padding.
+- `base64UrlUnpadded <string>`: Returns the input strings as base64 URL encoded string without padding.
 - `md5 <string>`: Returns the HEX encoded MD5 hash of the input string.
 - `sha1 <string>`: Returns the HEX encoded SHA1 hash of the input string.
 - `sha256 <string>`: Returns the HEX encoded SHA256 hash of the input string.

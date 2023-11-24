@@ -19,24 +19,34 @@ import (
 var rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 var builtinFuncsMap = template.FuncMap{
-	"base64":       builtin_base64,
-	"base64url":    builtin_base64Url,
-	"md5":          builtin_hasher(md5.New()),
-	"sha1":         builtin_hasher(sha1.New()),
-	"sha256":       builtin_hasher(sha256.New()),
-	"sha512":       builtin_hasher(sha512.New()),
-	"randomString": builtin_randomString,
-	"randomInt":    builtin_randomInt,
-	"timestamp":    builtin_timestamp,
-	"isset":        builtin_isset,
-	"json":         builtin_json,
+	"base64":            builtin_base64,
+	"base64Url":         builtin_base64Url,
+	"base64Unpadded":    builtin_base64Unpadded,
+	"base64UrlUnpadded": builtin_base64UrlUnpadded,
+	"md5":               builtin_hasher(md5.New()),
+	"sha1":              builtin_hasher(sha1.New()),
+	"sha256":            builtin_hasher(sha256.New()),
+	"sha512":            builtin_hasher(sha512.New()),
+	"randomString":      builtin_randomString,
+	"randomInt":         builtin_randomInt,
+	"timestamp":         builtin_timestamp,
+	"isset":             builtin_isset,
+	"json":              builtin_json,
 }
 
 func builtin_base64(v string) string {
-	return base64.RawStdEncoding.EncodeToString([]byte(v))
+	return base64.StdEncoding.EncodeToString([]byte(v))
 }
 
 func builtin_base64Url(v string) string {
+	return base64.URLEncoding.EncodeToString([]byte(v))
+}
+
+func builtin_base64Unpadded(v string) string {
+	return base64.RawStdEncoding.EncodeToString([]byte(v))
+}
+
+func builtin_base64UrlUnpadded(v string) string {
 	return base64.RawURLEncoding.EncodeToString([]byte(v))
 }
 
