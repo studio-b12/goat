@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"fmt"
 	"io/fs"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -39,6 +41,7 @@ type Args struct {
 	Params   []string      `arg:"-p,--params,separate" help:"Params file location(s)"`
 	Silent   bool          `arg:"-s,--silent" help:"Disables all logging output"`
 	Skip     []string      `arg:"--skip,separate" help:"Section(s) to be skipped during execution"`
+	Secure   bool          `arg:"--secure" help:"Validate TLS certificates"`
 }
 
 func main() {
@@ -93,7 +96,11 @@ func main() {
 	}
 
 	engineMaker := engine.NewGoja
-	req := requester.NewHttpWithCookies()
+	req := requester.NewHttpWithCookies(func(client *http.Client) {
+		client.Transport = &http.Transport{TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: !args.Secure,
+		}}
+	})
 
 	exec := executor.New(engineMaker, req)
 	exec.Dry = args.Dry
