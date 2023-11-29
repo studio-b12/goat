@@ -75,10 +75,10 @@ func (t *Executor) Execute(pathes []string, initialParams engine.State) (res Res
 // used as initial state for the runtime engine.
 func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.State) (res Result, err error) {
 	log := log.Tagged(gf.Path)
-	log.Debug().Msg("Parsed Goatfile\n" + gf.String())
 
 	if t.Dry {
 		log.Warn().Msg("This is a dry run: no requets will be executed")
+		log.Debug().Msg("Parsed Goatfile\n" + gf.String())
 		return Result{}, nil
 	}
 
