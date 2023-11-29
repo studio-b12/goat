@@ -6,6 +6,8 @@
 
 - The built-in template functions `base64` and `base64Url` do now encode strings to Base64 **with leading padding**. If you want to encode without padding, use the new functions `base64Unpadded` and `base64UrlUnpadded`. [#48]
 
+- The previously deprecated alias `headers` for the `header` request section has now been removed.  
+
 # New Features
 
 - Requesting HTTPS endpoints with self-signed certificates is now possible. [#49, #51]  

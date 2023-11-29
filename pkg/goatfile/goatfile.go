@@ -24,7 +24,6 @@ type optionName string
 const (
 	optionNameQueryParams = optionName("queryparams")
 	optionNameHeader      = optionName("header")
-	optionNameHeaders     = optionName("headers")
 	optionNameBody        = optionName("body")
 	optionNamePreScript   = optionName("prescript")
 	optionNameScript      = optionName("script")
