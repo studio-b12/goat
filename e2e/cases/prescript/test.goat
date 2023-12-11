@@ -18,5 +18,5 @@ var body = JSON.stringify({"foo": "bar"});
 
 [Script]
 assert(response.StatusCode === 200);
-assert(response.BodyJson.path === "/somepath");
-assert(response.BodyJson.body_string === '{"foo":"bar"}\n');
+assert(response.Body.path === "/somepath");
+assert(response.Body.body_string === '{"foo":"bar"}\n');

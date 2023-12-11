@@ -5,6 +5,7 @@ type Options struct {
 	CookieJar    any
 	StoreCookies bool
 	SendCookies  bool
+	ResponseType string
 }
 
 // OptionsFromMap takes a map and builds an
@@ -15,6 +16,7 @@ func OptionsFromMap(m map[string]any) Options {
 		CookieJar:    "default",
 		StoreCookies: true,
 		SendCookies:  true,
+		ResponseType: "",
 	}
 
 	if v, ok := m["cookiejar"]; ok {
@@ -25,6 +27,9 @@ func OptionsFromMap(m map[string]any) Options {
 	}
 	if v, ok := m["sendcookies"].(bool); ok {
 		opt.SendCookies = v
+	}
+	if v, ok := m["responsetype"].(string); ok {
+		opt.ResponseType = v
 	}
 
 	return opt

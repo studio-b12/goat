@@ -410,7 +410,7 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf go
 		return errs.WithPrefix("http request failed:", err)
 	}
 
-	resp, err := FromHttpResponse(httpResp)
+	resp, err := FromHttpResponse(httpResp, req.Options)
 	if err != nil {
 		return errs.WithPrefix("response interpretation failed:", err)
 	}
