@@ -77,3 +77,10 @@ Defines if a request shall be executed or not. This is useful in combination wit
 - **Default**: `0`
 
 A duration formatted as a Go [time.ParseDuration](https://pkg.go.dev/time#ParseDuration) compatible string. Execution will pause for this duration before the request is executed.
+
+### `responsetype`
+
+- **Type**: `string` 
+- **Default**: `""` 
+
+Explicit type declaration for body parsing. Implicit body parsing (json/xml) can be prevented by setting this option to `raw`.

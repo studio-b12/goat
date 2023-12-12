@@ -562,7 +562,7 @@ GET https://example.com
 
 [Script]
 assert(response.StatusCode == 200, "invalid status code");
-var id = response.BodyJson.id;
+var id = response.Body.id;
 
 ---
 
@@ -574,7 +574,7 @@ var id = response.BodyJson.id;
 		assert.Nil(t, err, err)
 		assert.Equal(t,
 			StringContent(`assert(response.StatusCode == 200, "invalid status code");`+
-				"\nvar id = response.BodyJson.id;\n"),
+				"\nvar id = response.Body.id;\n"),
 			res.Tests[0].(Request).Script)
 	})
 }

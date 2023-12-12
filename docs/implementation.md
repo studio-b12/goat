@@ -17,6 +17,7 @@ Name | Type | Default | Description
 `alwaysabort` | `boolean` | `false` | Forces the batch to abort when the request fails, even when the `--no-abort` flag is set.
 `condition` | `boolean` | `true` | Whether or not to execute the request.
 `delay` | `string` | `0` | A duration which is awaited before the request is executed. The duration must be formatted in compatibility to Go's [ParseDuration](https://pkg.go.dev/time#ParseDuration) function.
+`responsetype` | `string` | `""` | Explicit type declaration for body parsing. Implicit body parsing (json/xml) can be prevented by setting this option to `raw`.
 
 ### `PreScript`
 
@@ -35,8 +36,8 @@ var body = JSON.stringify({"foo": "bar"});
 
 [Script]
 assert(response.StatusCode === 200);
-assert(response.BodyJson.path === "/somepath");
-assert(response.BodyJson.body_string === '{"foo":"bar"}\n');
+assert(response.Body.path === "/somepath");
+assert(response.Body.body_string === '{"foo":"bar"}\n');
 ```
 
 ## Script Implementation
@@ -96,13 +97,13 @@ Response {
 	ProtoMinor    int
 	Header        map[string][]string
 	ContentLength int64
-	Body          string
-	BodyJson      object
+	BodyRaw       []byte
+	Body		  any
 }
 ```
-
-When the response body is JSON-parsable, `BodyJson` contains the parsed JSON as a JavaScript object. Otherwise, it will be `null`.
-
+`Body` is a special field containing the response body content as a JavaScript object which will be populated if the response body can be parsed.
+Parsers are currently implemented for `json` and `xml` and are chosen depending on the `responsetype` option or the `Content-Type` header.
+If neither are set, the raw response string gets set as `Body`. By setting the `responsetype` to `raw`, implicit body parsing can be prevented.
 
 ## Parameters
 

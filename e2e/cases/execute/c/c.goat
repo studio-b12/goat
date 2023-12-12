@@ -6,4 +6,4 @@ Hello world!
 [Script]
 assert(response.StatusCode === 200);
 println(response);
-var body = response.BodyJson.body_string.trim();
+var body = response.Body.body_string.trim();
