@@ -1,0 +1,31 @@
+### Tests
+
+GET {{.instance}}/
+
+[Auth]
+username = "{{.user.name}}"
+password = "{{.user.password}}"
+
+[Script]
+assert(response.Body.headers.Authorization[0] === "basic Zm9vOmJhcg==");
+
+---
+
+GET {{.instance}}/
+
+[Auth]
+token = "{{.token}}"
+
+[Script]
+assert(response.Body.headers.Authorization[0] === "foobar");
+
+---
+
+GET {{.instance}}/
+
+[Auth]
+type = "{{.type}}"
+token = "{{.token}}"
+
+[Script]
+assert(response.Body.headers.Authorization[0] === "bearer foobar");

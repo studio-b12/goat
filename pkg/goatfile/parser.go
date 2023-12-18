@@ -438,6 +438,13 @@ func (t *Parser) parseBlock(req *requestParseChecker) error {
 		}
 		req.Options = data
 
+	case optionNameAuth:
+		data, err := t.parseBlockEntries(nil)
+		if err != nil {
+			return err
+		}
+		req.Auth = data
+
 	default:
 		return errs.WithSuffix(ErrInvalidBlockHeader,
 			fmt.Sprintf("('%s')", blockHeader))
