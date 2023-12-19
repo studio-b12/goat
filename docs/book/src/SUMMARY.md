@@ -19,6 +19,7 @@
     - [Options](./goatfile/requests/options.md)
     - [Headers](./goatfile/requests/header.md)
     - [Query Parameters](./goatfile/requests/query-params.md)
+    - [Auth](./goatfile/requests/auth.md)
     - [Body](./goatfile/requests/body.md)
     - [PreScript](./goatfile/requests/prescript.md)
     - [Script](./goatfile/requests/script.md)
