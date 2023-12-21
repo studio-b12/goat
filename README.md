@@ -1,4 +1,4 @@
-# 🐐 goat
+# 🐐 goat &nbsp; [![GitHub release (with filter)](https://img.shields.io/github/v/release/studio-b12/goat)](https://github.com/studio-b12/goat/releases) [![Deploy Book](https://github.com/studio-b12/goat/actions/workflows/docgen.yml/badge.svg)](https://studio-b12.github.io/goat)  [![Unit Tests](https://github.com/studio-b12/goat/actions/workflows/tests.yml/badge.svg)](https://github.com/studio-b12/goat/actions/workflows/tests.yml)
 
 goat *(**Go** **A**PI **T**ester)*, a CLI tool to simplify and automate integration testing of HTTP APIs by using script files.
 
@@ -61,10 +61,7 @@ Otherwise, you can also download the binaries from the [Releases Page](https://g
 
 ### Goatfile
 
-Now, you can dive in to create your first Goatfile. You can find more information on how Goatfiles work here:
-
-- [Goatfile Specification](docs/goatfile-spec.md)
-- [Implementation Docs](docs/implementation.md)
+Now, you can dive in to create your first Goatfile. You can find more information on how Goatfiles work in the [**documentation book**](https://studio-b12.github.io/goat/).
 
 You can also simply generate an example Goatfile using the following command.
 ```
@@ -73,7 +70,7 @@ goat --new
 
 There, you can define your setup, teardown and test requests as you desire.
 
-Take a look into the more detailed [Usage Manual](docs/usage.md) to find out more.
+Take a look into the more detailed [CLI Manual](https://studio-b12.github.io/goat/command-line-tool/index.html) to find out more.
 
 ## Language Support
 
