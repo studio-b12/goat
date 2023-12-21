@@ -7,13 +7,8 @@
 // parameter file (can be either a YAML, JSON or TOML file).
 // Tip: You can also use a .env file for testing!
 //
-// Here you can find the Goatfile reference:
-// https://github.com/studio-b12/goat/blob/main/docs/goatfile-spec.md
-//
-// And here you can find more details about additional options
-// and available builtin functions as well as the documentation
-// what you can use in the [Script] section.
-// https://github.com/studio-b12/goat/blob/main/docs/implementation.md
+// Here you can find the Goatfile reference and more about how Goat works:
+// https://studio-b12.github.io/goat/goatfile/index.html
 //
 // If you encounter any issues, want to submit an improvement or
 // feature request or just want to ask a question, feel free to
