@@ -404,6 +404,10 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf go
 		return errs.WithPrefix("failed transforming to http request:", err)
 	}
 
+	if authOpts, ok := AuthOptionsFromMap(req.Auth); ok {
+		httpReq.Header.Set("Authorization", authOpts.HeaderValue())
+	}
+
 	reqOpts := requester.OptionsFromMap(req.Options)
 	httpResp, err := t.req.Do(httpReq, reqOpts)
 	if err != nil {

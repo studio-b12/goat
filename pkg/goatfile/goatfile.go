@@ -28,6 +28,7 @@ const (
 	optionNamePreScript   = optionName("prescript")
 	optionNameScript      = optionName("script")
 	optionNameOptions     = optionName("options")
+	optionNameAuth        = optionName("auth")
 )
 
 // Goatfile holds all sections and
@@ -70,4 +71,5 @@ func (t Goatfile) String() string {
 type Opts struct {
 	QueryParams map[string]any
 	Options     map[string]any
+	Auth        map[string]any
 }
