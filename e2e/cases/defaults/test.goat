@@ -11,5 +11,5 @@ some body
 GET {{.instance}}/
 
 [Script]
-assert(response.BodyJson.headers["Foo"] == "bar");
-assert(response.BodyJson.body_string == "some body\n");
+assert(response.Body.headers["Foo"] == "bar");
+assert(response.Body.body_string == "some body\n");

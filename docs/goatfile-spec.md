@@ -199,7 +199,7 @@ The script parts is getting passed builtin functions as well as the response con
 [Script]
 assert(response.StatusCode == 200);
 info(response.Body);
-var uid = response.BodyJson.Uid;
+var uid = response.Body.Uid;
 ```
 
 It is also possible to import a file as script. Simply specify the path to the file with a leading `@` to import the file by a relative path from the current Goatfile or an absolute path. The past must be specified in Unix style. Template placeholders in imported body data **will** be infused on execution!
@@ -264,7 +264,7 @@ POST {{.instance}}/api/auth/token
 [Script]
 assert(response.StatusCode == 200);
 
-var bearerToken = response.BodyJson.bearer_token;
+var bearerToken = response.Body.bearer_token;
 
 ---
 

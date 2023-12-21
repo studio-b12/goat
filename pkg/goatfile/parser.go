@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/studio-b12/goat/pkg/errs"
-	"github.com/zekrotja/rogu/log"
 )
 
 // Parser parses a Goatfile.
@@ -410,16 +409,6 @@ func (t *Parser) parseBlock(req *requestParseChecker) error {
 		if err != nil {
 			return err
 		}
-	case optionNameHeaders:
-		// TODO: Remove due to deprecation with release 1.0
-		log.Warn().Tag("Parser").
-			Field("pos", fmt.Sprintf("%d:%d", t.s.line, t.s.linepos)).
-			Msg("Option name [headers] is deprecated! Please use [header] instead! See the release notes of v0.8.0 for more information: " +
-				"https://github.com/studio-b12/goat/releases/tag/v0.8.0")
-		err := t.parseHeaders(req.Header)
-		if err != nil {
-			return err
-		}
 
 	case optionNameBody:
 		raw, err := t.parseRaw()
@@ -448,6 +437,13 @@ func (t *Parser) parseBlock(req *requestParseChecker) error {
 			return err
 		}
 		req.Options = data
+
+	case optionNameAuth:
+		data, err := t.parseBlockEntries(nil)
+		if err != nil {
+			return err
+		}
+		req.Auth = data
 
 	default:
 		return errs.WithSuffix(ErrInvalidBlockHeader,

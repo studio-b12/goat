@@ -1,6 +1,13 @@
 package config
 
-import "strings"
+import (
+	"errors"
+	"strings"
+)
+
+var (
+	ErrInvalidKeyValuePair = errors.New("invalid key value pair")
+)
 
 // ParseKVArgs takes a list of key value pairs which are then
 // applied to the map m. Key value paris are split by '='. Sub
@@ -11,9 +18,13 @@ import "strings"
 //	m := make(map[string]any)
 //	kv := []string{"foo.bar=bazz"}
 //	ParseKVArgs(kv, m) // m = { "foo": { "bar": "bazz" } }
-func ParseKVArgs(args []string, m map[string]any) {
+func ParseKVArgs(args []string, m map[string]any) error {
 	for _, kvPair := range args {
 		kv := strings.SplitN(kvPair, "=", 2)
+		if len(kv) < 2 {
+			return ErrInvalidKeyValuePair
+		}
+
 		key, val := kv[0], kv[1]
 
 		keyPath := strings.Split(key, ".")
@@ -30,4 +41,6 @@ func ParseKVArgs(args []string, m map[string]any) {
 
 		subm[keyPath[len(keyPath)-1]] = val
 	}
+
+	return nil
 }

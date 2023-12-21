@@ -106,6 +106,13 @@ func (t *Request) SubstitudeWithParams(params any) error {
 		return err
 	}
 
+	// Substitute Auth
+
+	err = ApplyTemplateToMap(t.Auth, params)
+	if err != nil {
+		return err
+	}
+
 	// Substitute Header
 
 	for _, vals := range t.Header {
@@ -214,6 +221,10 @@ func (t *Request) Merge(with *Request) {
 
 	if len(with.Options) > 0 {
 		t.Options = mergeMaps(t.Options, with.Options)
+	}
+
+	if len(with.Auth) > 0 {
+		t.Auth = mergeMaps(t.Auth, with.Auth)
 	}
 
 	if IsNoContent(t.Body) && !IsNoContent(with.Body) {

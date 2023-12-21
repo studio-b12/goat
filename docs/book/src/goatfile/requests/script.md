@@ -21,7 +21,7 @@
 [Script]
 ```
 assert(response.StatusCode === 200, `Response status code was ${response.StatusCode}`);
-assert(response.BodyJson.UserName === "Foo Bar");
+assert(response.Body.UserName === "Foo Bar");
 ```
 ````
 
@@ -44,12 +44,14 @@ type Response struct {
 	ProtoMinor    int
 	Header        map[string][]string
 	ContentLength int64
-	Body          string
-	BodyJson      any
+	BodyRaw       []byte
+	Body          any
 }
 ```
 
-`BodyJson` is a special field containing the response body content as a JavaScript object which will be populated if the response body can be parsed as a JSON object.
+`Body` is a special field containing the response body content as a JavaScript object which will be populated if the response body can be parsed.
+Parsers are currently implemented for `json` and `xml` and are chosen depending on the `responsetype` option or the `Content-Type` header.
+If neither are set, the raw response string gets set as `Body`. By setting the `responsetype` to `raw`, implicit body parsing can be prevented.
 
 In any script section, a number of built-in functions like `assert` can be used, which are documented [here](../../scripting/builtins.md).
 

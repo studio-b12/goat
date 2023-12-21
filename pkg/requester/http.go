@@ -38,18 +38,15 @@ type HttpWithCookies struct {
 
 var _ Requester = (*HttpWithCookies)(nil)
 
-// NewHttpWithCookies returns a new HttpWithCookies
-// instance with the given HTTP client. When no
-// client is specified, the http.DefaultClient is
-// used.
-func NewHttpWithCookies(client ...*http.Client) *HttpWithCookies {
+// NewHttpWithCookies returns a new instance of HttpWithCookies.
+// cfg is getting passed the instance of http.Client which you
+// can configure as you desire.
+func NewHttpWithCookies(cfg func(client *http.Client)) *HttpWithCookies {
 	var t HttpWithCookies
 
-	if len(client) != 0 {
-		t.client = client[0]
-	} else {
-		t.client = http.DefaultClient
-	}
+	t.client = http.DefaultClient
+
+	cfg(t.client)
 
 	t.cookieJars = make(map[any]http.CookieJar)
 

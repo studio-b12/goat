@@ -27,7 +27,7 @@ POST https://api.restful-api.dev/objects
 [Script]
 debug(response);
 assert(response.StatusCode === 200, `Invalid response code: ${response.StatusCode}`);
-var game1Id = response.BodyJson.id;
+var game1Id = response.Body.id;
 
 ---
 
@@ -50,7 +50,7 @@ POST https://api.restful-api.dev/objects
 [Script]
 debug(response);
 assert(response.StatusCode === 200, `Invalid response code: ${response.StatusCode}`);
-var game2Id = response.BodyJson.id;
+var game2Id = response.Body.id;
 
 ---
 
@@ -85,12 +85,12 @@ id = ["{{.game1Id}}", "{{.game2Id}}"]
 debug(response);
 assert(response.StatusCode === 200, `Invalid response code: ${response.StatusCode}`);
 
-var game1 = response.BodyJson[0];
+var game1 = response.Body[0];
 assert(game1.name === "Cyberpunk 2077", "game1: Invalid name");
 assert(game1.data.developer === "CD PROJECT RED", "game1: Invalid developer");
 assert(game1.data.released === "2020-12-10T00:00:00Z", "game1: Invalid publishing date");
 
-var game2 = response.BodyJson[1];
+var game2 = response.Body[1];
 assert(game2.name === "Cult of the Lamb", "game2: Invalid name");
 assert(game2.data.developer === "Massive Monster", "game2: Invalid developer");
 assert(game2.data.tags.includes("Base Building"), "game2: Tags do not include 'Base Building'");

@@ -37,7 +37,7 @@ POST http://example.com/api/user
 
 [Script]
 assert(response.StatusCode === 201);
-var user = response.BodyJson;
+var user = response.Body;
 
 ---
 

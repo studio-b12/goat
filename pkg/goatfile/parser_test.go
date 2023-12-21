@@ -117,6 +117,10 @@ body
 [queryparams]
 keyInt = 2
 keyString = "some string"
+
+[Auth]
+username = "foo"
+password = "{{.creds.password}}"
 		
 		`
 
@@ -136,6 +140,10 @@ keyString = "some string"
 			"keyInt":    int64(2),
 			"keyString": "some string",
 		}, res.Tests[0].(Request).QueryParams)
+		assert.Equal(t, map[string]any{
+			"username": "foo",
+			"password": "{{.creds.password}}",
+		}, res.Tests[0].(Request).Auth)
 	})
 
 	t.Run("single-invalidblockheader", func(t *testing.T) {
@@ -562,7 +570,7 @@ GET https://example.com
 
 [Script]
 assert(response.StatusCode == 200, "invalid status code");
-var id = response.BodyJson.id;
+var id = response.Body.id;
 
 ---
 
@@ -574,7 +582,7 @@ var id = response.BodyJson.id;
 		assert.Nil(t, err, err)
 		assert.Equal(t,
 			StringContent(`assert(response.StatusCode == 200, "invalid status code");`+
-				"\nvar id = response.BodyJson.id;\n"),
+				"\nvar id = response.Body.id;\n"),
 			res.Tests[0].(Request).Script)
 	})
 }
@@ -1308,6 +1316,10 @@ hello: world
 answer = 42 // some comment
 some = "value"
 
+[Auth]
+username = "foo"
+password = "bar"
+
 [Body]
 hello
 world
@@ -1326,6 +1338,8 @@ some script
 		assert.Equal(t, "world", gf.Defaults.Header.Get("hello"))
 		assert.Equal(t, int64(42), gf.Defaults.Options["answer"])
 		assert.Equal(t, "value", gf.Defaults.Options["some"])
+		assert.Equal(t, "foo", gf.Defaults.Auth["username"])
+		assert.Equal(t, "bar", gf.Defaults.Auth["password"])
 		assert.Equal(t, StringContent("hello\nworld\n"), gf.Defaults.Body)
 		assert.Equal(t, StringContent("some pre script\n"), gf.Defaults.PreScript)
 		assert.Equal(t, StringContent("some script\n"), gf.Defaults.Script)

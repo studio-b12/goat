@@ -1,6 +1,10 @@
 package executor
 
-import "time"
+import (
+	"encoding/base64"
+	"fmt"
+	"time"
+)
 
 // AbortOptions wraps options that control the
 // abort behavior of an execution batch.
@@ -57,4 +61,48 @@ func ExecOptionsFromMap(m map[string]any) ExecOptions {
 	}
 
 	return opt
+}
+
+type AuthOptions struct {
+	Type     string
+	UserName string
+	Password string
+	Token    string
+}
+
+func AuthOptionsFromMap(m map[string]any) (opt AuthOptions, ok bool) {
+	if m == nil {
+		return opt, false
+	}
+
+	if v, ok := m["type"].(string); ok {
+		opt.Type = v
+	}
+
+	if v, ok := m["username"].(string); ok {
+		opt.UserName = v
+	}
+
+	if v, ok := m["password"].(string); ok {
+		opt.Password = v
+	}
+
+	if v, ok := m["token"].(string); ok {
+		opt.Token = v
+	}
+
+	return opt, true
+}
+
+func (t AuthOptions) HeaderValue() string {
+	if t.UserName != "" && t.Password != "" {
+		v := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", t.UserName, t.Password)))
+		return fmt.Sprintf("basic %s", v)
+	}
+
+	if t.Type != "" {
+		return fmt.Sprintf("%s %s", t.Type, t.Token)
+	}
+
+	return t.Token
 }

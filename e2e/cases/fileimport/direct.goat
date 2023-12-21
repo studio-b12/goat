@@ -16,7 +16,7 @@ X-Foo: bar
 [Script]
 info(response)
 
-var body = response.BodyJson;
+var body = response.Body;
 
 assert(response.StatusCode == 200);
 assert(body.method == "POST");

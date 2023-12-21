@@ -1,15 +1,24 @@
 [VERSION]
 
+# ⚠️ Breaking Changes
+
+- The built-in template function `base64url` has been renamed to `base64Url` for better naming consistency. [#48]
+
+- The built-in template functions `base64` and `base64Url` do now encode strings to Base64 **with leading padding**. If you want to encode without padding, use the new functions `base64Unpadded` and `base64UrlUnpadded`. [#48]
+
+- The previously deprecated alias `headers` for the `header` request section has now been removed.  
+
 # New Features
 
-- A new template function `json` has been added which encodes any passed object into a JSON string (e.g. `{{ json .myObject }}`).
-- 
-- For each in-script logging function, a formatted equivalent has been added (e.g. `infof("Hello, %s!", "world")`).
+- Requesting HTTPS endpoints with self-signed certificates is now possible. [#49, #51]  
+  *That means, that the certificate validity is **not checked by default**. You can pass the `--secure` flag or set the `GOATARG_SECURE=true` environment variable to enable certificate validation.*
 
 # Minor Changes and Bug Fixes
 
-- Variables set in the `PreScript` section are now available for substitution in all other parts of the request like URL, options, header, body or script. [#43]
+- Fixed a bug causing a panic when multiple Goatfiles are passed and one or more of these files do not exist. Now, a proper error message is returned.
 
-- Section log lines are now hidden when a Goatfile is executed via the `execute` instruction.
+- Fixed a bug which caused a panic when invalid key-value paris have been passed via the `--args` flag. [#49]
 
-- Some more debugging information has been added visible when using the `trace` log level.
+- When running with the `DEBUG` logging level, the parsed Goatfile is now only printed to log output if the `--dry` flag is passed.
+
+- Some command line parameters now got respective environment variables to set them. These are prefixed with `GOATARG_` and can be viewed in the `--help` overview.

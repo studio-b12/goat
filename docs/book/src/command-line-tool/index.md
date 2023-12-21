@@ -54,6 +54,9 @@ In the following, further information is provided about the various flags which 
   Section(s) to be skipped during execution.  
   *Example: `--skip teardown`*
 
+- **`--secure`**  
+  Enable TLS certificate validation.
+
 - **`--help`, ` -h`**  
   Display the help message.
 

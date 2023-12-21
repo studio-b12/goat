@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"fmt"
 	"io/fs"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -28,17 +30,18 @@ type Args struct {
 	Goatfile []string `arg:"positional" help:"Goatfile(s) location"`
 
 	Arg      []string      `arg:"-a,--args,separate" help:"Pass params as key value arguments into the execution (format: key=value)"`
-	Delay    time.Duration `arg:"-d,--delay" help:"Delay requests by the given duration"`
+	Delay    time.Duration `arg:"-d,--delay,env:GOATARG_DELAY" help:"Delay requests by the given duration"`
 	Dry      bool          `arg:"--dry" help:"Only parse the goatfile(s) without executing any requests"`
 	Gradual  bool          `arg:"-g,--gradual" help:"Advance the requests maually"`
-	Json     bool          `arg:"--json" help:"Use JSON format instead of pretty console format for logging"`
-	LogLevel string        `arg:"-l,--loglevel" default:"info" help:"Logging level (see https://github.com/zekrotja/rogu#levels for reference)"`
+	Json     bool          `arg:"--json,env:GOATARG_JSON" help:"Use JSON format instead of pretty console format for logging"`
+	LogLevel string        `arg:"-l,--loglevel,env:GOATARG_LOGLEVEL" default:"info" help:"Logging level (see https://github.com/zekrotja/rogu#levels for reference)"`
 	New      bool          `arg:"--new" help:"Create a new base Goatfile"`
-	NoAbort  bool          `arg:"--no-abort" help:"Do not abort batch execution on error"`
-	NoColor  bool          `arg:"--no-color" help:"Supress colored log output"`
-	Params   []string      `arg:"-p,--params,separate" help:"Params file location(s)"`
-	Silent   bool          `arg:"-s,--silent" help:"Disables all logging output"`
-	Skip     []string      `arg:"--skip,separate" help:"Section(s) to be skipped during execution"`
+	NoAbort  bool          `arg:"--no-abort,env:GOATARG_NOABORT" help:"Do not abort batch execution on error"`
+	NoColor  bool          `arg:"--no-color,env:GOATARG_NOCOLOR" help:"Supress colored log output"`
+	Params   []string      `arg:"-p,--params,separate,env:GOATARG_PARAMS" help:"Params file location(s)"`
+	Silent   bool          `arg:"-s,--silent,env:GOATARG_SILENT" help:"Disables all logging output"`
+	Skip     []string      `arg:"--skip,separate,env:GOATARG_SKIP" help:"Section(s) to be skipped during execution"`
+	Secure   bool          `arg:"--secure,env:GOATARG_SECURE" help:"Validate TLS certificates"`
 }
 
 func main() {
@@ -86,10 +89,18 @@ func main() {
 		return
 	}
 
-	config.ParseKVArgs(args.Arg, state)
+	err = config.ParseKVArgs(args.Arg, state)
+	if err != nil {
+		log.Fatal().Err(err).Msg("argument parsing failed")
+		return
+	}
 
 	engineMaker := engine.NewGoja
-	req := requester.NewHttpWithCookies()
+	req := requester.NewHttpWithCookies(func(client *http.Client) {
+		client.Transport = &http.Transport{TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: !args.Secure,
+		}}
+	})
 
 	exec := executor.New(engineMaker, req)
 	exec.Dry = args.Dry

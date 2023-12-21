@@ -226,11 +226,27 @@ func TestApplyTemplate_Builtins(t *testing.T) {
 
 		res, err := ApplyTemplate(raw, nil)
 		assert.Nil(t, err)
+		assert.Equal(t, "aGVsbG8gd29ybGQ=", res)
+	})
+
+	t.Run("template-builtin-base64Url", func(t *testing.T) {
+		const raw = `{{base64Url "hello world"}}`
+
+		res, err := ApplyTemplate(raw, nil)
+		assert.Nil(t, err)
+		assert.Equal(t, "aGVsbG8gd29ybGQ=", res)
+	})
+
+	t.Run("template-builtin-base64Unpadded", func(t *testing.T) {
+		const raw = `{{base64Unpadded "hello world"}}`
+
+		res, err := ApplyTemplate(raw, nil)
+		assert.Nil(t, err)
 		assert.Equal(t, "aGVsbG8gd29ybGQ", res)
 	})
 
-	t.Run("template-builtin-base64url", func(t *testing.T) {
-		const raw = `{{base64url "hello world"}}`
+	t.Run("template-builtin-base64UrlUnpadded", func(t *testing.T) {
+		const raw = `{{base64UrlUnpadded "hello world"}}`
 
 		res, err := ApplyTemplate(raw, nil)
 		assert.Nil(t, err)
