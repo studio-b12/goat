@@ -1,0 +1,19 @@
+GET {{.instance}}/
+
+[Body]
+hello {{ .name }}
+
+[Script]
+debug(response);
+assert(response.Body.body_string === `hello ${name}\n`, `Body was: '${response.Body.body_string}'`);
+
+---
+
+GET {{.instance}}/
+
+[Body]
+hello \{\{ .name \}\}
+
+[Script]
+debug(response);
+assert(response.Body.body_string === "hello \{\{ .name \}\}\n", `Body was: '${response.Body.body_string}'`);
