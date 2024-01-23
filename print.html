@@ -352,7 +352,7 @@ When one request has finished, the state is passed on to the next request and so
 </ul>
 <h2 id="batch-lifecycle"><a class="header" href="#batch-lifecycle">Batch Lifecycle</a></h2>
 <p>Below, you can find a simplified schematic of how a single test batch is executed.</p>
-<pre><code class="language-mermaid">%%{init: {'theme':'dark'}}%%
+<pre class="mermaid">%%{init: {'theme':'dark'}}%%
 flowchart TD
   collect_args[Collect params\nand arguments]
   entry[Parse entry Goatfile]
@@ -381,7 +381,7 @@ flowchart TD
         setup_failed -- no --&gt; test_actions
           --&gt; test_failed -- yes --&gt; teardown_actions
               test_failed -- no --&gt; teardown_actions
-</code></pre>
+</pre>
 <p>Every batch begins with a single entrypoint Goatfile <em>(if you execute Goat on a folder of Goatfiles, each Goatfile in that folder will be seen as an entrypoint Goatfile and the batch execution will be executed indiviually for each file)</em>. </p>
 <p>First, all imported <em>(see <a href="explanations/../goatfile/import-statement.html"><code>use</code></a>)</em> Goatfiles are resolved, parsed and merged together with the entrypoint Goatfile to one single batch execution. So all <code>Default</code>, <code>Setup</code>, <code>Test</code> and <code>Teardown</code> entries are merged together for each file.</p>
 <p>&quot;Simultaneously&quot;, all parameters are collected from passed parameter files, environment variables and arguments <em>(see <a href="explanations/../command-line-tool/index.html#flags">Command Line Tool</a>)</em>. These form the initial state.</p>
@@ -390,7 +390,7 @@ flowchart TD
 <p>If the <code>Test</code> section has completed successfully, the <code>Teardown</code> section is executed. Here, if any action fails, the execution <strong>continues</strong> instead of skipping the rest of the actions to ensure a complete cleanup as intended. If any of the <code>Teardown</code> actions fail, the batch execution will result in a failed state as well.</p>
 <h2 id="action-lifecycle"><a class="header" href="#action-lifecycle">Action Lifecycle</a></h2>
 <p>Below, you can see a simplified lifecycle diagram of the three actions <code>Request</code>, <code>Execute</code> and <code>Log Section</code>.</p>
-<pre><code class="language-mermaid">%%{init: {'theme':'dark'}}%%
+<pre class="mermaid">%%{init: {'theme':'dark'}}%%
 flowchart TD
   type{Type of Action}
 
@@ -454,7 +454,7 @@ flowchart TD
   type
     -- Log Section --&gt; print_logsection 
     -----------&gt; exit_with_success
-</code></pre>
+</pre>
 <h3 id="request"><a class="header" href="#request">Request</a></h3>
 <p>A <code>Request</code> action begins with the application of all default parameters from the <code>Default</code> section of the batch. After that, the parameters from the current state are substituted for the template parameters in the request definition. With the resulting state, the <code>PreScript</code> section is executed. If the execution failed, the request ends with a failure state. Otherwise, the new state is extracted and all templates are re-substituted using the new state. Following this, the request options are evaluated and applied. If the option <code>condition</code> evaluates to <code>false</code>, the request is skipped which ends the request in a success state. Otherwise, the actual request is now executed. Finally, the <code>Script</code> section is executed using the current state. Depending on the result, the request will end with a failure or success state.</p>
 <h3 id="execute"><a class="header" href="#execute">Execute</a></h3>
