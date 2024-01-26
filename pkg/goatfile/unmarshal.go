@@ -25,11 +25,15 @@ func unmarshal(fSys fs.FS, raw string, fileDir string, visited set.Set[string]) 
 
 	raw = crlf2lf(raw)
 
-	gf, err = NewParser(strings.NewReader(raw), fileDir).Parse()
+	ast, err := NewParser(strings.NewReader(raw), fileDir).Parse()
 	if err != nil {
 		return Goatfile{}, err
 	}
-	gf.Path = fileDir
+
+	gf, err = FromAst(ast)
+	if err != nil {
+		return Goatfile{}, err
+	}
 
 	if !visited.Add(gf.String()) {
 		return Goatfile{}, ErrMultiImport

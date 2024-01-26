@@ -92,10 +92,10 @@ key-2: value 2
 		assert.Equal(t, 1, len(res.Actions))
 		assert.Equal(t, "GET", res.Actions[0].(*ast.Request).Head.Method)
 		assert.Equal(t, "https://example.com", res.Actions[0].(*ast.Request).Head.Url)
-		assert.Equal(t, ast.RequestHeader{
+		assert.Equal(t, ast.RequestHeader{ast.HeaderEntries{
 			"Key-1": []string{"value 1"},
 			"key-2": []string{"value 2"},
-		}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
+		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
 	})
 
 	t.Run("single-multi-block", func(t *testing.T) {
@@ -128,19 +128,19 @@ password = "{{.creds.password}}"
 		assert.Equal(t, 1, len(res.Actions))
 		assert.Equal(t, "GET", res.Actions[0].(*ast.Request).Head.Method)
 		assert.Equal(t, "https://example.com", res.Actions[0].(*ast.Request).Head.Url)
-		assert.Equal(t, ast.RequestHeader{
+		assert.Equal(t, ast.RequestHeader{ast.HeaderEntries{
 			"Key-1": []string{"value 1"},
 			"key-2": []string{"value 2"},
-		}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
-		assert.Equal(t, ast.TextBlock("some\nbody\n"), res.Actions[0].(*ast.Request).Blocks[1].(ast.RequestBody))
-		assert.Equal(t, ast.RequestQueryParams{
+		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
+		assert.Equal(t, ast.TextBlock{Content: "some\nbody\n"}, res.Actions[0].(*ast.Request).Blocks[1].(ast.RequestBody).DataContent)
+		assert.Equal(t, ast.RequestQueryParams{ast.KV{
 			"keyInt":    int64(2),
 			"keyString": "some string",
-		}, res.Actions[0].(*ast.Request).Blocks[2].(ast.RequestQueryParams))
-		assert.Equal(t, ast.RequestAuth{
+		}}, res.Actions[0].(*ast.Request).Blocks[2].(ast.RequestQueryParams))
+		assert.Equal(t, ast.RequestAuth{ast.KV{
 			"username": "foo",
 			"password": "{{.creds.password}}",
-		}, res.Actions[0].(*ast.Request).Blocks[3].(ast.RequestAuth))
+		}}, res.Actions[0].(*ast.Request).Blocks[3].(ast.RequestAuth))
 	})
 
 	t.Run("single-invalidblockheader", func(t *testing.T) {
@@ -209,7 +209,7 @@ GET https://example.com
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.RequestHeader{}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
+		assert.Equal(t, ast.RequestHeader{ast.HeaderEntries{}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
 	})
 
 	t.Run("values", func(t *testing.T) {
@@ -232,13 +232,13 @@ multiple-1: value 2
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.RequestHeader{
+		assert.Equal(t, ast.RequestHeader{ast.HeaderEntries{
 			"key":        []string{"value"},
 			"key-2":      []string{"value 2"},
 			"Some-Key-3": []string{"some value 3"},
 			"SOME_KEY_4": []string{"§$%&/()=!§"},
 			"multiple-1": []string{"value 1", "value 2"},
-		}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
+		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
 	})
 
 	t.Run("no-separator", func(t *testing.T) {
@@ -304,7 +304,7 @@ GET https://example.com
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.NoContent{}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody))
+		assert.Equal(t, ast.NoContent{}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("unescaped-EOF", func(t *testing.T) {
@@ -322,8 +322,8 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			ast.TextBlock("some body content\nsome more content\n"),
-			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody))
+			ast.TextBlock{Content: "some body content\nsome more content\n"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("unescaped-newblock", func(t *testing.T) {
@@ -343,8 +343,8 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			ast.TextBlock("some body content\nsome more content\n"),
-			(res.Actions[0].(*ast.Request).Blocks[0]).(ast.RequestBody))
+			ast.TextBlock{Content: "some body content\nsome more content\n"},
+			(res.Actions[0].(*ast.Request).Blocks[0]).(ast.RequestBody).DataContent)
 	})
 
 	t.Run("unescaped-newrequest", func(t *testing.T) {
@@ -364,8 +364,8 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			ast.TextBlock("some body content\nsome more content\n"),
-			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody))
+			ast.TextBlock{Content: "some body content\nsome more content\n"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("unescaped-finaldelim", func(t *testing.T) {
@@ -383,8 +383,8 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			ast.TextBlock("some body content\nsome more content"),
-			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody))
+			ast.TextBlock{Content: "some body content\nsome more content"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("unescaped-section", func(t *testing.T) {
@@ -403,8 +403,8 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			ast.TextBlock("some body content\nsome more content"),
-			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody))
+			ast.TextBlock{Content: "some body content\nsome more content"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("unescaped-logsection", func(t *testing.T) {
@@ -423,8 +423,8 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			ast.TextBlock("some body content\nsome more content"),
-			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody))
+			ast.TextBlock{Content: "some body content\nsome more content"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("escaped-empty", func(t *testing.T) {
@@ -441,7 +441,7 @@ GET https://example.com
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.NoContent{}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody))
+		assert.Equal(t, ast.NoContent{}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("escaped-EOF", func(t *testing.T) {
@@ -461,8 +461,8 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			ast.TextBlock("some body content\nsome more content\n"),
-			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody))
+			ast.TextBlock{Content: "some body content\nsome more content\n"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("escaped-newblock", func(t *testing.T) {
@@ -486,8 +486,8 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			ast.TextBlock("some body content\n\n[QueryParams]\nsome more content\n"),
-			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody))
+			ast.TextBlock{Content: "some body content\n\n[QueryParams]\nsome more content\n"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("escaped-newrequest", func(t *testing.T) {
@@ -512,8 +512,8 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			ast.TextBlock("some body content\n\n---\n\nsome more content\n"),
-			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody))
+			ast.TextBlock{Content: "some body content\n\n---\n\nsome more content\n"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("escaped-section", func(t *testing.T) {
@@ -538,8 +538,8 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			ast.TextBlock("some body content\n\n### setup\n\nsome more content\n"),
-			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody))
+			ast.TextBlock{Content: "some body content\n\n### setup\n\nsome more content\n"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("escaped-open", func(t *testing.T) {
@@ -578,9 +578,9 @@ var id = response.Body.id;
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			ast.TextBlock(`assert(response.StatusCode == 200, "invalid status code");`+
-				"\nvar id = response.Body.id;\n"),
-			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestScript))
+			ast.TextBlock{Content: `assert(response.StatusCode == 200, "invalid status code");` +
+				"\nvar id = response.Body.id;\n"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestScript).DataContent)
 	})
 }
 
@@ -598,7 +598,7 @@ GET https://example.com
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.RequestQueryParams{}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
+		assert.Equal(t, ast.RequestQueryParams{ast.KV{}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
 	t.Run("value-strings", func(t *testing.T) {
@@ -616,11 +616,11 @@ string3 = 		"some string 3"
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.RequestQueryParams{
+		assert.Equal(t, ast.RequestQueryParams{ast.KV{
 			"string1": "some string 1",
 			"string2": "some string 2",
 			"string3": "some string 3",
-		}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
+		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
 	t.Run("value-integer", func(t *testing.T) {
@@ -638,11 +638,11 @@ int3 = -123
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.RequestQueryParams{
+		assert.Equal(t, ast.RequestQueryParams{ast.KV{
 			"int1": int64(1),
 			"int2": int64(1000),
 			"int3": int64(-123),
-		}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
+		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
 	t.Run("value-float", func(t *testing.T) {
@@ -661,12 +661,12 @@ float4 = -12.34
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.RequestQueryParams{
+		assert.Equal(t, ast.RequestQueryParams{ast.KV{
 			"float1": float64(1.234),
 			"float2": float64(1000.234),
 			"float3": float64(0.12),
 			"float4": float64(-12.34),
-		}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
+		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
 	t.Run("value-boolean", func(t *testing.T) {
@@ -683,10 +683,10 @@ bool2 = false
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.RequestQueryParams{
+		assert.Equal(t, ast.RequestQueryParams{ast.KV{
 			"bool1": true,
 			"bool2": false,
-		}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
+		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
 	t.Run("value-array", func(t *testing.T) {
@@ -727,7 +727,7 @@ arrayLeadingComma2 = [
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.RequestQueryParams{
+		assert.Equal(t, ast.RequestQueryParams{ast.KV{
 			"arrayEmpty1":        []any(nil),
 			"arrayEmpty2":        []any(nil),
 			"arrayString1":       []any{"some string"},
@@ -741,7 +741,7 @@ arrayLeadingComma2 = [
 			"arrayMultiline":     []any{"foo", "bar"},
 			"arrayLeadingComma1": []any{true, false},
 			"arrayLeadingComma2": []any{true, false},
-		}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
+		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
 	t.Run("value-invalid-entry", func(t *testing.T) {
@@ -858,11 +858,11 @@ arr = [ // comment
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.RequestQueryParams{
+		assert.Equal(t, ast.RequestQueryParams{ast.KV{
 			"key1": "value",
 			"key2": 1.23,
 			"arr":  []any{int64(1), int64(2)},
-		}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
+		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
 	t.Run("invlid-1", func(t *testing.T) {
@@ -1082,7 +1082,7 @@ someoption = {{.param}}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(".param"), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions)["someoption"])
+		assert.Equal(t, ParameterValue(".param"), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).KV["someoption"])
 	})
 
 	t.Run("variable-2", func(t *testing.T) {
@@ -1097,7 +1097,7 @@ someoption = {{ .param }}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(" .param "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions)["someoption"])
+		assert.Equal(t, ParameterValue(" .param "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).KV["someoption"])
 	})
 
 	t.Run("wrapped", func(t *testing.T) {
@@ -1113,8 +1113,8 @@ someoption2 = {{ print {{if .param1}}true{{else}}false{{end}} }}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(" print {{.param1}} {{.param2}} "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions)["someoption1"])
-		assert.Equal(t, ParameterValue(" print {{if .param1}}true{{else}}false{{end}} "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions)["someoption2"])
+		assert.Equal(t, ParameterValue(" print {{.param1}} {{.param2}} "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).KV["someoption1"])
+		assert.Equal(t, ParameterValue(" print {{if .param1}}true{{else}}false{{end}} "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).KV["someoption2"])
 	})
 
 	t.Run("instring-1", func(t *testing.T) {
@@ -1129,7 +1129,7 @@ someoption = {{ print "}}" }}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(` print "}}" `), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions)["someoption"])
+		assert.Equal(t, ParameterValue(` print "}}" `), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).KV["someoption"])
 	})
 
 	t.Run("instring-2", func(t *testing.T) {
@@ -1144,7 +1144,7 @@ someoption = {{ print ´}}´ }}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(" print `}}` "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions)["someoption"])
+		assert.Equal(t, ParameterValue(" print `}}` "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).KV["someoption"])
 	})
 
 	t.Run("instring-wrapped", func(t *testing.T) {
@@ -1159,7 +1159,7 @@ someoption = {{ print {{ "}}" }} }}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(` print {{ "}}" }} `), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions)["someoption"])
+		assert.Equal(t, ParameterValue(` print {{ "}}" }} `), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).KV["someoption"])
 	})
 }
 
@@ -1292,11 +1292,11 @@ script stuff 3`
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
 		assert.Equal(t, "Log section 1", gf.Actions[0].(ast.LogSection).Content)
-		assert.Equal(t, ast.TextBlock("script stuff 1\n"), gf.Actions[1].(*ast.Request).Blocks[0].(ast.RequestScript))
+		assert.Equal(t, ast.TextBlock{Content: "script stuff 1\n"}, gf.Actions[1].(*ast.Request).Blocks[0].(ast.RequestScript).DataContent)
 		assert.Equal(t, "Log section 2", gf.Actions[2].(ast.LogSection).Content)
-		assert.Equal(t, ast.TextBlock("script stuff 2\n"), gf.Actions[3].(*ast.Request).Blocks[0].(ast.RequestScript))
+		assert.Equal(t, ast.TextBlock{Content: "script stuff 2\n"}, gf.Actions[3].(*ast.Request).Blocks[0].(ast.RequestScript).DataContent)
 		assert.Equal(t, "Log section 3", gf.Actions[4].(ast.LogSection).Content)
-		assert.Equal(t, ast.TextBlock("script stuff 3"), gf.Actions[5].(*ast.Request).Blocks[0].(ast.RequestScript))
+		assert.Equal(t, ast.TextBlock{Content: "script stuff 3"}, gf.Actions[5].(*ast.Request).Blocks[0].(ast.RequestScript).DataContent)
 	})
 }
 
@@ -1332,15 +1332,15 @@ some script
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, []string{"bar"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader)["foo"])
-		assert.Equal(t, []string{"world"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader)["hello"])
-		assert.Equal(t, int64(42), gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestOptions)["answer"])
-		assert.Equal(t, "value", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestOptions)["some"])
-		assert.Equal(t, "foo", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[2].(ast.RequestAuth)["username"])
-		assert.Equal(t, "bar", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[2].(ast.RequestAuth)["password"])
-		assert.Equal(t, ast.TextBlock("hello\nworld\n"), gf.Sections[0].(ast.SectionDefaults).Request.Blocks[3].(ast.RequestBody))
-		assert.Equal(t, ast.TextBlock("some pre script\n"), gf.Sections[0].(ast.SectionDefaults).Request.Blocks[4].(ast.RequestPreScript))
-		assert.Equal(t, ast.TextBlock("some script\n"), gf.Sections[0].(ast.SectionDefaults).Request.Blocks[5].(ast.RequestScript))
+		assert.Equal(t, []string{"bar"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["foo"])
+		assert.Equal(t, []string{"world"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["hello"])
+		assert.Equal(t, int64(42), gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestOptions).KV["answer"])
+		assert.Equal(t, "value", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestOptions).KV["some"])
+		assert.Equal(t, "foo", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[2].(ast.RequestAuth).KV["username"])
+		assert.Equal(t, "bar", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[2].(ast.RequestAuth).KV["password"])
+		assert.Equal(t, ast.TextBlock{Content: "hello\nworld\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[3].(ast.RequestBody).DataContent)
+		assert.Equal(t, ast.TextBlock{Content: "some pre script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[4].(ast.RequestPreScript).DataContent)
+		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[5].(ast.RequestScript).DataContent)
 	})
 
 	t.Run("with-following-section", func(t *testing.T) {
@@ -1365,9 +1365,9 @@ GET https://exmaple.com
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, []string{"bar"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader)["foo"])
-		assert.Equal(t, []string{"world"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader)["hello"])
-		assert.Equal(t, ast.TextBlock("some script\n"), gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript))
+		assert.Equal(t, []string{"bar"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["foo"])
+		assert.Equal(t, []string{"world"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["hello"])
+		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
 	})
 
 	t.Run("with-following-splitter+section", func(t *testing.T) {
@@ -1394,9 +1394,9 @@ GET https://exmaple.com
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, []string{"bar"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader)["foo"])
-		assert.Equal(t, []string{"world"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader)["hello"])
-		assert.Equal(t, ast.TextBlock("some script\n"), gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript))
+		assert.Equal(t, []string{"bar"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["foo"])
+		assert.Equal(t, []string{"world"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["hello"])
+		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
 	})
 
 	t.Run("with-following-splitter", func(t *testing.T) {
@@ -1421,9 +1421,9 @@ GET https://exmaple.com
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, []string{"bar"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader)["foo"])
-		assert.Equal(t, []string{"world"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader)["hello"])
-		assert.Equal(t, ast.TextBlock("some script\n"), gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript))
+		assert.Equal(t, []string{"bar"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["foo"])
+		assert.Equal(t, []string{"world"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["hello"])
+		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
 	})
 
 	t.Run("in-between", func(t *testing.T) {
@@ -1450,9 +1450,9 @@ GET https://exmaple.com
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, []string{"bar"}, gf.Sections[1].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader)["foo"])
-		assert.Equal(t, []string{"world"}, gf.Sections[1].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader)["hello"])
-		assert.Equal(t, ast.TextBlock("some script\n"), gf.Sections[1].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript))
+		assert.Equal(t, []string{"bar"}, gf.Sections[1].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["foo"])
+		assert.Equal(t, []string{"world"}, gf.Sections[1].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["hello"])
+		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[1].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
 	})
 
 	t.Run("multiple", func(t *testing.T) {
@@ -1481,10 +1481,10 @@ some script 2
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, []string{"bar"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader)["foo"])
-		assert.Equal(t, []string{"moon"}, gf.Sections[1].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader)["hello"])
-		assert.Equal(t, ast.TextBlock("some script\n"), gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript))
-		assert.Equal(t, ast.TextBlock("some script 2\n"), gf.Sections[1].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript))
+		assert.Equal(t, []string{"bar"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["foo"])
+		assert.Equal(t, []string{"moon"}, gf.Sections[1].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["hello"])
+		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
+		assert.Equal(t, ast.TextBlock{Content: "some script 2\n"}, gf.Sections[1].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
 	})
 }
 

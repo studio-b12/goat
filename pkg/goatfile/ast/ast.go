@@ -84,11 +84,16 @@ type PartialRequest struct {
 
 type HeaderEntries map[string][]string
 
-type DataContent interface{}
+type DataContent interface {
+}
 
-type TextBlock string
+type TextBlock struct {
+	Content string
+}
 
-type FileDescriptor string
+type FileDescriptor struct {
+	Path string
+}
 
 type NoContent struct{}
 
@@ -99,16 +104,30 @@ type RequestHead struct {
 
 type RequestBlock interface{}
 
-type RequestOptions KV
+type RequestOptions struct {
+	KV
+}
 
-type RequestHeader HeaderEntries
+type RequestHeader struct {
+	HeaderEntries
+}
 
-type RequestQueryParams KV
+type RequestQueryParams struct {
+	KV
+}
 
-type RequestAuth KV
+type RequestAuth struct {
+	KV
+}
 
-type RequestBody DataContent
+type RequestBody struct {
+	DataContent
+}
 
-type RequestPreScript DataContent
+type RequestPreScript struct {
+	DataContent
+}
 
-type RequestScript DataContent
+type RequestScript struct {
+	DataContent
+}

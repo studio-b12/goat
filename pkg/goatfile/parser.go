@@ -446,49 +446,49 @@ func (t *Parser) parseBlock() (ast.RequestBlock, error) {
 		if err != nil {
 			return nil, err
 		}
-		return ast.RequestQueryParams(data), nil
+		return ast.RequestQueryParams{KV: data}, nil
 
 	case optionNameHeader:
 		header, err := t.parseHeaders()
 		if err != nil {
 			return nil, err
 		}
-		return ast.RequestHeader(header), nil
+		return ast.RequestHeader{HeaderEntries: header}, nil
 
 	case optionNameBody:
 		raw, err := t.parseRaw()
 		if err != nil {
 			return nil, err
 		}
-		return ast.RequestBody(raw), nil
+		return ast.RequestBody{DataContent: raw}, nil
 
 	case optionNamePreScript:
 		raw, err := t.parseRaw()
 		if err != nil {
 			return nil, err
 		}
-		return ast.RequestPreScript(raw), nil
+		return ast.RequestPreScript{DataContent: raw}, nil
 
 	case optionNameScript:
 		raw, err := t.parseRaw()
 		if err != nil {
 			return nil, err
 		}
-		return ast.RequestScript(raw), nil
+		return ast.RequestScript{DataContent: raw}, nil
 
 	case optionNameOptions:
 		data, err := t.parseBlockEntries(nil)
 		if err != nil {
 			return nil, err
 		}
-		return ast.RequestOptions(data), nil
+		return ast.RequestOptions{KV: data}, nil
 
 	case optionNameAuth:
 		data, err := t.parseBlockEntries(nil)
 		if err != nil {
 			return nil, err
 		}
-		return ast.RequestAuth(data), nil
+		return ast.RequestAuth{KV: data}, nil
 
 	default:
 		return nil, errs.WithSuffix(ErrInvalidBlockHeader,
@@ -579,7 +579,7 @@ func (t *Parser) parseRaw() (ast.DataContent, error) {
 		if tk != tokSTRING {
 			return nil, ErrInvalidFileDescriptor
 		}
-		return ast.FileDescriptor(file), nil
+		return ast.FileDescriptor{Path: file}, nil
 	}
 
 	t.s.unread()
@@ -659,7 +659,7 @@ func (t *Parser) parseRaw() (ast.DataContent, error) {
 		return ast.NoContent{}, nil
 	}
 
-	return ast.TextBlock(outStr), nil
+	return ast.TextBlock{Content: outStr}, nil
 }
 
 func (t *Parser) parseValue() (any, error) {
