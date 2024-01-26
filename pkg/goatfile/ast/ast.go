@@ -1,8 +1,14 @@
 package ast
 
-type Pos int
+type Pos struct {
+	Pos     int
+	Line    int
+	LinePos int
+}
 
 type Goatfile struct {
+	Dir string
+
 	Comments   []Comment
 	Imports    []Import
 	Separators []Separator
@@ -76,9 +82,15 @@ type PartialRequest struct {
 	Blocks []RequestBlock
 }
 
-type HeaderEntries map[string]string
+type HeaderEntries map[string][]string
+
+type DataContent interface{}
 
 type TextBlock string
+
+type FileDescriptor string
+
+type NoContent struct{}
 
 type RequestHead struct {
 	Method string
@@ -89,14 +101,14 @@ type RequestBlock interface{}
 
 type RequestOptions KV
 
-type RequestHeaders HeaderEntries
+type RequestHeader HeaderEntries
 
 type RequestQueryParams KV
 
 type RequestAuth KV
 
-type RequestPreScript TextBlock
+type RequestBody DataContent
 
-type RequestScript TextBlock
+type RequestPreScript DataContent
 
-type FileDescriptor string
+type RequestScript DataContent

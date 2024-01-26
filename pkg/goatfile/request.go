@@ -258,24 +258,3 @@ func mergeMaps[TK comparable, TV any](src, base map[TK]TV) map[TK]TV {
 	}
 	return new
 }
-
-type requestParseChecker struct {
-	*Request
-
-	set map[optionName]struct{}
-}
-
-func wrapIntoRequestParseChecker(req *Request) *requestParseChecker {
-	return &requestParseChecker{
-		Request: req,
-		set:     make(map[optionName]struct{}),
-	}
-}
-
-func (t *requestParseChecker) Check(opt optionName) error {
-	if _, ok := t.set[opt]; ok {
-		return errs.WithPrefix(fmt.Sprintf("[%s]:", opt), ErrSectionDefinedMultiple)
-	}
-	t.set[opt] = struct{}{}
-	return nil
-}

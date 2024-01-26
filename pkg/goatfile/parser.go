@@ -3,9 +3,8 @@ package goatfile
 import (
 	"bytes"
 	"fmt"
+	"github.com/studio-b12/goat/pkg/goatfile/ast"
 	"io"
-	"net/http"
-	"path"
 	"strconv"
 	"strings"
 
@@ -34,10 +33,17 @@ func NewParser(r io.Reader, fileDir string) *Parser {
 }
 
 // Parse parses a Goatfile from the specified source.
-func (t *Parser) Parse() (gf Goatfile, err error) {
+func (t *Parser) Parse() (*ast.Goatfile, error) {
+	var (
+		err error
+		gf  ast.Goatfile
+	)
+
 	defer func() {
 		err = t.wrapErr(err)
 	}()
+
+	gf.Dir = t.fileDir
 
 	for {
 		tok, lit := t.scan()
@@ -45,44 +51,57 @@ func (t *Parser) Parse() (gf Goatfile, err error) {
 
 		switch tok {
 		case tokCOMMENT, tokWS, tokLF:
+			// TODO: set in ast
 			continue
 
 		case tokDELIMITER:
 			continue
 
 		case tokLOGSECTION:
+			pos := t.astPos()
 			sec := t.s.scanUntilLF()
-			gf.Tests = append(gf.Tests, LogSection(strings.TrimSpace(sec)))
+			gf.Actions = append(gf.Actions, ast.LogSection{
+				Pos:     pos,
+				Content: strings.TrimSpace(sec),
+			})
 			continue
 
 		case tokIDENT, tokSTRING:
 			t.unscan()
-			err = t.parseRequest(&gf.Tests)
+			req, err := t.parseRequest()
+			if err != nil {
+				return nil, err
+			}
+			gf.Actions = append(gf.Actions, req)
 
 		case tokEXECUTE:
-			var exec Execute
-			exec, err = t.parseExecute()
-			if err == nil {
-				gf.Tests = append(gf.Tests, exec)
+			exec, err := t.parseExecute()
+			if err != nil {
+				return nil, err
 			}
+			gf.Actions = append(gf.Actions, exec)
 
 		case tokUSE:
-			err = t.parseUse(&gf)
+			use, err := t.parseUse()
+			if err != nil {
+				return nil, err
+			}
+			gf.Imports = append(gf.Imports, *use)
 
 		case tokSECTION:
-			err = t.parseSection(&gf)
+			sec, err := t.parseSection()
+			if err != nil {
+				return nil, err
+			}
+			gf.Sections = append(gf.Sections, sec)
 		case tokEOF:
-			return gf, nil
+			return &gf, nil
 
 		case tokBLOCKSTART:
-			return Goatfile{}, ErrBlockOutOfRequest
+			return nil, ErrBlockOutOfRequest
 
 		default:
-			return Goatfile{}, ErrIllegalCharacter
-		}
-
-		if err != nil {
-			return Goatfile{}, err
+			return nil, ErrIllegalCharacter
 		}
 	}
 }
@@ -130,73 +149,80 @@ func (t *Parser) wrapErr(err error) error {
 	return pErr
 }
 
-func (t *Parser) parseUse(gf *Goatfile) error {
+func (t *Parser) parseUse() (*ast.Import, error) {
+	pos := t.astPos()
+
 	tk, _ := t.scan()
 	if tk != tokWS {
-		return ErrInvalidStringLiteral
+		return nil, ErrInvalidStringLiteral
 	}
 
 	tk, lit := t.s.scanString()
 	if tk == tokILLEGAL {
-		return ErrInvalidStringLiteral
+		return nil, ErrInvalidStringLiteral
 	}
 
 	if lit == "" {
-		return ErrEmptyUsePath
+		return nil, ErrEmptyUsePath
 	}
 
-	gf.Imports = append(gf.Imports, lit)
-
-	return nil
+	return &ast.Import{
+		Pos:  pos,
+		Path: lit,
+	}, nil
 }
 
-func (t *Parser) parseExecute() (execParams Execute, err error) {
+func (t *Parser) parseExecute() (*ast.Execute, error) {
 	tk, _ := t.scan()
 	if tk != tokWS {
-		return Execute{}, ErrInvalidStringLiteral
+		return nil, ErrInvalidStringLiteral
 	}
 
 	tk, lit := t.s.scanString()
 	if tk == tokILLEGAL {
-		return Execute{}, ErrInvalidStringLiteral
+		return nil, ErrInvalidStringLiteral
 	}
 
 	if lit == "" {
-		return Execute{}, ErrEmptyCallPath
+		return nil, ErrEmptyCallPath
 	}
 
-	execParams.File = lit
-	execParams.Path = t.fileDir
+	var (
+		exec ast.Execute
+		err  error
+	)
+
+	exec.Path = lit
 
 	tok, _ := t.scanSkipWS()
 	if tok != tokGROUPSTART {
 		t.unscan()
-		return execParams, nil
+		return &exec, nil
 	}
 
 	end := tokGROUPEND
-	execParams.Params, err = t.parseBlockEntries(&end)
+	exec.Parameters, err = t.parseBlockEntries(&end)
 	if err != nil {
-		return Execute{}, err
+		return nil, err
 	}
 	t.scan() // re-scan closing group `)`
 
 	tok, _ = t.scanSkipWS()
 	if tok != tokRETURN {
 		t.unscan()
-		return execParams, nil
+		return &exec, nil
 	}
 
 	tok, _ = t.scanSkipWS()
 	if tok != tokGROUPSTART {
-		return Execute{}, ErrMissingGroup
+		return nil, ErrMissingGroup
 	}
 
-	execParams.Returns = map[string]string{}
+	exec.Returns = make(ast.Assignments)
 	for {
 		tok, key := t.scanSkipWS()
 		if tok == tokEOF {
-			return Execute{}, ErrUnclosedGroup
+			return nil, ErrUnclosedGroup
 		}
 		if tok == tokLF {
 			continue
@@ -205,43 +231,39 @@ func (t *Parser) parseExecute() (execParams Execute, err error) {
 			break
 		}
 		if tok != tokIDENT {
-			return Execute{}, ErrIllegalCharacter
+			return nil, ErrIllegalCharacter
 		}
 
 		tok, _ = t.scanSkipWS()
 		if tok != tokAS {
-			return Execute{}, ErrIllegalCharacter
+			return nil, ErrIllegalCharacter
 		}
 
 		tok, val := t.scanSkipWS()
 		if tok != tokIDENT {
-			return Execute{}, ErrIllegalCharacter
+			return nil, ErrIllegalCharacter
 		}
 
-		execParams.Returns[key] = val
+		exec.Returns[key] = val
 	}
 
-	return execParams, nil
+	return &exec, nil
 }
 
-func (t *Parser) parseSection(gf *Goatfile) (err error) {
-	name := strings.TrimSpace(t.s.readToLF())
+func (t *Parser) parseSection() (ast.Section, error) {
+	sectionPos := t.astPos()
 
-	var r *[]Action
+	name := SectionName(strings.ToLower(strings.TrimSpace(t.s.readToLF())))
 
-	switch SectionName(strings.ToLower(name)) {
-	case SectionDefaults:
-		gf.Defaults, err = t.parseDefaults()
-		return err
-	case SectionSetup:
-		r = &gf.Setup
-	case SectionTests:
-		r = &gf.Tests
-	case SectionTeardown:
-		r = &gf.Teardown
-	default:
-		return ErrInvalidSection
+	if name == SectionDefaults {
+		pr, err := t.parseDefaults()
+		if err != nil {
+			return nil, err
+		}
+		return ast.SectionDefaults{Pos: sectionPos, Request: *pr}, nil
 	}
+
+	var actions []ast.Action
 
 	for {
 		tok, _ := t.scan()
@@ -255,55 +277,78 @@ func (t *Parser) parseSection(gf *Goatfile) (err error) {
 		}
 
 		if tok == tokLOGSECTION {
+			pos := t.astPos()
 			sec := t.s.scanUntilLF()
-			*r = append(*r, LogSection(strings.TrimSpace(sec)))
+			actions = append(actions, ast.LogSection{
+				Pos:     pos,
+				Content: strings.TrimSpace(sec),
+			})
 			continue
 		}
 
 		if tok == tokEXECUTE {
 			exec, err := t.parseExecute()
 			if err != nil {
-				return err
+				return nil, err
 			}
-			*r = append(*r, exec)
+			actions = append(actions, exec)
 			continue
 		}
 
 		t.unscan()
-		err := t.parseRequest(r)
+		req, err := t.parseRequest()
 		if err != nil {
-			return err
+			return nil, err
 		}
+		actions = append(actions, req)
 	}
 
-	return nil
+	switch name {
+	case SectionSetup:
+		return ast.SectionSetup{
+			Pos:     sectionPos,
+			Actions: actions,
+		}, nil
+	case SectionTests:
+		return ast.SectionTests{
+			Pos:     sectionPos,
+			Actions: actions,
+		}, nil
+	case SectionTeardown:
+		return ast.SectionTeardown{
+			Pos:     sectionPos,
+			Actions: actions,
+		}, nil
+	default:
+		return nil, ErrInvalidSection
+	}
 }
 
-func (t *Parser) parseRequest(section *[]Action) (err error) {
-	req := newRequest()
+func (t *Parser) parseRequest() (*ast.Request, error) {
+	var (
+		req ast.Request
+	)
 
 	// parse header
 
-	req.PosLine = t.s.line + 1
+	req.Pos = t.astPos()
 
 	tok, lit := t.scan()
 	if tok != tokIDENT && tok != tokSTRING || lit == "" {
-		return ErrInvalidRequestMethod
+		return nil, ErrInvalidRequestMethod
 	}
-	req.Method = lit
+	req.Head.Method = lit
 
 	tok, _ = t.scan()
 	if tok != tokWS && tok != tokLF {
-		return ErrNoRequestURI
+		return nil, ErrNoRequestURI
 	}
 
 	tok, lit = t.s.scanString()
 	if tok != tokSTRING || lit == "" {
-		return ErrNoRequestURI
+		return nil, ErrNoRequestURI
 	}
-	req.URI = lit
-
-	ck := wrapIntoRequestParseChecker(&req)
+	req.Head.Url = lit
 
 loop:
 	for {
@@ -311,7 +356,11 @@ loop:
 
 		switch tok {
 		case tokBLOCKSTART:
-			err = t.parseBlock(ck)
+			block, err := t.parseBlock()
+			if err != nil {
+				return nil, err
+			}
+			req.Blocks = append(req.Blocks, block)
 
 		case tokWS, tokLF:
 			continue loop
@@ -322,24 +371,20 @@ loop:
 			break loop
 
 		default:
-			err = errs.WithSuffix(ErrInvalidToken, "(request)")
-		}
-
-		if err != nil {
-			return err
+			return nil, errs.WithSuffix(ErrInvalidToken, "(request)")
 		}
 	}
 
-	req.Path = t.fileDir
-	*section = append(*section, req)
-	return nil
+	return &req, nil
 }
 
-func (t *Parser) parseDefaults() (*Request, error) {
-	req := newRequest()
-	ck := wrapIntoRequestParseChecker(&req)
+func (t *Parser) parseDefaults() (*ast.PartialRequest, error) {
+	var (
+		req ast.PartialRequest
+		err error
+	)
 
-	var err error
+	req.Pos = t.astPos()
 
 loop:
 	for {
@@ -347,7 +392,11 @@ loop:
 
 		switch tok {
 		case tokBLOCKSTART:
-			err = t.parseBlock(ck)
+			block, err := t.parseBlock()
+			if err != nil {
+				return nil, err
+			}
+			req.Blocks = append(req.Blocks, block)
 
 		case tokWS, tokLF:
 			continue loop
@@ -369,92 +418,86 @@ loop:
 	return &req, nil
 }
 
-func (t *Parser) parseBlock(req *requestParseChecker) error {
+func (t *Parser) parseBlock() (ast.RequestBlock, error) {
 	var blockHeader string
 
 	tok, lit := t.scanSkipWS()
 	if tok != tokIDENT || lit == "" {
-		return ErrInvalidBlockHeader
+		return nil, ErrInvalidBlockHeader
 	}
 	blockHeader = lit
 
 	tok, _ = t.scan()
 	if tok != tokBLOCKEND {
-		return ErrInvalidBlockHeader
+		return nil, ErrInvalidBlockHeader
 	}
 
 	tok, _ = t.scanSkipWS()
 	if tok != tokLF {
-		return errs.WithSuffix(ErrInvalidToken, "(block)")
+		return nil, errs.WithSuffix(ErrInvalidToken, "(block)")
 	}
 
 	optName := optionName(strings.ToLower(blockHeader))
-
-	err := req.Check(optName)
-	if err != nil {
-		return err
-	}
 
 	switch optName {
 
 	case optionNameQueryParams:
 		data, err := t.parseBlockEntries(nil)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		req.QueryParams = data
+		return ast.RequestQueryParams(data), nil
 
 	case optionNameHeader:
-		err := t.parseHeaders(req.Header)
+		header, err := t.parseHeaders()
 		if err != nil {
-			return err
+			return nil, err
 		}
+		return ast.RequestHeader(header), nil
 
 	case optionNameBody:
 		raw, err := t.parseRaw()
 		if err != nil {
-			return err
+			return nil, err
 		}
-		req.Body = raw
+		return ast.RequestBody(raw), nil
 
 	case optionNamePreScript:
 		raw, err := t.parseRaw()
 		if err != nil {
-			return err
+			return nil, err
 		}
-		req.PreScript = raw
+		return ast.RequestPreScript(raw), nil
 
 	case optionNameScript:
 		raw, err := t.parseRaw()
 		if err != nil {
-			return err
+			return nil, err
 		}
-		req.Script = raw
+		return ast.RequestScript(raw), nil
 
 	case optionNameOptions:
 		data, err := t.parseBlockEntries(nil)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		req.Options = data
+		return ast.RequestOptions(data), nil
 
 	case optionNameAuth:
 		data, err := t.parseBlockEntries(nil)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		req.Auth = data
+		return ast.RequestAuth(data), nil
 
 	default:
-		return errs.WithSuffix(ErrInvalidBlockHeader,
+		return nil, errs.WithSuffix(ErrInvalidBlockHeader,
 			fmt.Sprintf("('%s')", blockHeader))
 	}
-
-	return nil
 }
 
-func (t *Parser) parseBlockEntries(exitToken *token) (map[string]any, error) {
-	m := map[string]any{}
+func (t *Parser) parseBlockEntries(exitToken *token) (ast.KV, error) {
+	m := make(ast.KV)
 
 	for {
 		tok, lit := t.scanSkipWS()
@@ -491,7 +534,9 @@ func (t *Parser) parseBlockEntries(exitToken *token) (map[string]any, error) {
 	return m, nil
 }
 
-func (t *Parser) parseHeaders(header http.Header) error {
+func (t *Parser) parseHeaders() (ast.HeaderEntries, error) {
+	header := make(ast.HeaderEntries)
+
 	for {
 		tok, lit := t.scanSkipWS()
 		if tok == tokLF {
@@ -503,27 +548,27 @@ func (t *Parser) parseHeaders(header http.Header) error {
 		}
 
 		if tok != tokIDENT {
-			return ErrInvalidHeaderKey
+			return nil, ErrInvalidHeaderKey
 		}
 		key := lit
 
 		tok, _ = t.scanSkipWS()
 		if tok != tokCOLON {
-			return ErrInvalidHeaderSeparator
+			return nil, ErrInvalidHeaderSeparator
 		}
 
 		val := strings.TrimSpace(t.s.scanUntilLF())
 		if val == "" {
-			return ErrNoHeaderValue
+			return nil, ErrNoHeaderValue
 		}
 
-		header.Add(key, val)
+		header[key] = append(header[key], val)
 	}
 
-	return nil
+	return header, nil
 }
 
-func (t *Parser) parseRaw() (Data, error) {
+func (t *Parser) parseRaw() (ast.DataContent, error) {
 	var out bytes.Buffer
 
 	inEscape := false
@@ -532,9 +577,9 @@ func (t *Parser) parseRaw() (Data, error) {
 	if r == '@' {
 		tk, file := t.s.scanString()
 		if tk != tokSTRING {
-			return NoContent{}, ErrInvalidFileDescriptor
+			return nil, ErrInvalidFileDescriptor
 		}
-		return FileContent{filePath: file, currDir: path.Dir(t.fileDir)}, nil
+		return ast.FileDescriptor(file), nil
 	}
 
 	t.s.unread()
@@ -584,7 +629,7 @@ func (t *Parser) parseRaw() (Data, error) {
 
 		if r == eof {
 			if inEscape {
-				return NoContent{}, ErrOpenEscapeBlock
+				return ast.NoContent{}, ErrOpenEscapeBlock
 			}
 			t.s.unread()
 			break
@@ -611,10 +656,10 @@ func (t *Parser) parseRaw() (Data, error) {
 
 	outStr := out.String()
 	if outStr == "" {
-		return NoContent{}, nil
+		return ast.NoContent{}, nil
 	}
 
-	return StringContent(outStr), nil
+	return ast.TextBlock(outStr), nil
 }
 
 func (t *Parser) parseValue() (any, error) {
@@ -668,4 +713,12 @@ loop:
 	}
 
 	return arr, nil
+}
+
+func (t *Parser) astPos() ast.Pos {
+	return ast.Pos{
+		Pos:     t.prevPos.pos,
+		Line:    t.prevPos.line,
+		LinePos: t.prevPos.linepos,
+	}
 }
