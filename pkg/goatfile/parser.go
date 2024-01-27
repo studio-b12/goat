@@ -61,6 +61,7 @@ func (t *Parser) Parse() (*ast.Goatfile, error) {
 			continue
 
 		case tokDELIMITER:
+			gf.Delimiters = append(gf.Delimiters, ast.Delimiter{Pos: pos, ExtraLen: len(lit)})
 			continue
 
 		case tokLOGSECTION:
@@ -97,12 +98,13 @@ func (t *Parser) Parse() (*ast.Goatfile, error) {
 			gf.Imports = append(gf.Imports, *use)
 
 		case tokSECTION:
-			sec, comms, err := t.parseSection()
+			sec, comms, delims, err := t.parseSection()
 			if err != nil {
 				return nil, err
 			}
 			gf.Sections = append(gf.Sections, sec)
 			gf.Comments = append(gf.Comments, comms...)
+			gf.Delimiters = append(gf.Delimiters, delims...)
 		case tokEOF:
 			return &gf, nil
 
@@ -258,7 +260,7 @@ func (t *Parser) parseExecute() (*ast.Execute, []ast.Comment, error) {
 	return &exec, comments, nil
 }
 
-func (t *Parser) parseSection() (sect ast.Section, comments []ast.Comment, err error) {
+func (t *Parser) parseSection() (sect ast.Section, comments []ast.Comment, delims []ast.Delimiter, err error) {
 	sectionPos := t.astPos()
 
 	name := SectionName(strings.ToLower(strings.TrimSpace(t.s.readToLF())))
@@ -266,11 +268,11 @@ func (t *Parser) parseSection() (sect ast.Section, comments []ast.Comment, err e
 	if name == SectionDefaults {
 		pr, comms, err := t.parseDefaults()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		sect = ast.SectionDefaults{Pos: sectionPos, Request: *pr}
 		comments = append(comments, comms...)
-		return sect, comments, nil
+		return sect, comments, delims, nil
 	}
 
 	var actions []ast.Action
@@ -279,7 +281,12 @@ func (t *Parser) parseSection() (sect ast.Section, comments []ast.Comment, err e
 		pos := t.astPos()
 		tok, lit := t.scan()
 
-		if tok == tokLF || tok == tokWS || tok == tokDELIMITER {
+		if tok == tokLF || tok == tokWS {
+			continue
+		}
+
+		if tok == tokDELIMITER {
+			delims = append(delims, ast.Delimiter{Pos: pos, ExtraLen: len(lit)})
 			continue
 		}
 
@@ -306,7 +313,7 @@ func (t *Parser) parseSection() (sect ast.Section, comments []ast.Comment, err e
 		if tok == tokEXECUTE {
 			exec, comms, err := t.parseExecute()
 			if err != nil {
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
 			actions = append(actions, exec)
 			comments = append(comments, comms...)
@@ -316,7 +323,7 @@ func (t *Parser) parseSection() (sect ast.Section, comments []ast.Comment, err e
 		t.unscan()
 		req, comms, err := t.parseRequest()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		actions = append(actions, req)
 		comments = append(comments, comms...)
@@ -339,10 +346,10 @@ func (t *Parser) parseSection() (sect ast.Section, comments []ast.Comment, err e
 			Actions: actions,
 		}
 	default:
-		return nil, nil, ErrInvalidSection
+		return nil, nil, nil, ErrInvalidSection
 	}
 
-	return sect, comments, nil
+	return sect, comments, delims, nil
 }
 
 func (t *Parser) parseRequest() (*ast.Request, []ast.Comment, error) {
@@ -391,10 +398,8 @@ loop:
 
 		case tokWS, tokLF:
 			continue loop
-		case tokEOF, tokSECTION, tokLOGSECTION:
+		case tokEOF, tokSECTION, tokLOGSECTION, tokDELIMITER:
 			t.unscan()
-			break loop
-		case tokDELIMITER:
 			break loop
 
 		default:
@@ -433,10 +438,8 @@ loop:
 
 		case tokWS, tokLF:
 			continue loop
-		case tokEOF, tokSECTION, tokLOGSECTION:
+		case tokEOF, tokSECTION, tokLOGSECTION, tokDELIMITER:
 			t.unscan()
-			break loop
-		case tokDELIMITER:
 			break loop
 
 		default:
@@ -636,14 +639,10 @@ func (t *Parser) parseRaw() (ast.DataContent, error) {
 	for {
 		if !inEscape {
 			if out.Len() > 3 && string(out.Bytes()[out.Len()-4:]) == "\n---" {
-				for {
-					if t.s.read() != '-' {
-						break
-					}
-				}
+				lit := t.s.readToLF()
 				t.s.unread()
 				t.buf.tok = tokDELIMITER
-				t.buf.lit = ""
+				t.buf.lit = lit
 				t.unscan()
 				out.Truncate(out.Len() - 4)
 				break

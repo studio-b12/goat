@@ -1092,6 +1092,53 @@ use"test"
 	})
 }
 
+func TestParse_Delimiters(t *testing.T) {
+	t.Run("general", func(t *testing.T) {
+		const raw = `
+GET https://foo.com
+
+---
+
+GET https://bar.com
+
+[Header]
+A: B
+
+[Body]
+some stuff
+
+[Script]
+hello world
+
+----
+
+-----
+
+GET https://baz.com
+
+### Setup
+
+------
+
+GET https://bar.com
+
+-------
+		`
+
+		p := stringParser(raw)
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t, 5, len(res.Delimiters))
+
+		assert.Equal(t, 0, res.Delimiters[0].ExtraLen)
+		assert.Equal(t, 1, res.Delimiters[1].ExtraLen)
+		assert.Equal(t, 2, res.Delimiters[2].ExtraLen)
+		assert.Equal(t, 3, res.Delimiters[3].ExtraLen)
+		assert.Equal(t, 4, res.Delimiters[4].ExtraLen)
+	})
+}
+
 // --- Special Tests --------------------------------------
 
 func TestParse_BlockTemplateValues(t *testing.T) {

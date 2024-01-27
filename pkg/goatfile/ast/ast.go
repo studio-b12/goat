@@ -11,7 +11,7 @@ type Goatfile struct {
 
 	Comments   []Comment
 	Imports    []Import
-	Separators []Separator
+	Delimiters []Delimiter
 	Actions    []Action
 	Sections   []Section
 }
@@ -26,9 +26,9 @@ type Import struct {
 	Path string
 }
 
-type Separator struct {
-	Pos Pos
-	Len int
+type Delimiter struct {
+	Pos      Pos
+	ExtraLen int
 }
 
 type Action interface{}
