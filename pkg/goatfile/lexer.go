@@ -198,9 +198,7 @@ func (t *scanner) scanComment() (tk token, lit string) {
 		return tokILLEGAL, ""
 	}
 
-	t.skipToLF()
-
-	return tokCOMMENT, ""
+	return tokCOMMENT, t.readToLF()
 }
 
 func (t *scanner) scanDash() (tk token, lit string) {

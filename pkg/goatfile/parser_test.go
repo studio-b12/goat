@@ -827,6 +827,7 @@ func TestParse_Comments(t *testing.T) {
    // Some comment
 GET https://example.com //another comment
 // comment
+
 // heyo
 			`
 
@@ -836,6 +837,28 @@ GET https://example.com //another comment
 		assert.Nil(t, err, err)
 		assert.Equal(t, "GET", res.Actions[0].(*ast.Request).Head.Method)
 		assert.Equal(t, "https://example.com", res.Actions[0].(*ast.Request).Head.Url)
+
+		assert.Equal(t, 5, len(res.Comments))
+
+		assert.Equal(t, "Some comment", res.Comments[0].Content)
+		assert.Equal(t, 1, res.Comments[0].Pos.Line)
+		assert.Equal(t, 0, res.Comments[0].Pos.LinePos)
+
+		assert.Equal(t, "Some comment", res.Comments[1].Content)
+		assert.Equal(t, 2, res.Comments[1].Pos.Line)
+		assert.Equal(t, 3, res.Comments[1].Pos.LinePos)
+
+		assert.Equal(t, "another comment", res.Comments[2].Content)
+		assert.Equal(t, 3, res.Comments[2].Pos.Line)
+		assert.Equal(t, 24, res.Comments[2].Pos.LinePos)
+
+		assert.Equal(t, "comment", res.Comments[3].Content)
+		assert.Equal(t, 4, res.Comments[3].Pos.Line)
+		assert.Equal(t, 0, res.Comments[3].Pos.LinePos)
+
+		assert.Equal(t, "heyo", res.Comments[4].Content)
+		assert.Equal(t, 6, res.Comments[4].Pos.Line)
+		assert.Equal(t, 0, res.Comments[4].Pos.LinePos)
 	})
 
 	t.Run("blocks", func(t *testing.T) {
@@ -863,6 +886,8 @@ arr = [ // comment
 			"key2": 1.23,
 			"arr":  []any{int64(1), int64(2)},
 		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
+
+		assert.Equal(t, 10, len(res.Comments))
 	})
 
 	t.Run("invlid-1", func(t *testing.T) {
