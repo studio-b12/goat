@@ -15,7 +15,7 @@ func TestRequestFromAst(t *testing.T) {
 			Url:    "https://foo.bar",
 		},
 		Blocks: []ast.RequestBlock{
-			ast.RequestOptions{ast.KV{"a": "b"}},
+			ast.RequestOptions{ast.KVList[any]{ast.KV[any]{Key: "a", Value: "b"}}},
 			ast.RequestBody{ast.TextBlock{"body stuff"}},
 			ast.RequestScript{ast.TextBlock{"script stuff"}},
 		},
@@ -36,7 +36,7 @@ func TestRequestFromAst(t *testing.T) {
 func TestPartialRequestFromAst(t *testing.T) {
 	astR := ast.PartialRequest{
 		Blocks: []ast.RequestBlock{
-			ast.RequestOptions{ast.KV{"a": "b"}},
+			ast.RequestOptions{ast.KVList[any]{ast.KV[any]{Key: "a", Value: "b"}}},
 			ast.RequestBody{ast.TextBlock{"body stuff"}},
 			ast.RequestScript{ast.TextBlock{"script stuff"}},
 		},

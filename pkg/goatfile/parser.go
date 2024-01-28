@@ -228,8 +228,8 @@ func (t *Parser) parseExecute() (*ast.Execute, []ast.Comment, error) {
 		return nil, nil, ErrMissingGroup
 	}
 
-	exec.Returns = make(ast.Assignments)
 	for {
+		pos := t.astPos()
 		tok, key := t.scanSkipWS()
 		if tok == tokEOF {
 			return nil, nil, ErrUnclosedGroup
@@ -254,7 +254,7 @@ func (t *Parser) parseExecute() (*ast.Execute, []ast.Comment, error) {
 			return nil, nil, ErrIllegalCharacter
 		}
 
-		exec.Returns[key] = val
+		exec.Returns.KVList = append(exec.Returns.KVList, ast.KV[string]{Pos: pos, Key: key, Value: val})
 	}
 
 	return &exec, comments, nil
@@ -489,13 +489,14 @@ func (t *Parser) parseBlock() (ast.RequestBlock, []ast.Comment, error) {
 			return nil, nil, err
 		}
 		comments = append(comments, comms...)
-		return ast.RequestQueryParams{KV: data}, comments, nil
+		return ast.RequestQueryParams{KVList: data}, comments, nil
 
 	case optionNameHeader:
-		header, err := t.parseHeaders()
+		header, comms, err := t.parseHeaders()
 		if err != nil {
 			return nil, nil, err
 		}
+		comments = append(comments, comms...)
 		return ast.RequestHeader{HeaderEntries: header}, comments, nil
 
 	case optionNameBody:
@@ -525,7 +526,7 @@ func (t *Parser) parseBlock() (ast.RequestBlock, []ast.Comment, error) {
 			return nil, nil, err
 		}
 		comments = append(comments, comms...)
-		return ast.RequestOptions{KV: data}, comments, nil
+		return ast.RequestOptions{KVList: data}, comments, nil
 
 	case optionNameAuth:
 		data, comms, err := t.parseBlockEntries(nil)
@@ -533,7 +534,7 @@ func (t *Parser) parseBlock() (ast.RequestBlock, []ast.Comment, error) {
 			return nil, nil, err
 		}
 		comments = append(comments, comms...)
-		return ast.RequestAuth{KV: data}, comments, nil
+		return ast.RequestAuth{KVList: data}, comments, nil
 
 	default:
 		return nil, nil, errs.WithSuffix(ErrInvalidBlockHeader,
@@ -541,8 +542,8 @@ func (t *Parser) parseBlock() (ast.RequestBlock, []ast.Comment, error) {
 	}
 }
 
-func (t *Parser) parseBlockEntries(exitToken *token) (ast.KV, []ast.Comment, error) {
-	m := make(ast.KV)
+func (t *Parser) parseBlockEntries(exitToken *token) (ast.KVList[any], []ast.Comment, error) {
+	m := make(ast.KVList[any], 0)
 	var comments []ast.Comment
 
 	for {
@@ -580,44 +581,49 @@ func (t *Parser) parseBlockEntries(exitToken *token) (ast.KV, []ast.Comment, err
 		}
 		comments = append(comments, comms...)
 
-		m[key] = val
+		m = append(m, ast.KV[any]{Pos: pos, Key: key, Value: val})
 	}
 
 	return m, comments, nil
 }
 
-func (t *Parser) parseHeaders() (ast.HeaderEntries, error) {
-	header := make(ast.HeaderEntries)
+func (t *Parser) parseHeaders() (header ast.HeaderEntries, comments []ast.Comment, err error) {
 
 	for {
+		pos := t.astPos()
 		tok, lit := t.scanSkipWS()
 		if tok == tokLF {
 			continue
 		}
-		if tok == tokCOMMENT || tok == tokDELIMITER || tok == tokEOF || tok == tokBLOCKSTART || tok == tokSECTION {
+		if tok == tokDELIMITER || tok == tokEOF || tok == tokBLOCKSTART || tok == tokSECTION {
 			t.unscan()
 			break
 		}
 
+		if tok == tokCOMMENT {
+			comments = append(comments, ast.Comment{Pos: pos, Content: lit})
+			continue
+		}
+
 		if tok != tokIDENT {
-			return nil, ErrInvalidHeaderKey
+			return header, nil, ErrInvalidHeaderKey
 		}
 		key := lit
 
 		tok, _ = t.scanSkipWS()
 		if tok != tokCOLON {
-			return nil, ErrInvalidHeaderSeparator
+			return header, nil, ErrInvalidHeaderSeparator
 		}
 
 		val := strings.TrimSpace(t.s.scanUntilLF())
 		if val == "" {
-			return nil, ErrNoHeaderValue
+			return header, nil, ErrNoHeaderValue
 		}
 
-		header[key] = append(header[key], val)
+		header.KVList = append(header.KVList, ast.KV[string]{Pos: pos, Key: key, Value: val})
 	}
 
-	return header, nil
+	return header, comments, nil
 }
 
 func (t *Parser) parseRaw() (ast.DataContent, error) {

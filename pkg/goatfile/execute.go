@@ -22,8 +22,8 @@ func ExecuteFromAst(a *ast.Execute, path string) (t Execute, err error) {
 
 	t.File = a.Path
 	t.Path = path
-	t.Params = a.Parameters
-	t.Returns = a.Returns
+	t.Params = a.Parameters.ToMap()
+	t.Returns = a.Returns.ToMap()
 
 	return t, nil
 }

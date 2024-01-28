@@ -92,10 +92,10 @@ key-2: value 2
 		assert.Equal(t, 1, len(res.Actions))
 		assert.Equal(t, "GET", res.Actions[0].(*ast.Request).Head.Method)
 		assert.Equal(t, "https://example.com", res.Actions[0].(*ast.Request).Head.Url)
-		assert.Equal(t, ast.RequestHeader{ast.HeaderEntries{
-			"Key-1": []string{"value 1"},
-			"key-2": []string{"value 2"},
-		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
+		assert.Equal(t, ast.RequestHeader{ast.HeaderEntries{ast.KVList[string]{
+			ast.KV[string]{Key: "Key-1", Value: "value 1", Pos: pos(38, 5, 0)},
+			ast.KV[string]{Key: "key-2", Value: "value 2", Pos: pos(53, 6, 0)},
+		}}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
 	})
 
 	t.Run("single-multi-block", func(t *testing.T) {
@@ -128,18 +128,18 @@ password = "{{.creds.password}}"
 		assert.Equal(t, 1, len(res.Actions))
 		assert.Equal(t, "GET", res.Actions[0].(*ast.Request).Head.Method)
 		assert.Equal(t, "https://example.com", res.Actions[0].(*ast.Request).Head.Url)
-		assert.Equal(t, ast.RequestHeader{ast.HeaderEntries{
-			"Key-1": []string{"value 1"},
-			"key-2": []string{"value 2"},
-		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
+		assert.Equal(t, ast.RequestHeader{ast.HeaderEntries{ast.KVList[string]{
+			ast.KV[string]{Key: "Key-1", Value: "value 1", Pos: pos(38, 5, 0)},
+			ast.KV[string]{Key: "key-2", Value: "value 2", Pos: pos(53, 6, 0)},
+		}}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
 		assert.Equal(t, ast.TextBlock{Content: "some\nbody\n"}, res.Actions[0].(*ast.Request).Blocks[1].(ast.RequestBody).DataContent)
-		assert.Equal(t, ast.RequestQueryParams{ast.KV{
-			"keyInt":    int64(2),
-			"keyString": "some string",
+		assert.Equal(t, ast.RequestQueryParams{ast.KVList[any]{
+			ast.KV[any]{Key: "keyInt", Value: int64(2), Pos: pos(101, 13, 0)},
+			ast.KV[any]{Key: "keyString", Value: "some string", Pos: pos(112, 14, 0)},
 		}}, res.Actions[0].(*ast.Request).Blocks[2].(ast.RequestQueryParams))
-		assert.Equal(t, ast.RequestAuth{ast.KV{
-			"username": "foo",
-			"password": "{{.creds.password}}",
+		assert.Equal(t, ast.RequestAuth{ast.KVList[any]{
+			ast.KV[any]{Key: "username", Value: "foo", Pos: pos(146, 17, 0)},
+			ast.KV[any]{Key: "password", Value: "{{.creds.password}}", Pos: pos(163, 18, 0)},
 		}}, res.Actions[0].(*ast.Request).Blocks[3].(ast.RequestAuth))
 	})
 
@@ -219,6 +219,7 @@ GET https://example.com
 
 [Header]
 key: value
+// Hey, A comment!
 key-2:  value 2
 Some-Key-3: 		some value 3
 SOME_KEY_4: 		§$%&/()=!§
@@ -232,13 +233,14 @@ multiple-1: value 2
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.RequestHeader{ast.HeaderEntries{
-			"key":        []string{"value"},
-			"key-2":      []string{"value 2"},
-			"Some-Key-3": []string{"some value 3"},
-			"SOME_KEY_4": []string{"§$%&/()=!§"},
-			"multiple-1": []string{"value 1", "value 2"},
-		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
+		assert.Equal(t, ast.RequestHeader{ast.HeaderEntries{ast.KVList[string]{
+			ast.KV[string]{Key: "key", Value: "value", Pos: pos(36, 5, 0)},
+			ast.KV[string]{Key: "key-2", Value: "value 2", Pos: pos(66, 7, 0)},
+			ast.KV[string]{Key: "Some-Key-3", Value: "some value 3", Pos: pos(82, 8, 0)},
+			ast.KV[string]{Key: "SOME_KEY_4", Value: "§$%&/()=!§", Pos: pos(109, 9, 0)},
+			ast.KV[string]{Key: "multiple-1", Value: "value 1", Pos: pos(135, 11, 0)},
+			ast.KV[string]{Key: "multiple-1", Value: "value 2", Pos: pos(155, 12, 0)},
+		}}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
 	})
 
 	t.Run("no-separator", func(t *testing.T) {
@@ -598,7 +600,7 @@ GET https://example.com
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.RequestQueryParams{ast.KV{}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
+		assert.Equal(t, ast.RequestQueryParams{ast.KVList[any]{}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
 	t.Run("value-strings", func(t *testing.T) {
@@ -616,10 +618,10 @@ string3 = 		"some string 3"
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.RequestQueryParams{ast.KV{
-			"string1": "some string 1",
-			"string2": "some string 2",
-			"string3": "some string 3",
+		assert.Equal(t, ast.RequestQueryParams{ast.KVList[any]{
+			ast.KV[any]{Key: "string1", Value: "some string 1", Pos: pos(41, 5, 0)},
+			ast.KV[any]{Key: "string2", Value: "some string 2", Pos: pos(67, 6, 0)},
+			ast.KV[any]{Key: "string3", Value: "some string 3", Pos: pos(97, 7, 0)},
 		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
@@ -638,10 +640,10 @@ int3 = -123
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.RequestQueryParams{ast.KV{
-			"int1": int64(1),
-			"int2": int64(1000),
-			"int3": int64(-123),
+		assert.Equal(t, ast.RequestQueryParams{ast.KVList[any]{
+			ast.KV[any]{Key: "int1", Value: int64(1), Pos: pos(41, 5, 0)},
+			ast.KV[any]{Key: "int2", Value: int64(1000), Pos: pos(50, 6, 0)},
+			ast.KV[any]{Key: "int3", Value: int64(-123), Pos: pos(63, 7, 0)},
 		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
@@ -661,11 +663,11 @@ float4 = -12.34
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.RequestQueryParams{ast.KV{
-			"float1": float64(1.234),
-			"float2": float64(1000.234),
-			"float3": float64(0.12),
-			"float4": float64(-12.34),
+		assert.Equal(t, ast.RequestQueryParams{ast.KVList[any]{
+			ast.KV[any]{Key: "float1", Value: float64(1.234), Pos: pos(41, 5, 0)},
+			ast.KV[any]{Key: "float2", Value: float64(1000.234), Pos: pos(56, 6, 0)},
+			ast.KV[any]{Key: "float3", Value: float64(0.12), Pos: pos(75, 7, 0)},
+			ast.KV[any]{Key: "float4", Value: float64(-12.34), Pos: pos(89, 8, 0)},
 		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
@@ -683,9 +685,9 @@ bool2 = false
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.RequestQueryParams{ast.KV{
-			"bool1": true,
-			"bool2": false,
+		assert.Equal(t, ast.RequestQueryParams{ast.KVList[any]{
+			ast.KV[any]{Key: "bool1", Value: true, Pos: pos(41, 5, 0)},
+			ast.KV[any]{Key: "bool2", Value: false, Pos: pos(54, 6, 0)},
 		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
@@ -727,20 +729,20 @@ arrayLeadingComma2 = [
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.RequestQueryParams{ast.KV{
-			"arrayEmpty1":        []any(nil),
-			"arrayEmpty2":        []any(nil),
-			"arrayString1":       []any{"some string"},
-			"arrayString2":       []any{"some string", "another string", "and another one"},
-			"arrayInt1":          []any{int64(1)},
-			"arrayInt2":          []any{int64(1), int64(2), int64(-3), int64(4_000)},
-			"arrayFloat1":        []any{1.23},
-			"arrayFloat2":        []any{1.0, -1.1, 1.234},
-			"arrayMixed":         []any{"a string", int64(2), 3.456, true},
-			"arrayNested":        []any{[]any{int64(1), int64(2)}, []any{[]any{true, false}, "foo"}},
-			"arrayMultiline":     []any{"foo", "bar"},
-			"arrayLeadingComma1": []any{true, false},
-			"arrayLeadingComma2": []any{true, false},
+		assert.Equal(t, ast.RequestQueryParams{ast.KVList[any]{
+			ast.KV[any]{Key: "arrayEmpty1", Value: []any(nil), Pos: pos(41, 5, 0)},
+			ast.KV[any]{Key: "arrayEmpty2", Value: []any(nil), Pos: pos(58, 6, 0)},
+			ast.KV[any]{Key: "arrayString1", Value: []any{"some string"}, Pos: pos(79, 8, 0)},
+			ast.KV[any]{Key: "arrayString2", Value: []any{"some string", "another string", "and another one"}, Pos: pos(110, 9, 0)},
+			ast.KV[any]{Key: "arrayInt1", Value: []any{int64(1)}, Pos: pos(178, 11, 0)},
+			ast.KV[any]{Key: "arrayInt2", Value: []any{int64(1), int64(2), int64(-3), int64(4_000)}, Pos: pos(194, 12, 0)},
+			ast.KV[any]{Key: "arrayFloat1", Value: []any{1.23}, Pos: pos(224, 14, 0)},
+			ast.KV[any]{Key: "arrayFloat2", Value: []any{1.0, -1.1, 1.234}, Pos: pos(245, 15, 0)},
+			ast.KV[any]{Key: "arrayMixed", Value: []any{"a string", int64(2), 3.456, true}, Pos: pos(278, 17, 0)},
+			ast.KV[any]{Key: "arrayNested", Value: []any{[]any{int64(1), int64(2)}, []any{[]any{true, false}, "foo"}}, Pos: pos(321, 19, 0)},
+			ast.KV[any]{Key: "arrayMultiline", Value: []any{"foo", "bar"}, Pos: pos(368, 21, 0)},
+			ast.KV[any]{Key: "arrayLeadingComma1", Value: []any{true, false}, Pos: pos(405, 26, 0)},
+			ast.KV[any]{Key: "arrayLeadingComma2", Value: []any{true, false}, Pos: pos(441, 27, 0)},
 		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
@@ -881,10 +883,10 @@ arr = [ // comment
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ast.RequestQueryParams{ast.KV{
-			"key1": "value",
-			"key2": 1.23,
-			"arr":  []any{int64(1), int64(2)},
+		assert.Equal(t, ast.RequestQueryParams{ast.KVList[any]{
+			ast.KV[any]{Key: "key1", Value: "value", Pos: pos(79, 5, 0)},
+			ast.KV[any]{Key: "key2", Value: 1.23, Pos: pos(113, 6, 0)},
+			ast.KV[any]{Key: "arr", Value: []any{int64(1), int64(2)}, Pos: pos(151, 8, 0)},
 		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 
 		assert.Equal(t, 10, len(res.Comments))
@@ -1154,7 +1156,7 @@ someoption = {{.param}}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(".param"), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).KV["someoption"])
+		assert.Equal(t, ParameterValue(".param"), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).GetUnchecked("someoption"))
 	})
 
 	t.Run("variable-2", func(t *testing.T) {
@@ -1169,7 +1171,7 @@ someoption = {{ .param }}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(" .param "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).KV["someoption"])
+		assert.Equal(t, ParameterValue(" .param "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).GetUnchecked("someoption"))
 	})
 
 	t.Run("wrapped", func(t *testing.T) {
@@ -1185,8 +1187,8 @@ someoption2 = {{ print {{if .param1}}true{{else}}false{{end}} }}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(" print {{.param1}} {{.param2}} "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).KV["someoption1"])
-		assert.Equal(t, ParameterValue(" print {{if .param1}}true{{else}}false{{end}} "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).KV["someoption2"])
+		assert.Equal(t, ParameterValue(" print {{.param1}} {{.param2}} "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).GetUnchecked("someoption1"))
+		assert.Equal(t, ParameterValue(" print {{if .param1}}true{{else}}false{{end}} "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).GetUnchecked("someoption2"))
 	})
 
 	t.Run("instring-1", func(t *testing.T) {
@@ -1201,7 +1203,7 @@ someoption = {{ print "}}" }}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(` print "}}" `), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).KV["someoption"])
+		assert.Equal(t, ParameterValue(` print "}}" `), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).GetUnchecked("someoption"))
 	})
 
 	t.Run("instring-2", func(t *testing.T) {
@@ -1216,7 +1218,7 @@ someoption = {{ print ´}}´ }}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(" print `}}` "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).KV["someoption"])
+		assert.Equal(t, ParameterValue(" print `}}` "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).GetUnchecked("someoption"))
 	})
 
 	t.Run("instring-wrapped", func(t *testing.T) {
@@ -1231,7 +1233,7 @@ someoption = {{ print {{ "}}" }} }}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(` print {{ "}}" }} `), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).KV["someoption"])
+		assert.Equal(t, ParameterValue(` print {{ "}}" }} `), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).GetUnchecked("someoption"))
 	})
 }
 
@@ -1404,12 +1406,12 @@ some script
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, []string{"bar"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["foo"])
-		assert.Equal(t, []string{"world"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["hello"])
-		assert.Equal(t, int64(42), gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestOptions).KV["answer"])
-		assert.Equal(t, "value", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestOptions).KV["some"])
-		assert.Equal(t, "foo", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[2].(ast.RequestAuth).KV["username"])
-		assert.Equal(t, "bar", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[2].(ast.RequestAuth).KV["password"])
+		assert.Equal(t, "bar", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("foo"))
+		assert.Equal(t, "world", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("hello"))
+		assert.Equal(t, int64(42), gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestOptions).GetUnchecked("answer"))
+		assert.Equal(t, "value", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestOptions).GetUnchecked("some"))
+		assert.Equal(t, "foo", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[2].(ast.RequestAuth).GetUnchecked("username"))
+		assert.Equal(t, "bar", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[2].(ast.RequestAuth).GetUnchecked("password"))
 		assert.Equal(t, ast.TextBlock{Content: "hello\nworld\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[3].(ast.RequestBody).DataContent)
 		assert.Equal(t, ast.TextBlock{Content: "some pre script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[4].(ast.RequestPreScript).DataContent)
 		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[5].(ast.RequestScript).DataContent)
@@ -1437,8 +1439,8 @@ GET https://exmaple.com
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, []string{"bar"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["foo"])
-		assert.Equal(t, []string{"world"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["hello"])
+		assert.Equal(t, "bar", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).GetUnchecked("foo"))
+		assert.Equal(t, "world", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).GetUnchecked("hello"))
 		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
 	})
 
@@ -1466,8 +1468,8 @@ GET https://exmaple.com
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, []string{"bar"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["foo"])
-		assert.Equal(t, []string{"world"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["hello"])
+		assert.Equal(t, "bar", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("foo"))
+		assert.Equal(t, "world", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("hello"))
 		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
 	})
 
@@ -1493,8 +1495,8 @@ GET https://exmaple.com
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, []string{"bar"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["foo"])
-		assert.Equal(t, []string{"world"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["hello"])
+		assert.Equal(t, "bar", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("foo"))
+		assert.Equal(t, "world", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("hello"))
 		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
 	})
 
@@ -1522,8 +1524,8 @@ GET https://exmaple.com
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, []string{"bar"}, gf.Sections[1].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["foo"])
-		assert.Equal(t, []string{"world"}, gf.Sections[1].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["hello"])
+		assert.Equal(t, "bar", gf.Sections[1].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("foo"))
+		assert.Equal(t, "world", gf.Sections[1].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("hello"))
 		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[1].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
 	})
 
@@ -1553,8 +1555,8 @@ some script 2
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, []string{"bar"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["foo"])
-		assert.Equal(t, []string{"moon"}, gf.Sections[1].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries["hello"])
+		assert.Equal(t, "bar", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("foo"))
+		assert.Equal(t, "moon", gf.Sections[1].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("hello"))
 		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
 		assert.Equal(t, ast.TextBlock{Content: "some script 2\n"}, gf.Sections[1].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
 	})
@@ -1630,21 +1632,21 @@ execute ../pathTo/someGoatfile (
 		assert.Nil(t, err, err)
 
 		assert.Equal(t, "../pathTo/someGoatfile", gf.Actions[0].(*ast.Execute).Path)
-		assert.Equal(t, ast.KV{
-			"foo": int64(1),
+		assert.Equal(t, ast.KVList[any]{
+			ast.KV[any]{Key: "foo", Value: int64(1), Pos: pos(33, 1, 32)},
 		}, gf.Actions[0].(*ast.Execute).Parameters)
 
 		assert.Equal(t, "../pathTo/someGoatfile", gf.Actions[1].(*ast.Execute).Path)
-		assert.Equal(t, ast.KV{
-			"foo": int64(1),
-			"bar": "hello",
+		assert.Equal(t, ast.KVList[any]{
+			ast.KV[any]{Key: "foo", Value: int64(1), Pos: pos(77, 5, 32)},
+			ast.KV[any]{Key: "bar", Value: "hello", Pos: pos(82, 5, 37)},
 		}, gf.Actions[1].(*ast.Execute).Parameters)
 
 		assert.Equal(t, "../pathTo/someGoatfile", gf.Actions[2].(*ast.Execute).Path)
-		assert.Equal(t, ast.KV{
-			"foo":  "hello",
-			"bar":  int64(2),
-			"bazz": ParameterValue(".someParam"),
+		assert.Equal(t, ast.KVList[any]{
+			ast.KV[any]{Key: "foo", Value: "hello", Pos: pos(134, 10, 0)},
+			ast.KV[any]{Key: "bar", Value: int64(2), Pos: pos(152, 11, 0)},
+			ast.KV[any]{Key: "bazz", Value: ParameterValue(".someParam"), Pos: pos(159, 12, 0)},
 		}, gf.Actions[2].(*ast.Execute).Parameters)
 	})
 
@@ -1673,33 +1675,33 @@ execute ../pathTo/someGoatfile (
 		assert.Nil(t, err, err)
 
 		assert.Equal(t, "../pathTo/someGoatfile", gf.Actions[0].(*ast.Execute).Path)
-		assert.Equal(t, ast.KV{
-			"foo": int64(1),
+		assert.Equal(t, ast.KVList[any]{
+			ast.KV[any]{Key: "foo", Value: int64(1), Pos: pos(33, 1, 32)},
 		}, gf.Actions[0].(*ast.Execute).Parameters)
-		assert.Equal(t, ast.Assignments{
-			"foo": "bar",
-		}, gf.Actions[0].(*ast.Execute).Returns)
+		assert.Equal(t, ast.Assignments{ast.KVList[string]{
+			ast.KV[string]{Key: "foo", Value: "bar", Pos: pos(48, 1, 47)},
+		}}, gf.Actions[0].(*ast.Execute).Returns)
 
 		assert.Equal(t, "../pathTo/someGoatfile", gf.Actions[1].(*ast.Execute).Path)
-		assert.Equal(t, ast.KV{
-			"foo": int64(1),
-			"bar": "hello",
+		assert.Equal(t, ast.KVList[any]{
+			ast.KV[any]{Key: "foo", Value: int64(1), Pos: pos(97, 5, 32)},
+			ast.KV[any]{Key: "bar", Value: "hello", Pos: pos(102, 5, 37)},
 		}, gf.Actions[1].(*ast.Execute).Parameters)
-		assert.Equal(t, ast.Assignments{
-			"foo": "bar",
-			"bar": "bazz",
-		}, gf.Actions[1].(*ast.Execute).Returns)
+		assert.Equal(t, ast.Assignments{ast.KVList[string]{
+			ast.KV[string]{Key: "foo", Value: "bar", Pos: pos(124, 5, 59)},
+			ast.KV[string]{Key: "bar", Value: "bazz", Pos: pos(134, 5, 69)},
+		}}, gf.Actions[1].(*ast.Execute).Returns)
 
 		assert.Equal(t, "../pathTo/someGoatfile", gf.Actions[2].(*ast.Execute).Path)
-		assert.Equal(t, ast.KV{
-			"foo":  "hello",
-			"bar":  int64(2),
-			"bazz": ParameterValue(".someParam"),
+		assert.Equal(t, ast.KVList[any]{
+			ast.KV[any]{Key: "foo", Value: "hello", Pos: pos(186, 10, 0)},
+			ast.KV[any]{Key: "bar", Value: int64(2), Pos: pos(204, 11, 0)},
+			ast.KV[any]{Key: "bazz", Value: ParameterValue(".someParam"), Pos: pos(211, 12, 0)},
 		}, gf.Actions[2].(*ast.Execute).Parameters)
-		assert.Equal(t, ast.Assignments{
-			"foo": "bar",
-			"bar": "bazz",
-		}, gf.Actions[2].(*ast.Execute).Returns)
+		assert.Equal(t, ast.Assignments{ast.KVList[string]{
+			ast.KV[string]{Key: "foo", Value: "bar", Pos: pos(244, 14, 0)},
+			ast.KV[string]{Key: "bar", Value: "bazz", Pos: pos(258, 15, 0)},
+		}}, gf.Actions[2].(*ast.Execute).Returns)
 	})
 }
 
@@ -1719,4 +1721,8 @@ func importsToPaths(imp []ast.Import) []string {
 		res = append(res, i.Path)
 	}
 	return res
+}
+
+func pos(pos int, line int, linePos int) ast.Pos {
+	return ast.Pos{Pos: pos, Line: line, LinePos: linePos}
 }

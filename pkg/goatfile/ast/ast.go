@@ -63,13 +63,51 @@ type LogSection struct {
 type Execute struct {
 	Pos        Pos
 	Path       string
-	Parameters KV
+	Parameters KVList[any]
 	Returns    Assignments
 }
 
-type KV map[string]any
+type KVList[TVal any] []KV[TVal]
 
-type Assignments map[string]string
+func (t KVList[TVal]) Get(key string) (val TVal, ok bool) {
+	for _, kv := range t {
+		if kv.Key == key {
+			return kv.Value, true
+		}
+	}
+	return val, false
+}
+
+func (t KVList[TVal]) GetUnchecked(key string) TVal {
+	val, _ := t.Get(key)
+	return val
+}
+
+func (t KVList[TVal]) ToMap() map[string]TVal {
+	m := make(map[string]TVal)
+	for _, kv := range t {
+		m[kv.Key] = kv.Value
+	}
+	return m
+}
+
+func (t KVList[TVal]) ToMultiMap() map[string][]TVal {
+	m := make(map[string][]TVal)
+	for _, kv := range t {
+		m[kv.Key] = append(m[kv.Key], kv.Value)
+	}
+	return m
+}
+
+type Assignments struct {
+	KVList[string]
+}
+
+type KV[TVal any] struct {
+	Pos   Pos
+	Key   string
+	Value TVal
+}
 
 type Request struct {
 	Pos    Pos
@@ -82,7 +120,9 @@ type PartialRequest struct {
 	Blocks []RequestBlock
 }
 
-type HeaderEntries map[string][]string
+type HeaderEntries struct {
+	KVList[string]
+}
 
 type DataContent interface {
 }
@@ -105,7 +145,7 @@ type RequestHead struct {
 type RequestBlock interface{}
 
 type RequestOptions struct {
-	KV
+	KVList[any]
 }
 
 type RequestHeader struct {
@@ -113,11 +153,11 @@ type RequestHeader struct {
 }
 
 type RequestQueryParams struct {
-	KV
+	KVList[any]
 }
 
 type RequestAuth struct {
-	KV
+	KVList[any]
 }
 
 type RequestBody struct {

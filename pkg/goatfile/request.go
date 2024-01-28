@@ -59,13 +59,13 @@ func RequestFromAst(req *ast.Request, path string) (t Request, err error) {
 	for _, block := range req.Blocks {
 		switch b := block.(type) {
 		case ast.RequestHeader:
-			t.Header = http.Header(b.HeaderEntries)
+			t.Header = b.HeaderEntries.ToMultiMap()
 		case ast.RequestOptions:
-			t.Options = b.KV
+			t.Options = b.KVList.ToMap()
 		case ast.RequestQueryParams:
-			t.QueryParams = b.KV
+			t.QueryParams = b.KVList.ToMap()
 		case ast.RequestAuth:
-			t.Auth = b.KV
+			t.Auth = b.KVList.ToMap()
 		case ast.RequestBody:
 			t.Body, err = DataFromAst(b.DataContent, path)
 		case ast.RequestPreScript:
