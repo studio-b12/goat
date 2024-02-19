@@ -1,10 +1,10 @@
 package config
 
 import (
-	"os"
-
 	"github.com/joho/godotenv"
 	"github.com/traefik/paerser/env"
+	"os"
+
 	"github.com/traefik/paerser/file"
 )
 
@@ -25,8 +25,13 @@ func Parse[T any](cfgFiles []string, envPrefix string, def ...T) (cfg T, err err
 		cfg = def[0]
 	}
 
-	godotenv.Load()
-	err = env.Decode(os.Environ(), envPrefix, &cfg)
+	if envPrefix != "" {
+		godotenv.Load()
+		err = env.Decode(os.Environ(), envPrefix, &cfg)
+		if err != nil {
+			return cfg, err
+		}
+	}
 
 	for _, cfgFile := range cfgFiles {
 		err = file.Decode(cfgFile, &cfg)
