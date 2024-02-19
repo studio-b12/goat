@@ -2,6 +2,8 @@ package goatfile
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/studio-b12/goat/pkg/goatfile/ast"
 	"io"
 	"os"
 	"os/user"
@@ -19,6 +21,22 @@ type Data interface {
 	// data or an error. The returned reader
 	// might be nil.
 	Reader() (io.Reader, error)
+}
+
+func DataFromAst(di ast.DataContent, path string) (Data, error) {
+	switch d := di.(type) {
+	case ast.NoContent:
+		return NoContent{}, nil
+	case ast.TextBlock:
+		return StringContent(d.Content), nil
+	case ast.FileDescriptor:
+		return FileContent{
+			filePath: d.Path,
+			currDir:  filepath.Dir(path),
+		}, nil
+	default:
+		return nil, fmt.Errorf("invalid ast data content type: %v", di)
+	}
 }
 
 // NoContent implements Data containing no content.

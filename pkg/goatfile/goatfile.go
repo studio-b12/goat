@@ -7,7 +7,10 @@
 package goatfile
 
 import (
+	"errors"
+	"github.com/studio-b12/goat/pkg/goatfile/ast"
 	"github.com/studio-b12/goat/pkg/util"
+	"slices"
 )
 
 type SectionName string
@@ -43,6 +46,71 @@ type Goatfile struct {
 	Teardown []Action
 
 	Path string
+}
+
+func FromAst(astGf *ast.Goatfile) (gf Goatfile, err error) {
+	if astGf == nil {
+		return gf, errors.New("ast is nil")
+	}
+
+	gf.Path = astGf.Dir
+
+	gf.Imports = make([]string, 0, len(astGf.Imports))
+	for _, imp := range astGf.Imports {
+		gf.Imports = append(gf.Imports, imp.Path)
+	}
+
+	if len(astGf.Actions) > 0 {
+		gf.Tests = slices.Grow(gf.Tests, len(astGf.Actions))
+		for _, act := range astGf.Actions {
+			a, err := ActionFromAst(act, astGf.Dir)
+			if err != nil {
+				return Goatfile{}, err
+			}
+			gf.Tests = append(gf.Tests, a)
+		}
+	}
+
+	for _, sect := range astGf.Sections {
+		switch s := sect.(type) {
+		case ast.SectionDefaults:
+			defReq, err := PartialRequestFromAst(s.Request, astGf.Dir)
+			if err != nil {
+				return Goatfile{}, err
+			}
+			if gf.Defaults == nil {
+				gf.Defaults = &defReq
+			} else {
+				gf.Defaults.Merge(&defReq)
+			}
+		case ast.SectionSetup:
+			for _, act := range s.Actions {
+				a, err := ActionFromAst(act, astGf.Dir)
+				if err != nil {
+					return Goatfile{}, err
+				}
+				gf.Setup = append(gf.Setup, a)
+			}
+		case ast.SectionTests:
+			for _, act := range s.Actions {
+				a, err := ActionFromAst(act, astGf.Dir)
+				if err != nil {
+					return Goatfile{}, err
+				}
+				gf.Tests = append(gf.Tests, a)
+			}
+		case ast.SectionTeardown:
+			for _, act := range s.Actions {
+				a, err := ActionFromAst(act, astGf.Dir)
+				if err != nil {
+					return Goatfile{}, err
+				}
+				gf.Teardown = append(gf.Teardown, a)
+			}
+		}
+	}
+
+	return gf, nil
 }
 
 // Merge appends all requests in all sections of with

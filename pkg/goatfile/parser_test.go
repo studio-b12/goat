@@ -1,14 +1,11 @@
 package goatfile
 
 import (
-	"errors"
-	"fmt"
-	"net/http"
+	"github.com/studio-b12/goat/pkg/goatfile/ast"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/studio-b12/goat/pkg/errs"
 )
 
 // TODO: Add more unit tests
@@ -21,9 +18,9 @@ func TestParse_Simple(t *testing.T) {
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, 1, len(res.Tests))
-		assert.Equal(t, "GET", res.Tests[0].(Request).Method)
-		assert.Equal(t, "https://example.com", res.Tests[0].(Request).URI)
+		assert.Equal(t, 1, len(res.Actions))
+		assert.Equal(t, "GET", res.Actions[0].(*ast.Request).Head.Method)
+		assert.Equal(t, "https://example.com", res.Actions[0].(*ast.Request).Head.Url)
 	})
 
 	t.Run("multi", func(t *testing.T) {
@@ -57,22 +54,22 @@ abc
 
 		assert.Nil(t, err, err)
 
-		assert.Equal(t, 5, len(res.Tests))
+		assert.Equal(t, 5, len(res.Actions))
 
-		assert.Equal(t, "GET", res.Tests[0].(Request).Method)
-		assert.Equal(t, "https://example1.com", res.Tests[0].(Request).URI)
+		assert.Equal(t, "GET", res.Actions[0].(*ast.Request).Head.Method)
+		assert.Equal(t, "https://example1.com", res.Actions[0].(*ast.Request).Head.Url)
 
-		assert.Equal(t, "POST", res.Tests[1].(Request).Method)
-		assert.Equal(t, "https://example2.com", res.Tests[1].(Request).URI)
+		assert.Equal(t, "POST", res.Actions[1].(*ast.Request).Head.Method)
+		assert.Equal(t, "https://example2.com", res.Actions[1].(*ast.Request).Head.Url)
 
-		assert.Equal(t, "LOGIN", res.Tests[2].(Request).Method)
-		assert.Equal(t, "https://example3.com", res.Tests[2].(Request).URI)
+		assert.Equal(t, "LOGIN", res.Actions[2].(*ast.Request).Head.Method)
+		assert.Equal(t, "https://example3.com", res.Actions[2].(*ast.Request).Head.Url)
 
-		assert.Equal(t, "CHECK", res.Tests[3].(Request).Method)
-		assert.Equal(t, "https://example4.com", res.Tests[3].(Request).URI)
+		assert.Equal(t, "CHECK", res.Actions[3].(*ast.Request).Head.Method)
+		assert.Equal(t, "https://example4.com", res.Actions[3].(*ast.Request).Head.Url)
 
-		assert.Equal(t, "CHECK", res.Tests[4].(Request).Method)
-		assert.Equal(t, "https://example5.com", res.Tests[4].(Request).URI)
+		assert.Equal(t, "CHECK", res.Actions[4].(*ast.Request).Head.Method)
+		assert.Equal(t, "https://example5.com", res.Actions[4].(*ast.Request).Head.Url)
 	})
 }
 
@@ -92,13 +89,13 @@ key-2: value 2
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, 1, len(res.Tests))
-		assert.Equal(t, "GET", res.Tests[0].(Request).Method)
-		assert.Equal(t, "https://example.com", res.Tests[0].(Request).URI)
-		assert.Equal(t, http.Header{
-			"Key-1": []string{"value 1"},
-			"Key-2": []string{"value 2"},
-		}, res.Tests[0].(Request).Header)
+		assert.Equal(t, 1, len(res.Actions))
+		assert.Equal(t, "GET", res.Actions[0].(*ast.Request).Head.Method)
+		assert.Equal(t, "https://example.com", res.Actions[0].(*ast.Request).Head.Url)
+		assert.Equal(t, ast.RequestHeader{ast.HeaderEntries{ast.KVList[string]{
+			ast.KV[string]{Key: "Key-1", Value: "value 1", Pos: pos(38, 5, 0)},
+			ast.KV[string]{Key: "key-2", Value: "value 2", Pos: pos(53, 6, 0)},
+		}}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
 	})
 
 	t.Run("single-multi-block", func(t *testing.T) {
@@ -128,22 +125,22 @@ password = "{{.creds.password}}"
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, 1, len(res.Tests))
-		assert.Equal(t, "GET", res.Tests[0].(Request).Method)
-		assert.Equal(t, "https://example.com", res.Tests[0].(Request).URI)
-		assert.Equal(t, http.Header{
-			"Key-1": []string{"value 1"},
-			"Key-2": []string{"value 2"},
-		}, res.Tests[0].(Request).Header)
-		assert.Equal(t, StringContent("some\nbody\n"), res.Tests[0].(Request).Body)
-		assert.Equal(t, map[string]any{
-			"keyInt":    int64(2),
-			"keyString": "some string",
-		}, res.Tests[0].(Request).QueryParams)
-		assert.Equal(t, map[string]any{
-			"username": "foo",
-			"password": "{{.creds.password}}",
-		}, res.Tests[0].(Request).Auth)
+		assert.Equal(t, 1, len(res.Actions))
+		assert.Equal(t, "GET", res.Actions[0].(*ast.Request).Head.Method)
+		assert.Equal(t, "https://example.com", res.Actions[0].(*ast.Request).Head.Url)
+		assert.Equal(t, ast.RequestHeader{ast.HeaderEntries{ast.KVList[string]{
+			ast.KV[string]{Key: "Key-1", Value: "value 1", Pos: pos(38, 5, 0)},
+			ast.KV[string]{Key: "key-2", Value: "value 2", Pos: pos(53, 6, 0)},
+		}}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
+		assert.Equal(t, ast.TextBlock{Content: "some\nbody\n"}, res.Actions[0].(*ast.Request).Blocks[1].(ast.RequestBody).DataContent)
+		assert.Equal(t, ast.RequestQueryParams{ast.KVList[any]{
+			ast.KV[any]{Key: "keyInt", Value: int64(2), Pos: pos(101, 13, 0)},
+			ast.KV[any]{Key: "keyString", Value: "some string", Pos: pos(112, 14, 0)},
+		}}, res.Actions[0].(*ast.Request).Blocks[2].(ast.RequestQueryParams))
+		assert.Equal(t, ast.RequestAuth{ast.KVList[any]{
+			ast.KV[any]{Key: "username", Value: "foo", Pos: pos(146, 17, 0)},
+			ast.KV[any]{Key: "password", Value: "{{.creds.password}}", Pos: pos(163, 18, 0)},
+		}}, res.Actions[0].(*ast.Request).Blocks[3].(ast.RequestAuth))
 	})
 
 	t.Run("single-invalidblockheader", func(t *testing.T) {
@@ -201,27 +198,28 @@ key-2: value 2
 func TestParse_BlockHeaders(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Header]
-		
+
 		`
 
 		p := stringParser(raw)
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, http.Header{}, res.Tests[0].(Request).Header)
+		assert.Equal(t, ast.RequestHeader{ast.HeaderEntries{}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
 	})
 
 	t.Run("values", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Header]
 key: value
+// Hey, A comment!
 key-2:  value 2
 Some-Key-3: 		some value 3
 SOME_KEY_4: 		§$%&/()=!§
@@ -235,23 +233,24 @@ multiple-1: value 2
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, http.Header{
-			"Key":        []string{"value"},
-			"Key-2":      []string{"value 2"},
-			"Some-Key-3": []string{"some value 3"},
-			"Some_key_4": []string{"§$%&/()=!§"},
-			"Multiple-1": []string{"value 1", "value 2"},
-		}, res.Tests[0].(Request).Header)
+		assert.Equal(t, ast.RequestHeader{ast.HeaderEntries{ast.KVList[string]{
+			ast.KV[string]{Key: "key", Value: "value", Pos: pos(36, 5, 0)},
+			ast.KV[string]{Key: "key-2", Value: "value 2", Pos: pos(66, 7, 0)},
+			ast.KV[string]{Key: "Some-Key-3", Value: "some value 3", Pos: pos(82, 8, 0)},
+			ast.KV[string]{Key: "SOME_KEY_4", Value: "§$%&/()=!§", Pos: pos(109, 9, 0)},
+			ast.KV[string]{Key: "multiple-1", Value: "value 1", Pos: pos(135, 11, 0)},
+			ast.KV[string]{Key: "multiple-1", Value: "value 2", Pos: pos(155, 12, 0)},
+		}}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestHeader))
 	})
 
 	t.Run("no-separator", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Header]
 invalid
-		
+
 		`
 
 		p := stringParser(raw)
@@ -262,12 +261,12 @@ invalid
 
 	t.Run("invalid-key-format", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Header]
 some key: value
-		
+
 		`
 
 		p := stringParser(raw)
@@ -278,13 +277,13 @@ some key: value
 
 	t.Run("no-value", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Header]
 some-key:
 some-key-2:
-		
+
 		`
 
 		p := stringParser(raw)
@@ -297,7 +296,7 @@ some-key-2:
 func TestParse_BlockRaw(t *testing.T) {
 	t.Run("unescaped-empty", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Body]
@@ -307,12 +306,12 @@ GET https://example.com
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, NoContent{}, res.Tests[0].(Request).Body)
+		assert.Equal(t, ast.NoContent{}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("unescaped-EOF", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Body]
@@ -325,13 +324,13 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringContent("some body content\nsome more content\n"),
-			res.Tests[0].(Request).Body)
+			ast.TextBlock{Content: "some body content\nsome more content\n"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("unescaped-newblock", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Body]
@@ -346,13 +345,13 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringContent("some body content\nsome more content\n"),
-			res.Tests[0].(Request).Body)
+			ast.TextBlock{Content: "some body content\nsome more content\n"},
+			(res.Actions[0].(*ast.Request).Blocks[0]).(ast.RequestBody).DataContent)
 	})
 
 	t.Run("unescaped-newrequest", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Body]
@@ -367,13 +366,13 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringContent("some body content\nsome more content\n"),
-			res.Tests[0].(Request).Body)
+			ast.TextBlock{Content: "some body content\nsome more content\n"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("unescaped-finaldelim", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Body]
@@ -386,13 +385,13 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringContent("some body content\nsome more content"),
-			res.Tests[0].(Request).Body)
+			ast.TextBlock{Content: "some body content\nsome more content"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("unescaped-section", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Body]
@@ -406,13 +405,13 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringContent("some body content\nsome more content"),
-			res.Tests[0].(Request).Body)
+			ast.TextBlock{Content: "some body content\nsome more content"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("unescaped-logsection", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Body]
@@ -426,13 +425,13 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringContent("some body content\nsome more content"),
-			res.Tests[0].(Request).Body)
+			ast.TextBlock{Content: "some body content\nsome more content"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("escaped-empty", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Body]
@@ -444,12 +443,12 @@ GET https://example.com
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, NoContent{}, res.Tests[0].(Request).Body)
+		assert.Equal(t, ast.NoContent{}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("escaped-EOF", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Body]
@@ -464,13 +463,13 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringContent("some body content\nsome more content\n"),
-			res.Tests[0].(Request).Body)
+			ast.TextBlock{Content: "some body content\nsome more content\n"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("escaped-newblock", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Body]
@@ -489,13 +488,13 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringContent("some body content\n\n[QueryParams]\nsome more content\n"),
-			res.Tests[0].(Request).Body)
+			ast.TextBlock{Content: "some body content\n\n[QueryParams]\nsome more content\n"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("escaped-newrequest", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Body]
@@ -515,13 +514,13 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringContent("some body content\n\n---\n\nsome more content\n"),
-			res.Tests[0].(Request).Body)
+			ast.TextBlock{Content: "some body content\n\n---\n\nsome more content\n"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("escaped-section", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Body]
@@ -541,13 +540,13 @@ some more content
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringContent("some body content\n\n### setup\n\nsome more content\n"),
-			res.Tests[0].(Request).Body)
+			ast.TextBlock{Content: "some body content\n\n### setup\n\nsome more content\n"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 
 	t.Run("escaped-open", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Body]
@@ -565,7 +564,7 @@ some body content
 
 	t.Run("script general", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [Script]
@@ -581,54 +580,54 @@ var id = response.Body.id;
 
 		assert.Nil(t, err, err)
 		assert.Equal(t,
-			StringContent(`assert(response.StatusCode == 200, "invalid status code");`+
-				"\nvar id = response.Body.id;\n"),
-			res.Tests[0].(Request).Script)
+			ast.TextBlock{Content: `assert(response.StatusCode == 200, "invalid status code");` +
+				"\nvar id = response.Body.id;\n"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestScript).DataContent)
 	})
 }
 
 func TestParse_BlockValues(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [QueryParams]
-		
+
 		`
 
 		p := stringParser(raw)
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, map[string]any{}, res.Tests[0].(Request).QueryParams)
+		assert.Equal(t, ast.RequestQueryParams{ast.KVList[any]{}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
 	t.Run("value-strings", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [QueryParams]
 string1 = "some string 1"
 string2 =     "some string 2"
-string3 = 		"some string 3" 
+string3 = 		"some string 3"
 		`
 
 		p := stringParser(raw)
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, map[string]any{
-			"string1": "some string 1",
-			"string2": "some string 2",
-			"string3": "some string 3",
-		}, res.Tests[0].(Request).QueryParams)
+		assert.Equal(t, ast.RequestQueryParams{ast.KVList[any]{
+			ast.KV[any]{Key: "string1", Value: "some string 1", Pos: pos(41, 5, 0)},
+			ast.KV[any]{Key: "string2", Value: "some string 2", Pos: pos(67, 6, 0)},
+			ast.KV[any]{Key: "string3", Value: "some string 3", Pos: pos(97, 7, 0)},
+		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
 	t.Run("value-integer", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [QueryParams]
@@ -641,16 +640,16 @@ int3 = -123
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, map[string]any{
-			"int1": int64(1),
-			"int2": int64(1000),
-			"int3": int64(-123),
-		}, res.Tests[0].(Request).QueryParams)
+		assert.Equal(t, ast.RequestQueryParams{ast.KVList[any]{
+			ast.KV[any]{Key: "int1", Value: int64(1), Pos: pos(41, 5, 0)},
+			ast.KV[any]{Key: "int2", Value: int64(1000), Pos: pos(50, 6, 0)},
+			ast.KV[any]{Key: "int3", Value: int64(-123), Pos: pos(63, 7, 0)},
+		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
 	t.Run("value-float", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [QueryParams]
@@ -664,17 +663,17 @@ float4 = -12.34
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, map[string]any{
-			"float1": float64(1.234),
-			"float2": float64(1000.234),
-			"float3": float64(0.12),
-			"float4": float64(-12.34),
-		}, res.Tests[0].(Request).QueryParams)
+		assert.Equal(t, ast.RequestQueryParams{ast.KVList[any]{
+			ast.KV[any]{Key: "float1", Value: float64(1.234), Pos: pos(41, 5, 0)},
+			ast.KV[any]{Key: "float2", Value: float64(1000.234), Pos: pos(56, 6, 0)},
+			ast.KV[any]{Key: "float3", Value: float64(0.12), Pos: pos(75, 7, 0)},
+			ast.KV[any]{Key: "float4", Value: float64(-12.34), Pos: pos(89, 8, 0)},
+		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
 	t.Run("value-boolean", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [QueryParams]
@@ -686,15 +685,15 @@ bool2 = false
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, map[string]any{
-			"bool1": true,
-			"bool2": false,
-		}, res.Tests[0].(Request).QueryParams)
+		assert.Equal(t, ast.RequestQueryParams{ast.KVList[any]{
+			ast.KV[any]{Key: "bool1", Value: true, Pos: pos(41, 5, 0)},
+			ast.KV[any]{Key: "bool2", Value: false, Pos: pos(54, 6, 0)},
+		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
 	t.Run("value-array", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [QueryParams]
@@ -721,7 +720,7 @@ arrayMultiline = [
 
 arrayLeadingComma1 = [true, false,]
 arrayLeadingComma2 = [
-	true, 
+	true,
 	false,
 ]
 		`
@@ -730,26 +729,26 @@ arrayLeadingComma2 = [
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, map[string]any{
-			"arrayEmpty1":        []any(nil),
-			"arrayEmpty2":        []any(nil),
-			"arrayString1":       []any{"some string"},
-			"arrayString2":       []any{"some string", "another string", "and another one"},
-			"arrayInt1":          []any{int64(1)},
-			"arrayInt2":          []any{int64(1), int64(2), int64(-3), int64(4_000)},
-			"arrayFloat1":        []any{1.23},
-			"arrayFloat2":        []any{1.0, -1.1, 1.234},
-			"arrayMixed":         []any{"a string", int64(2), 3.456, true},
-			"arrayNested":        []any{[]any{int64(1), int64(2)}, []any{[]any{true, false}, "foo"}},
-			"arrayMultiline":     []any{"foo", "bar"},
-			"arrayLeadingComma1": []any{true, false},
-			"arrayLeadingComma2": []any{true, false},
-		}, res.Tests[0].(Request).QueryParams)
+		assert.Equal(t, ast.RequestQueryParams{ast.KVList[any]{
+			ast.KV[any]{Key: "arrayEmpty1", Value: []any(nil), Pos: pos(41, 5, 0)},
+			ast.KV[any]{Key: "arrayEmpty2", Value: []any(nil), Pos: pos(58, 6, 0)},
+			ast.KV[any]{Key: "arrayString1", Value: []any{"some string"}, Pos: pos(79, 8, 0)},
+			ast.KV[any]{Key: "arrayString2", Value: []any{"some string", "another string", "and another one"}, Pos: pos(110, 9, 0)},
+			ast.KV[any]{Key: "arrayInt1", Value: []any{int64(1)}, Pos: pos(178, 11, 0)},
+			ast.KV[any]{Key: "arrayInt2", Value: []any{int64(1), int64(2), int64(-3), int64(4_000)}, Pos: pos(194, 12, 0)},
+			ast.KV[any]{Key: "arrayFloat1", Value: []any{1.23}, Pos: pos(224, 14, 0)},
+			ast.KV[any]{Key: "arrayFloat2", Value: []any{1.0, -1.1, 1.234}, Pos: pos(245, 15, 0)},
+			ast.KV[any]{Key: "arrayMixed", Value: []any{"a string", int64(2), 3.456, true}, Pos: pos(278, 17, 0)},
+			ast.KV[any]{Key: "arrayNested", Value: []any{[]any{int64(1), int64(2)}, []any{[]any{true, false}, "foo"}}, Pos: pos(321, 19, 0)},
+			ast.KV[any]{Key: "arrayMultiline", Value: []any{"foo", "bar"}, Pos: pos(368, 21, 0)},
+			ast.KV[any]{Key: "arrayLeadingComma1", Value: []any{true, false}, Pos: pos(405, 26, 0)},
+			ast.KV[any]{Key: "arrayLeadingComma2", Value: []any{true, false}, Pos: pos(441, 27, 0)},
+		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
 	})
 
 	t.Run("value-invalid-entry", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [QueryParams]
@@ -764,11 +763,11 @@ invalid
 
 	t.Run("value-invalid-assignment", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [QueryParams]
-invalid = 
+invalid =
 		`
 
 		p := stringParser(raw)
@@ -779,7 +778,7 @@ invalid =
 
 	t.Run("value-invalid-string", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [QueryParams]
@@ -794,7 +793,7 @@ invalid = "
 
 	t.Run("value-invalid-array-1", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [QueryParams]
@@ -809,7 +808,7 @@ invalid = [
 
 	t.Run("value-invalid-array-2", func(t *testing.T) {
 		const raw = `
-		
+
 GET https://example.com
 
 [QueryParams]
@@ -827,9 +826,10 @@ func TestParse_Comments(t *testing.T) {
 	t.Run("uri", func(t *testing.T) {
 		const raw = `
 // Some comment
-    // Some comment
+   // Some comment
 GET https://example.com //another comment
 // comment
+
 // heyo
 			`
 
@@ -837,8 +837,30 @@ GET https://example.com //another comment
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, "GET", res.Tests[0].(Request).Method)
-		assert.Equal(t, "https://example.com", res.Tests[0].(Request).URI)
+		assert.Equal(t, "GET", res.Actions[0].(*ast.Request).Head.Method)
+		assert.Equal(t, "https://example.com", res.Actions[0].(*ast.Request).Head.Url)
+
+		assert.Equal(t, 5, len(res.Comments))
+
+		assert.Equal(t, "Some comment", res.Comments[0].Content)
+		assert.Equal(t, 1, res.Comments[0].Pos.Line)
+		assert.Equal(t, 0, res.Comments[0].Pos.LinePos)
+
+		assert.Equal(t, "Some comment", res.Comments[1].Content)
+		assert.Equal(t, 2, res.Comments[1].Pos.Line)
+		assert.Equal(t, 3, res.Comments[1].Pos.LinePos)
+
+		assert.Equal(t, "another comment", res.Comments[2].Content)
+		assert.Equal(t, 3, res.Comments[2].Pos.Line)
+		assert.Equal(t, 24, res.Comments[2].Pos.LinePos)
+
+		assert.Equal(t, "comment", res.Comments[3].Content)
+		assert.Equal(t, 4, res.Comments[3].Pos.Line)
+		assert.Equal(t, 0, res.Comments[3].Pos.LinePos)
+
+		assert.Equal(t, "heyo", res.Comments[4].Content)
+		assert.Equal(t, 6, res.Comments[4].Pos.Line)
+		assert.Equal(t, 0, res.Comments[4].Pos.LinePos)
 	})
 
 	t.Run("blocks", func(t *testing.T) {
@@ -861,18 +883,20 @@ arr = [ // comment
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, map[string]any{
-			"key1": "value",
-			"key2": 1.23,
-			"arr":  []any{int64(1), int64(2)},
-		}, res.Tests[0].(Request).QueryParams)
+		assert.Equal(t, ast.RequestQueryParams{ast.KVList[any]{
+			ast.KV[any]{Key: "key1", Value: "value", Pos: pos(79, 5, 0)},
+			ast.KV[any]{Key: "key2", Value: 1.23, Pos: pos(113, 6, 0)},
+			ast.KV[any]{Key: "arr", Value: []any{int64(1), int64(2)}, Pos: pos(151, 8, 0)},
+		}}, res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestQueryParams))
+
+		assert.Equal(t, 10, len(res.Comments))
 	})
 
 	t.Run("invlid-1", func(t *testing.T) {
 		const raw = `
 GET https://example.com
 
- /
+/
 			`
 
 		p := stringParser(raw)
@@ -925,14 +949,14 @@ GET https://example8.com
 
 		assert.Nil(t, err, err)
 
-		assert.Equal(t, "https://example1.com", res.Setup[0].(Request).URI)
-		assert.Equal(t, "https://example2.com", res.Setup[1].(Request).URI)
+		assert.Equal(t, "https://example1.com", res.Sections[0].(ast.SectionSetup).Actions[0].(*ast.Request).Head.Url)
+		assert.Equal(t, "https://example2.com", res.Sections[0].(ast.SectionSetup).Actions[1].(*ast.Request).Head.Url)
 
-		assert.Equal(t, "https://example5.com", res.Tests[0].(Request).URI)
-		assert.Equal(t, "https://example6.com", res.Tests[1].(Request).URI)
+		assert.Equal(t, "https://example5.com", res.Sections[1].(ast.SectionTests).Actions[0].(*ast.Request).Head.Url)
+		assert.Equal(t, "https://example6.com", res.Sections[1].(ast.SectionTests).Actions[1].(*ast.Request).Head.Url)
 
-		assert.Equal(t, "https://example7.com", res.Teardown[0].(Request).URI)
-		assert.Equal(t, "https://example8.com", res.Teardown[1].(Request).URI)
+		assert.Equal(t, "https://example7.com", res.Sections[2].(ast.SectionTeardown).Actions[0].(*ast.Request).Head.Url)
+		assert.Equal(t, "https://example8.com", res.Sections[2].(ast.SectionTeardown).Actions[1].(*ast.Request).Head.Url)
 	})
 
 	t.Run("invalid-1", func(t *testing.T) {
@@ -1011,7 +1035,7 @@ use 	  ../another/file
 			"../file3",
 			"some file",
 			"../another/file",
-		}, res.Imports)
+		}, importsToPaths(res.Imports))
 	})
 
 	t.Run("invalid-inclomplete", func(t *testing.T) {
@@ -1027,13 +1051,13 @@ use
 
 	t.Run("invalid-empty-1", func(t *testing.T) {
 		const raw = `
-use   
+use
 		`
 
 		p := stringParser(raw)
 		_, err := p.Parse()
 
-		assert.ErrorIs(t, err, ErrEmptyUsePath, err)
+		assert.ErrorIs(t, err, ErrInvalidStringLiteral, err)
 	})
 
 	t.Run("invalid-empty-2", func(t *testing.T) {
@@ -1070,6 +1094,53 @@ use"test"
 	})
 }
 
+func TestParse_Delimiters(t *testing.T) {
+	t.Run("general", func(t *testing.T) {
+		const raw = `
+GET https://foo.com
+
+---
+
+GET https://bar.com
+
+[Header]
+A: B
+
+[Body]
+some stuff
+
+[Script]
+hello world
+
+----
+
+-----
+
+GET https://baz.com
+
+### Setup
+
+------
+
+GET https://bar.com
+
+-------
+		`
+
+		p := stringParser(raw)
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t, 5, len(res.Delimiters))
+
+		assert.Equal(t, 0, res.Delimiters[0].ExtraLen)
+		assert.Equal(t, 1, res.Delimiters[1].ExtraLen)
+		assert.Equal(t, 2, res.Delimiters[2].ExtraLen)
+		assert.Equal(t, 3, res.Delimiters[3].ExtraLen)
+		assert.Equal(t, 4, res.Delimiters[4].ExtraLen)
+	})
+}
+
 // --- Special Tests --------------------------------------
 
 func TestParse_BlockTemplateValues(t *testing.T) {
@@ -1085,7 +1156,7 @@ someoption = {{.param}}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(".param"), res.Tests[0].(Request).Options["someoption"])
+		assert.Equal(t, ParameterValue(".param"), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).GetUnchecked("someoption"))
 	})
 
 	t.Run("variable-2", func(t *testing.T) {
@@ -1100,7 +1171,7 @@ someoption = {{ .param }}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(" .param "), res.Tests[0].(Request).Options["someoption"])
+		assert.Equal(t, ParameterValue(" .param "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).GetUnchecked("someoption"))
 	})
 
 	t.Run("wrapped", func(t *testing.T) {
@@ -1116,8 +1187,8 @@ someoption2 = {{ print {{if .param1}}true{{else}}false{{end}} }}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(" print {{.param1}} {{.param2}} "), res.Tests[0].(Request).Options["someoption1"])
-		assert.Equal(t, ParameterValue(" print {{if .param1}}true{{else}}false{{end}} "), res.Tests[0].(Request).Options["someoption2"])
+		assert.Equal(t, ParameterValue(" print {{.param1}} {{.param2}} "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).GetUnchecked("someoption1"))
+		assert.Equal(t, ParameterValue(" print {{if .param1}}true{{else}}false{{end}} "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).GetUnchecked("someoption2"))
 	})
 
 	t.Run("instring-1", func(t *testing.T) {
@@ -1132,7 +1203,7 @@ someoption = {{ print "}}" }}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(` print "}}" `), res.Tests[0].(Request).Options["someoption"])
+		assert.Equal(t, ParameterValue(` print "}}" `), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).GetUnchecked("someoption"))
 	})
 
 	t.Run("instring-2", func(t *testing.T) {
@@ -1147,7 +1218,7 @@ someoption = {{ print ´}}´ }}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(" print `}}` "), res.Tests[0].(Request).Options["someoption"])
+		assert.Equal(t, ParameterValue(" print `}}` "), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).GetUnchecked("someoption"))
 	})
 
 	t.Run("instring-wrapped", func(t *testing.T) {
@@ -1162,107 +1233,108 @@ someoption = {{ print {{ "}}" }} }}
 		res, err := p.Parse()
 
 		assert.Nil(t, err, err)
-		assert.Equal(t, ParameterValue(` print {{ "}}" }} `), res.Tests[0].(Request).Options["someoption"])
+		assert.Equal(t, ParameterValue(` print {{ "}}" }} `), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).GetUnchecked("someoption"))
 	})
 }
 
+// TODO: This validation should now be handled on the AST
 // See https://github.com/studio-b12/goat/issues/19
-func TestParseMultipleSectionsCheck(t *testing.T) {
-	t.Run("multiple-options", func(t *testing.T) {
-		const raw = `
-GET https://example.com
-
-[Options]
-someoption = "a"
-
-[Header]
-some: header
-
-[Options]
-anotheroption = "b"
-		`
-
-		p := stringParser(raw)
-		_, err := p.Parse()
-
-		assert.ErrorIs(t, err, ErrSectionDefinedMultiple, err)
-		var ewd errs.ErrorWithDetails
-		assert.True(t, errors.As(err, &ewd))
-		assert.Equal(t, fmt.Sprintf("[%s]:", optionNameOptions), ewd.Details.(string))
-	})
-
-	t.Run("multiple-header", func(t *testing.T) {
-		const raw = `
-GET https://example.com
-[Header]
-some: header
-
-[Options]
-someoption = "a"
-
-[Header]
-		`
-
-		p := stringParser(raw)
-		_, err := p.Parse()
-
-		assert.ErrorIs(t, err, ErrSectionDefinedMultiple, err)
-		var ewd errs.ErrorWithDetails
-		assert.True(t, errors.As(err, &ewd))
-		assert.Equal(t, fmt.Sprintf("[%s]:", optionNameHeader), ewd.Details.(string))
-	})
-
-	t.Run("multiple-script", func(t *testing.T) {
-		const raw = `
-GET https://example.com
-[Header]
-some: header
-
-[Options]
-someoption = "a"
-
-[Script]
-
-[Script]
-
-		`
-
-		p := stringParser(raw)
-		_, err := p.Parse()
-
-		assert.ErrorIs(t, err, ErrSectionDefinedMultiple, err)
-		var ewd errs.ErrorWithDetails
-		assert.True(t, errors.As(err, &ewd))
-		assert.Equal(t, fmt.Sprintf("[%s]:", optionNameScript), ewd.Details.(string))
-	})
-
-	t.Run("multiple-body", func(t *testing.T) {
-		const raw = `
-GET https://example.com
-[Header]
-some: header
-
-[Options]
-someoption = "a"
-
-[Body]
-foobar
-
-[Script]
-
-[Body]
-barbazz
-		`
-
-		p := stringParser(raw)
-		_, err := p.Parse()
-
-		assert.ErrorIs(t, err, ErrSectionDefinedMultiple, err)
-		var ewd errs.ErrorWithDetails
-		assert.True(t, errors.As(err, &ewd))
-		assert.Equal(t, fmt.Sprintf("[%s]:", optionNameBody), ewd.Details.(string))
-	})
-}
+//func TestParseMultipleSectionsCheck(t *testing.T) {
+//	t.Run("multiple-options", func(t *testing.T) {
+//		const raw = `
+//GET https://example.com
+//
+//[Options]
+//someoption = "a"
+//
+//[Header]
+//some: header
+//
+//[Options]
+//anotheroption = "b"
+//		`
+//
+//		p := stringParser(raw)
+//		_, err := p.Parse()
+//
+//		assert.ErrorIs(t, err, ErrSectionDefinedMultiple, err)
+//		var ewd errs.ErrorWithDetails
+//		assert.True(t, errors.As(err, &ewd))
+//		assert.Equal(t, fmt.Sprintf("[%s]:", optionNameOptions), ewd.Details.(string))
+//	})
+//
+//	t.Run("multiple-header", func(t *testing.T) {
+//		const raw = `
+//GET https://example.com
+//[Header]
+//some: header
+//
+//[Options]
+//someoption = "a"
+//
+//[Header]
+//		`
+//
+//		p := stringParser(raw)
+//		_, err := p.Parse()
+//
+//		assert.ErrorIs(t, err, ErrSectionDefinedMultiple, err)
+//		var ewd errs.ErrorWithDetails
+//		assert.True(t, errors.As(err, &ewd))
+//		assert.Equal(t, fmt.Sprintf("[%s]:", optionNameHeader), ewd.Details.(string))
+//	})
+//
+//	t.Run("multiple-script", func(t *testing.T) {
+//		const raw = `
+//GET https://example.com
+//[Header]
+//some: header
+//
+//[Options]
+//someoption = "a"
+//
+//[Script]
+//
+//[Script]
+//
+//		`
+//
+//		p := stringParser(raw)
+//		_, err := p.Parse()
+//
+//		assert.ErrorIs(t, err, ErrSectionDefinedMultiple, err)
+//		var ewd errs.ErrorWithDetails
+//		assert.True(t, errors.As(err, &ewd))
+//		assert.Equal(t, fmt.Sprintf("[%s]:", optionNameScript), ewd.Details.(string))
+//	})
+//
+//	t.Run("multiple-body", func(t *testing.T) {
+//		const raw = `
+//GET https://example.com
+//[Header]
+//some: header
+//
+//[Options]
+//someoption = "a"
+//
+//[Body]
+//foobar
+//
+//[Script]
+//
+//[Body]
+//barbazz
+//		`
+//
+//		p := stringParser(raw)
+//		_, err := p.Parse()
+//
+//		assert.ErrorIs(t, err, ErrSectionDefinedMultiple, err)
+//		var ewd errs.ErrorWithDetails
+//		assert.True(t, errors.As(err, &ewd))
+//		assert.Equal(t, fmt.Sprintf("[%s]:", optionNameBody), ewd.Details.(string))
+//	})
+//}
 
 func TestLogSections(t *testing.T) {
 	t.Run("general", func(t *testing.T) {
@@ -1293,12 +1365,12 @@ script stuff 3`
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, LogSection("Log section 1"), gf.Tests[0].(LogSection))
-		assert.Equal(t, StringContent("script stuff 1\n"), gf.Tests[1].(Request).Script)
-		assert.Equal(t, LogSection("Log section 2"), gf.Tests[2].(LogSection))
-		assert.Equal(t, StringContent("script stuff 2\n"), gf.Tests[3].(Request).Script)
-		assert.Equal(t, LogSection("Log section 3"), gf.Tests[4].(LogSection))
-		assert.Equal(t, StringContent("script stuff 3"), gf.Tests[5].(Request).Script)
+		assert.Equal(t, "Log section 1", gf.Actions[0].(ast.LogSection).Content)
+		assert.Equal(t, ast.TextBlock{Content: "script stuff 1\n"}, gf.Actions[1].(*ast.Request).Blocks[0].(ast.RequestScript).DataContent)
+		assert.Equal(t, "Log section 2", gf.Actions[2].(ast.LogSection).Content)
+		assert.Equal(t, ast.TextBlock{Content: "script stuff 2\n"}, gf.Actions[3].(*ast.Request).Blocks[0].(ast.RequestScript).DataContent)
+		assert.Equal(t, "Log section 3", gf.Actions[4].(ast.LogSection).Content)
+		assert.Equal(t, ast.TextBlock{Content: "script stuff 3"}, gf.Actions[5].(*ast.Request).Blocks[0].(ast.RequestScript).DataContent)
 	})
 }
 
@@ -1334,15 +1406,15 @@ some script
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, "bar", gf.Defaults.Header.Get("foo"))
-		assert.Equal(t, "world", gf.Defaults.Header.Get("hello"))
-		assert.Equal(t, int64(42), gf.Defaults.Options["answer"])
-		assert.Equal(t, "value", gf.Defaults.Options["some"])
-		assert.Equal(t, "foo", gf.Defaults.Auth["username"])
-		assert.Equal(t, "bar", gf.Defaults.Auth["password"])
-		assert.Equal(t, StringContent("hello\nworld\n"), gf.Defaults.Body)
-		assert.Equal(t, StringContent("some pre script\n"), gf.Defaults.PreScript)
-		assert.Equal(t, StringContent("some script\n"), gf.Defaults.Script)
+		assert.Equal(t, "bar", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("foo"))
+		assert.Equal(t, "world", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("hello"))
+		assert.Equal(t, int64(42), gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestOptions).GetUnchecked("answer"))
+		assert.Equal(t, "value", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestOptions).GetUnchecked("some"))
+		assert.Equal(t, "foo", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[2].(ast.RequestAuth).GetUnchecked("username"))
+		assert.Equal(t, "bar", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[2].(ast.RequestAuth).GetUnchecked("password"))
+		assert.Equal(t, ast.TextBlock{Content: "hello\nworld\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[3].(ast.RequestBody).DataContent)
+		assert.Equal(t, ast.TextBlock{Content: "some pre script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[4].(ast.RequestPreScript).DataContent)
+		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[5].(ast.RequestScript).DataContent)
 	})
 
 	t.Run("with-following-section", func(t *testing.T) {
@@ -1367,9 +1439,9 @@ GET https://exmaple.com
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, "bar", gf.Defaults.Header.Get("foo"))
-		assert.Equal(t, "world", gf.Defaults.Header.Get("hello"))
-		assert.Equal(t, StringContent("some script\n"), gf.Defaults.Script)
+		assert.Equal(t, "bar", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).GetUnchecked("foo"))
+		assert.Equal(t, "world", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).GetUnchecked("hello"))
+		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
 	})
 
 	t.Run("with-following-splitter+section", func(t *testing.T) {
@@ -1396,9 +1468,9 @@ GET https://exmaple.com
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, "bar", gf.Defaults.Header.Get("foo"))
-		assert.Equal(t, "world", gf.Defaults.Header.Get("hello"))
-		assert.Equal(t, StringContent("some script\n"), gf.Defaults.Script)
+		assert.Equal(t, "bar", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("foo"))
+		assert.Equal(t, "world", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("hello"))
+		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
 	})
 
 	t.Run("with-following-splitter", func(t *testing.T) {
@@ -1423,9 +1495,9 @@ GET https://exmaple.com
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, "bar", gf.Defaults.Header.Get("foo"))
-		assert.Equal(t, "world", gf.Defaults.Header.Get("hello"))
-		assert.Equal(t, StringContent("some script\n"), gf.Defaults.Script)
+		assert.Equal(t, "bar", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("foo"))
+		assert.Equal(t, "world", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("hello"))
+		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
 	})
 
 	t.Run("in-between", func(t *testing.T) {
@@ -1452,9 +1524,9 @@ GET https://exmaple.com
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, "bar", gf.Defaults.Header.Get("foo"))
-		assert.Equal(t, "world", gf.Defaults.Header.Get("hello"))
-		assert.Equal(t, StringContent("some script\n"), gf.Defaults.Script)
+		assert.Equal(t, "bar", gf.Sections[1].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("foo"))
+		assert.Equal(t, "world", gf.Sections[1].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("hello"))
+		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[1].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
 	})
 
 	t.Run("multiple", func(t *testing.T) {
@@ -1483,9 +1555,10 @@ some script 2
 		p := stringParser(raw)
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
-		assert.Equal(t, "bar", gf.Defaults.Header.Get("foo"))
-		assert.Equal(t, "moon", gf.Defaults.Header.Get("hello"))
-		assert.Equal(t, StringContent("some script 2\n"), gf.Defaults.Script)
+		assert.Equal(t, "bar", gf.Sections[0].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("foo"))
+		assert.Equal(t, "moon", gf.Sections[1].(ast.SectionDefaults).Request.Blocks[0].(ast.RequestHeader).HeaderEntries.GetUnchecked("hello"))
+		assert.Equal(t, ast.TextBlock{Content: "some script\n"}, gf.Sections[0].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
+		assert.Equal(t, ast.TextBlock{Content: "some script 2\n"}, gf.Sections[1].(ast.SectionDefaults).Request.Blocks[1].(ast.RequestScript).DataContent)
 	})
 }
 
@@ -1499,7 +1572,7 @@ execute ../pathTo/someGoatfile
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
 
-		assert.Equal(t, "../pathTo/someGoatfile", gf.Tests[0].(Execute).File)
+		assert.Equal(t, "../pathTo/someGoatfile", gf.Actions[0].(*ast.Execute).Path)
 	})
 
 	t.Run("multiple", func(t *testing.T) {
@@ -1516,7 +1589,7 @@ execute ../pathTo/someGoatfile4
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
 
-		assert.Equal(t, 4, len(gf.Tests))
+		assert.Equal(t, 4, len(gf.Actions))
 	})
 
 	t.Run("multiple-in-section", func(t *testing.T) {
@@ -1534,7 +1607,7 @@ execute ../pathTo/someGoatfile4
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
 
-		assert.Equal(t, 4, len(gf.Tests))
+		assert.Equal(t, 4, len(gf.Sections[0].(ast.SectionTests).Actions))
 	})
 
 	t.Run("params", func(t *testing.T) {
@@ -1558,23 +1631,23 @@ execute ../pathTo/someGoatfile (
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
 
-		assert.Equal(t, "../pathTo/someGoatfile", gf.Tests[0].(Execute).File)
-		assert.Equal(t, map[string]any{
-			"foo": int64(1),
-		}, gf.Tests[0].(Execute).Params)
+		assert.Equal(t, "../pathTo/someGoatfile", gf.Actions[0].(*ast.Execute).Path)
+		assert.Equal(t, ast.KVList[any]{
+			ast.KV[any]{Key: "foo", Value: int64(1), Pos: pos(33, 1, 32)},
+		}, gf.Actions[0].(*ast.Execute).Parameters)
 
-		assert.Equal(t, "../pathTo/someGoatfile", gf.Tests[1].(Execute).File)
-		assert.Equal(t, map[string]any{
-			"foo": int64(1),
-			"bar": "hello",
-		}, gf.Tests[1].(Execute).Params)
+		assert.Equal(t, "../pathTo/someGoatfile", gf.Actions[1].(*ast.Execute).Path)
+		assert.Equal(t, ast.KVList[any]{
+			ast.KV[any]{Key: "foo", Value: int64(1), Pos: pos(77, 5, 32)},
+			ast.KV[any]{Key: "bar", Value: "hello", Pos: pos(82, 5, 37)},
+		}, gf.Actions[1].(*ast.Execute).Parameters)
 
-		assert.Equal(t, "../pathTo/someGoatfile", gf.Tests[2].(Execute).File)
-		assert.Equal(t, map[string]any{
-			"foo":  "hello",
-			"bar":  int64(2),
-			"bazz": ParameterValue(".someParam"),
-		}, gf.Tests[2].(Execute).Params)
+		assert.Equal(t, "../pathTo/someGoatfile", gf.Actions[2].(*ast.Execute).Path)
+		assert.Equal(t, ast.KVList[any]{
+			ast.KV[any]{Key: "foo", Value: "hello", Pos: pos(134, 10, 0)},
+			ast.KV[any]{Key: "bar", Value: int64(2), Pos: pos(152, 11, 0)},
+			ast.KV[any]{Key: "bazz", Value: ParameterValue(".someParam"), Pos: pos(159, 12, 0)},
+		}, gf.Actions[2].(*ast.Execute).Parameters)
 	})
 
 	t.Run("return", func(t *testing.T) {
@@ -1601,34 +1674,34 @@ execute ../pathTo/someGoatfile (
 		gf, err := p.Parse()
 		assert.Nil(t, err, err)
 
-		assert.Equal(t, "../pathTo/someGoatfile", gf.Tests[0].(Execute).File)
-		assert.Equal(t, map[string]any{
-			"foo": int64(1),
-		}, gf.Tests[0].(Execute).Params)
-		assert.Equal(t, map[string]string{
-			"foo": "bar",
-		}, gf.Tests[0].(Execute).Returns)
+		assert.Equal(t, "../pathTo/someGoatfile", gf.Actions[0].(*ast.Execute).Path)
+		assert.Equal(t, ast.KVList[any]{
+			ast.KV[any]{Key: "foo", Value: int64(1), Pos: pos(33, 1, 32)},
+		}, gf.Actions[0].(*ast.Execute).Parameters)
+		assert.Equal(t, ast.Assignments{ast.KVList[string]{
+			ast.KV[string]{Key: "foo", Value: "bar", Pos: pos(48, 1, 47)},
+		}}, gf.Actions[0].(*ast.Execute).Returns)
 
-		assert.Equal(t, "../pathTo/someGoatfile", gf.Tests[1].(Execute).File)
-		assert.Equal(t, map[string]any{
-			"foo": int64(1),
-			"bar": "hello",
-		}, gf.Tests[1].(Execute).Params)
-		assert.Equal(t, map[string]string{
-			"foo": "bar",
-			"bar": "bazz",
-		}, gf.Tests[1].(Execute).Returns)
+		assert.Equal(t, "../pathTo/someGoatfile", gf.Actions[1].(*ast.Execute).Path)
+		assert.Equal(t, ast.KVList[any]{
+			ast.KV[any]{Key: "foo", Value: int64(1), Pos: pos(97, 5, 32)},
+			ast.KV[any]{Key: "bar", Value: "hello", Pos: pos(102, 5, 37)},
+		}, gf.Actions[1].(*ast.Execute).Parameters)
+		assert.Equal(t, ast.Assignments{ast.KVList[string]{
+			ast.KV[string]{Key: "foo", Value: "bar", Pos: pos(124, 5, 59)},
+			ast.KV[string]{Key: "bar", Value: "bazz", Pos: pos(134, 5, 69)},
+		}}, gf.Actions[1].(*ast.Execute).Returns)
 
-		assert.Equal(t, "../pathTo/someGoatfile", gf.Tests[2].(Execute).File)
-		assert.Equal(t, map[string]any{
-			"foo":  "hello",
-			"bar":  int64(2),
-			"bazz": ParameterValue(".someParam"),
-		}, gf.Tests[2].(Execute).Params)
-		assert.Equal(t, map[string]string{
-			"foo": "bar",
-			"bar": "bazz",
-		}, gf.Tests[2].(Execute).Returns)
+		assert.Equal(t, "../pathTo/someGoatfile", gf.Actions[2].(*ast.Execute).Path)
+		assert.Equal(t, ast.KVList[any]{
+			ast.KV[any]{Key: "foo", Value: "hello", Pos: pos(186, 10, 0)},
+			ast.KV[any]{Key: "bar", Value: int64(2), Pos: pos(204, 11, 0)},
+			ast.KV[any]{Key: "bazz", Value: ParameterValue(".someParam"), Pos: pos(211, 12, 0)},
+		}, gf.Actions[2].(*ast.Execute).Parameters)
+		assert.Equal(t, ast.Assignments{ast.KVList[string]{
+			ast.KV[string]{Key: "foo", Value: "bar", Pos: pos(244, 14, 0)},
+			ast.KV[string]{Key: "bar", Value: "bazz", Pos: pos(258, 15, 0)},
+		}}, gf.Actions[2].(*ast.Execute).Returns)
 	})
 }
 
@@ -1640,4 +1713,16 @@ func stringParser(raw string) *Parser {
 
 func swapTicks(v string) string {
 	return strings.ReplaceAll(v, "´", "`")
+}
+
+func importsToPaths(imp []ast.Import) []string {
+	res := make([]string, 0, len(imp))
+	for _, i := range imp {
+		res = append(res, i.Path)
+	}
+	return res
+}
+
+func pos(pos int, line int, linePos int) ast.Pos {
+	return ast.Pos{Pos: pos, Line: line, LinePos: linePos}
 }

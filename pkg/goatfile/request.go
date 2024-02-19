@@ -1,7 +1,9 @@
 package goatfile
 
 import (
+	"errors"
 	"fmt"
+	"github.com/studio-b12/goat/pkg/goatfile/ast"
 	"io"
 	"net/http"
 	"net/url"
@@ -34,12 +36,61 @@ type Request struct {
 
 var _ Action = (*Request)(nil)
 
-func newRequest() (r Request) {
-	r.Header = http.Header{}
-	r.Body = NoContent{}
-	r.PreScript = NoContent{}
-	r.Script = NoContent{}
-	return r
+func newRequest() (t Request) {
+	t.Header = http.Header{}
+	t.Body = NoContent{}
+	t.PreScript = NoContent{}
+	t.Script = NoContent{}
+	return t
+}
+
+func RequestFromAst(req *ast.Request, path string) (t Request, err error) {
+	if req == nil {
+		return Request{}, errors.New("request ast is nil")
+	}
+
+	t = newRequest()
+
+	t.Path = path
+	t.Method = req.Head.Method
+	t.URI = req.Head.Url
+	t.PosLine = req.Pos.Line + 1 // TODO: actually, this should start counting at 0 and the printer should add 1
+
+	for _, block := range req.Blocks {
+		switch b := block.(type) {
+		case ast.RequestHeader:
+			t.Header = b.HeaderEntries.ToMultiMap()
+		case ast.RequestOptions:
+			t.Options = b.KVList.ToMap()
+		case ast.RequestQueryParams:
+			t.QueryParams = b.KVList.ToMap()
+		case ast.RequestAuth:
+			t.Auth = b.KVList.ToMap()
+		case ast.RequestBody:
+			t.Body, err = DataFromAst(b.DataContent, path)
+		case ast.RequestPreScript:
+			t.PreScript, err = DataFromAst(b.DataContent, path)
+		case ast.RequestScript:
+			t.Script, err = DataFromAst(b.DataContent, path)
+		default:
+			err = fmt.Errorf("invalid request ast block type: %+v", block)
+		}
+	}
+
+	if err != nil {
+		return Request{}, err
+	}
+
+	return t, nil
+}
+
+func PartialRequestFromAst(req ast.PartialRequest, path string) (t Request, err error) {
+	var fullReq ast.Request
+
+	fullReq.Pos = req.Pos
+	fullReq.Blocks = req.Blocks
+
+	return RequestFromAst(&fullReq, path)
 }
 
 func (t Request) Type() ActionType {
@@ -257,25 +308,4 @@ func mergeMaps[TK comparable, TV any](src, base map[TK]TV) map[TK]TV {
 		new[key] = val
 	}
 	return new
-}
-
-type requestParseChecker struct {
-	*Request
-
-	set map[optionName]struct{}
-}
-
-func wrapIntoRequestParseChecker(req *Request) *requestParseChecker {
-	return &requestParseChecker{
-		Request: req,
-		set:     make(map[optionName]struct{}),
-	}
-}
-
-func (t *requestParseChecker) Check(opt optionName) error {
-	if _, ok := t.set[opt]; ok {
-		return errs.WithPrefix(fmt.Sprintf("[%s]:", opt), ErrSectionDefinedMultiple)
-	}
-	t.set[opt] = struct{}{}
-	return nil
 }
