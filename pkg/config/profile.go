@@ -33,7 +33,7 @@ func LoadProfiles(profileNames []string, state engine.State) (err error) {
 	_, err = os.Stat(pth)
 	if os.IsNotExist(err) {
 		if len(profileNames) > 0 {
-			return fmt.Errorf("no profiles(.*) file can be found in your config directory (%s)", pth)
+			return fmt.Errorf("no profiles.* file can be found in your config directory (%s)", pth)
 		}
 		return nil
 	}
@@ -48,7 +48,7 @@ func LoadProfiles(profileNames []string, state engine.State) (err error) {
 
 	var profileDirs []string
 	for _, dirEntry := range dirEntries {
-		if !dirEntry.IsDir() && strings.HasPrefix(dirEntry.Name(), "profiles") {
+		if !dirEntry.IsDir() && strings.HasPrefix(dirEntry.Name(), "profiles.") {
 			profileDirs = append(profileDirs, filepath.Join(pth, dirEntry.Name()))
 		}
 	}
