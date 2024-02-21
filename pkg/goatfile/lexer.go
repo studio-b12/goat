@@ -184,15 +184,6 @@ func (t *scanner) scanWhitespace() (tk token, lit string) {
 	return tokWS, b.String()
 }
 
-func (t *scanner) skipToLF() {
-	for {
-		r := t.read()
-		if r == '\n' || r == eof {
-			break
-		}
-	}
-}
-
 func (t *scanner) scanComment() (tk token, lit string) {
 	if t.read() != '/' {
 		return tokILLEGAL, ""
