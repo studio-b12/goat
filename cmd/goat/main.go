@@ -39,7 +39,7 @@ type Args struct {
 	NoAbort  bool          `arg:"--no-abort,env:GOATARG_NOABORT" help:"Do not abort batch execution on error"`
 	NoColor  bool          `arg:"--no-color,env:GOATARG_NOCOLOR" help:"Supress colored log output"`
 	Params   []string      `arg:"-p,--params,separate,env:GOATARG_PARAMS" help:"Params file location(s)"`
-	Profiles []string      `arg:"-P,--profiles,separate,env:GOATARG_PROFILE" help:"Select a profile from your home config"`
+	Profile  []string      `arg:"-P,--profile,separate,env:GOATARG_PROFILE" help:"Select a profile from your home config"`
 	Silent   bool          `arg:"-s,--silent,env:GOATARG_SILENT" help:"Disables all logging output"`
 	Skip     []string      `arg:"--skip,separate,env:GOATARG_SKIP" help:"Section(s) to be skipped during execution"`
 	Secure   bool          `arg:"--secure,env:GOATARG_SECURE" help:"Validate TLS certificates"`
@@ -90,7 +90,7 @@ func main() {
 		return
 	}
 
-	err = config.LoadProfiles(args.Profiles, state)
+	err = config.LoadProfiles(args.Profile, state)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed loading profiles")
 		return
