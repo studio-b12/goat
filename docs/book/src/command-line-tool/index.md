@@ -47,6 +47,10 @@ In the following, further information is provided about the various flags which 
   Pass parameters defined in parameter files. These can be either TOML, YAML or JSON files. If you want to pass multiple parameter files, specify each one with its own parameter.  
   *Example: `-p ./local.toml -p ~/credentials.yaml`*
 
+- **`--profile PROFILE`, `-P PROFILE`**  
+  Use parameters from profiles defined in a profile config in your home's configuration directory. [Here](./profiles.md) you can read more about how profiles work.    
+  *Example: `-P foo -P bar`*
+
 - **`--silent`, ` -s`**  
   Disable all logging output. Only `print` and `println` statements will be printed. This is especially useful if you want to use Goatfiles within other scripts.
 
