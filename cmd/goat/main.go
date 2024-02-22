@@ -86,17 +86,20 @@ func main() {
 		return
 	}
 
-	state, err := config.Parse(args.Params, "GOAT_", engine.State{})
-	if err != nil {
-		log.Fatal().Err(err).Msg("parameter parsing failed")
-		return
-	}
+	state := make(engine.State)
 
-	err = config.LoadProfiles(args.Profile, state)
+	err := config.LoadProfiles(args.Profile, state)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed loading profiles")
 		return
 	}
+
+	cfgState, err := config.Parse[engine.State](args.Params, "GOAT_")
+	if err != nil {
+		log.Fatal().Err(err).Msg("parameter parsing failed")
+		return
+	}
+	state.Merge(cfgState)
 
 	err = config.ParseKVArgs(args.Arg, state)
 	if err != nil {
