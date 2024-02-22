@@ -51,6 +51,9 @@ In the following, further information is provided about the various flags which 
   Use parameters from profiles defined in a profile config in your home's configuration directory. [Here](./profiles.md) you can read more about how profiles work.    
   *Example: `-P foo -P bar`*
 
+- **`--reduced-errors`, `-R`**  
+  Hide template errors in teardown steps. This can be useful when running tests to hide some noise from failing teardown steps due to missing variables.
+
 - **`--silent`, ` -s`**  
   Disable all logging output. Only `print` and `println` statements will be printed. This is especially useful if you want to use Goatfiles within other scripts.
 

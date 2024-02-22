@@ -46,7 +46,29 @@ func (t BatchResultError) ErrorMessages() []string {
 	return errMsgs
 }
 
-// ParamsParsingError is an alias for error
-// to identify that an error originates from
-// the parameter parsing step.
-type ParamsParsingError error
+// ParamsParsingError wraps an error occurred during
+// parameter parsing.
+type ParamsParsingError struct {
+	errs.InnerError
+}
+
+func NewParamsParsingError(err error) error {
+	return ParamsParsingError{
+		InnerError: errs.InnerError{
+			Inner: err,
+		},
+	}
+}
+
+// TeardownError wraps an error occurred in a teardown step.
+type TeardownError struct {
+	errs.InnerError
+}
+
+func NewTeardownError(err error) error {
+	return TeardownError{
+		InnerError: errs.InnerError{
+			Inner: err,
+		},
+	}
+}
