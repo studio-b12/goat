@@ -127,7 +127,7 @@ func (t *Executor) executeGoatfile(
 						continue
 					}
 
-					if !t.isAbortOnError(act.(goatfile.Request)) {
+					if !AbortOptionsFromMap(act.(goatfile.Request).Options).AlwaysAbort {
 						continue
 					}
 				} else {
