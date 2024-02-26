@@ -72,3 +72,15 @@ func NewTeardownError(err error) error {
 		},
 	}
 }
+
+type NoAbortError struct {
+	errs.InnerError
+}
+
+func NewNoAbortError(err error) error {
+	return NoAbortError{
+		InnerError: errs.InnerError{
+			Inner: err,
+		},
+	}
+}

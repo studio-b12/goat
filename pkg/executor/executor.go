@@ -157,8 +157,8 @@ func (t *Executor) executeGoatfile(
 			if err != nil {
 				if act.Type() == goatfile.ActionRequest {
 					log.Error().Err(err).Field("req", act).Msg("Setup step failed")
-					if !t.isAbortOnError(act.(goatfile.Request)) {
-						errsNoAbort = errsNoAbort.Append(err)
+					if errs.IsOfType[NoAbortError](err) {
+						errsNoAbort = errsNoAbort.Append(errors.Unwrap(err))
 						continue
 					}
 				}
@@ -183,8 +183,8 @@ func (t *Executor) executeGoatfile(
 			sectRes, err := t.executeTest(act, eng, gf, showTeardownParamErrors)
 			res.Tests.Merge(sectRes)
 			if err != nil {
-				if act.Type() == goatfile.ActionRequest && !t.isAbortOnError(act.(goatfile.Request)) {
-					errsNoAbort = errsNoAbort.Append(err)
+				if act.Type() == goatfile.ActionRequest && errs.IsOfType[NoAbortError](err) {
+					errsNoAbort = errsNoAbort.Append(errors.Unwrap(err))
 					continue
 				}
 				return res, err
@@ -307,11 +307,11 @@ func (t *Executor) executeTest(
 		if act.Type() == goatfile.ActionRequest {
 			log.Error().Err(err).Field("req", act).Msg("Test step failed")
 
-			if !t.isAbortOnError(act.(goatfile.Request)) {
+			if !errs.IsOfType[NoAbortError](err) {
 				return res, err
 			}
 
-			errsNoAbort = errsNoAbort.Append(err)
+			errsNoAbort = errsNoAbort.Append(errors.Unwrap(err))
 		} else {
 			return res, err
 		}
@@ -367,6 +367,15 @@ func (t *Executor) executeAction(
 
 func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf goatfile.Goatfile) (err error) {
 	req.Merge(gf.Defaults)
+
+	if !t.isAbortOnError(req) {
+		defer func() {
+			if err != nil {
+				err = NewNoAbortError(err)
+			}
+		}()
+	}
+
 	state := eng.State()
 
 	err = req.PreSubstitudeWithParams(state)
