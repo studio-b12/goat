@@ -12,6 +12,7 @@ import (
 	"io"
 	"math/rand"
 	"strconv"
+	"strings"
 	"text/template"
 	"time"
 )
@@ -32,6 +33,35 @@ var builtinFuncsMap = template.FuncMap{
 	"timestamp":         builtin_timestamp,
 	"isset":             builtin_isset,
 	"json":              builtin_json,
+	"formatTimestamp":   builtin_formatTimestamp,
+}
+
+var dateFormats = map[string]string{
+	"ANSIC":       time.ANSIC,
+	"UNIXDATE":    time.UnixDate,
+	"RubyDate":    time.RubyDate,
+	"RFC822":      time.RFC822,
+	"RFC822Z":     time.RFC822Z,
+	"RFC850":      time.RFC850,
+	"RFC1123":     time.RFC1123,
+	"RFC1123Z":    time.RFC1123Z,
+	"RFC3339":     time.RFC3339,
+	"RFC3339NANO": time.RFC3339Nano,
+	"KITCHEN":     time.Kitchen,
+	"STAMP":       time.Stamp,
+	"STAMPMILLI":  time.StampMilli,
+	"STAMPMICRO":  time.StampMicro,
+	"STAMPNANO":   time.StampNano,
+	"DATETIME":    time.DateTime,
+	"DATEONLY":    time.DateOnly,
+	"TIMEONLY":    time.TimeOnly,
+}
+
+func dateFormat(format string) string {
+	if trans, ok := dateFormats[strings.ToUpper(format)]; ok {
+		return trans
+	}
+	return format
 }
 
 func builtin_base64(v string) string {
@@ -87,7 +117,7 @@ func builtin_timestamp(formatOpt ...string) string {
 	now := time.Now()
 
 	if len(formatOpt) != 0 {
-		return now.Format(formatOpt[0])
+		return now.Format(dateFormat(formatOpt[0]))
 	}
 
 	return strconv.Itoa(int(now.Unix()))
@@ -115,4 +145,29 @@ func builtin_json(v any, indent ...string) string {
 	}
 
 	return string(res)
+}
+
+func builtin_formatTimestamp(v any, format ...string) string {
+	var t time.Time
+
+	switch tv := v.(type) {
+	case time.Time:
+		t = tv
+	case string:
+		if len(format) == 0 {
+			panic("input format is missing")
+		}
+		var err error
+		t, err = time.Parse(format[0], tv)
+		if err != nil {
+			panic("failed parsing input date: " + err.Error())
+		}
+		format = format[1:]
+	}
+
+	if len(format) > 0 {
+		return t.Format(dateFormat(format[0]))
+	}
+
+	return strconv.Itoa(int(t.Unix()))
 }

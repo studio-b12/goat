@@ -58,6 +58,15 @@ Returns the input `value` as base64url encoded string without padding.
 {{ base64UrlUnpadded "hello world" }}
 ```
 
+## `formatTimestamp`
+
+```
+formatTimestamp <value: Date, format?: string> -> string
+formatTimestamp <value: string, valueFormat: string, format?: string> -> string
+```
+
+Takes either a `Date` object and an optional output format or a timestamp string, the format for the input timestamp and
+an optional output format and returns the formatted timestamp.
 
 ## `md5`
 
