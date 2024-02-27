@@ -13,9 +13,11 @@
 - `response.BodyRaw` is now represented as a UTF-8 encoded string when printed in the `[Script]` section instead of listing
   the list of byte values. It is still an array of bytes though, so you can operate on it as expected.
 
+- Fixed a bug where `noabort` and `alwaysabort` options had no effect on teardown steps.
+
   
 # Code Base
 
 - The Goatfile parser does now produce an intermediate `AST` structure instead of the `Goatfile` directly. This should allow
   to build tooling around Goatfiles using the provided parser implementation more easily (i.e. like an auto-formatter or LSP). 
-  Feel free to discover the new implementation [here](pkg/goatfile/parser.go).
+  Feel free to discover the new implementation [here](pkg/goatfile/parser.go). [#57]
