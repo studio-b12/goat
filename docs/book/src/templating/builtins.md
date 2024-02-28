@@ -68,6 +68,10 @@ formatTimestamp <value: string, valueFormat: string, format?: string> -> string
 Takes either a `Date` object and an optional output format or a timestamp string, the format for the input timestamp and
 an optional output format and returns the formatted timestamp.
 
+The format is according to Go's [`time` package definition](https://pkg.go.dev/time#pkg-constants). You can also specify
+the names of the predefined formats like `rfc3339` or `DateOnly`. If no format is passed, the time will be represented as
+Unix seconds.
+
 ## `md5`
 
 ```
@@ -158,7 +162,11 @@ Returns a random integer in the range `[0, n)` where `n` is given as parameter. 
 timestamp <format?: string> -> string
 ```
 
-Returns the current timestamp in the given format. The format is specified in [Go's time format](https://pkg.go.dev/time). If no format is given, the time is returned as a Unix seconds string.
+Returns the current timestamp in the given format. 
+
+The format is according to Go's [`time` package definition](https://pkg.go.dev/time#pkg-constants). You can also specify
+the names of the predefined formats like `rfc3339` or `DateOnly`. If no format is passed, the time will be represented as
+Unix seconds.
 
 **Example:**
 
