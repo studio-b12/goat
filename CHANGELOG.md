@@ -8,6 +8,10 @@
 - A new flag `--reduced-errors` (or `-R` for short) has been added to hide template errors in teardown steps.
   This can be useful to reduce the noise of template errors due to missing variables in teardown steps when tests fail.
 
+- Added a new builtin templating function [`formatTimestamp`](https://studio-b12.github.io/goat/templating/builtins.html#formattimestamp) to
+  format dates. Also the [`timestamp`](https://studio-b12.github.io/goat/templating/builtins.html#timestamp) builtin
+  has been updated to also accept format names like `formatTimestamp`.
+
 # Minor Changes and Bug Fixes
 
 - `response.BodyRaw` is now represented as a UTF-8 encoded string when printed in the `[Script]` section instead of listing
