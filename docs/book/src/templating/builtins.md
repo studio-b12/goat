@@ -2,6 +2,21 @@
 
 The following built-in functions are available in templates used in Goatfiles.
 
+- [`base64`](#base64)
+- [`base64Url`](#base64Url)
+- [`base64Unpadded`](#base64Unpadded)
+- [`base64UrlUnpadded`](#base64UrlUnpadded)
+- [`formatTimestamp`](#formatTimestamp)
+- [`md5`](#md5)
+- [`sha1`](#sha1)
+- [`sha256`](#sha256)
+- [`sha512`](#sha512)
+- [`randomString`](#randomString)
+- [`randomInt`](#randomInt)
+- [`timestamp`](#timestamp)
+- [`isset`](#isset)
+- [`json`](#json)
+
 ## `base64`
 
 ```
