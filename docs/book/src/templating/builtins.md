@@ -61,8 +61,8 @@ Returns the input `value` as base64url encoded string without padding.
 ## `formatTimestamp`
 
 ```
-formatTimestamp <value: Date, format?: string> -> string
-formatTimestamp <value: string, valueFormat: string, format?: string> -> string
+formatTimestamp <value: Date> <format?: string> -> string
+formatTimestamp <value: string> <valueFormat: string> <format?: string> -> string
 ```
 
 Takes either a `Date` object and an optional output format or a timestamp string, the format for the input timestamp and
@@ -177,7 +177,7 @@ Unix seconds.
 ## `isset`
 
 ```
-timestamp <map: map[string]any> <key: string> -> bool
+isset <map: map[string]any> <key: string> -> bool
 ```
 
 Returns `true` when the given `key` is present and its corresponding value is not `nil` in the given `map`. Otherwise, `false` is returned.
@@ -186,4 +186,18 @@ Returns `true` when the given `key` is present and its corresponding value is no
 
 ```
 {{ isset . "username" }}
+```
+
+## `json`
+
+```
+json <value: any> <ident?: string | int> -> string
+```
+
+Serializes a given `value` into a JSON string. You can pass a string value used as ident or a number of spaces used as indent.
+
+**Example:**
+
+```
+{{ json .someObject 2 }}
 ```
