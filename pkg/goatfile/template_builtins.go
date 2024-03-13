@@ -128,14 +128,23 @@ func builtin_isset(m map[string]any, key string) bool {
 	return ok && v != nil
 }
 
-func builtin_json(v any, indent ...string) string {
+func builtin_json(v any, indent ...any) string {
 	var (
 		err error
 		res []byte
 	)
 
 	if len(indent) > 0 {
-		res, err = json.MarshalIndent(v, "", indent[0])
+		var ind string
+		switch i := indent[0].(type) {
+		case string:
+			ind = i
+		case int:
+			ind = strings.Repeat(" ", i)
+		default:
+			panic("invalid ident type")
+		}
+		res, err = json.MarshalIndent(v, "", ind)
 	} else {
 		res, err = json.Marshal(v)
 	}
