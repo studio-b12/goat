@@ -19,6 +19,7 @@
 
 - Fixed a bug where `noabort` and `alwaysabort` options had no effect on teardown steps.
 
+- The `json` template builtin now accepts an additional parameter for indentation.
   
 # Code Base
 
