@@ -1,0 +1,19 @@
+### Defaults
+
+[Options]
+noabort = true
+
+
+### Tests
+
+GET {{.instance}}/a
+
+[Script]
+assert(false)
+
+---
+
+GET {{.instance}}/b
+
+[Script]
+assert(false)

@@ -2,6 +2,21 @@
 
 The following built-in functions are available in each script instance.
 
+- [`assert`](#assert)
+- [`print`](#print)
+- [`println`](#println)
+- [`info`](#info)
+- [`warn`](#warn)
+- [`error`](#error)
+- [`fatal`](#fatal)
+- [`debug`](#debug)
+- [`infof`](#infof)
+- [`warnf`](#warnf)
+- [`errorf`](#errorf)
+- [`fatalf`](#fatalf)
+- [`debugf`](#debugf)
+
+
 ## `assert`
 
 ```ts

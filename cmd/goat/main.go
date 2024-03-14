@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/tls"
 	"fmt"
+	"github.com/studio-b12/goat/pkg/errs"
 	"io/fs"
 	"net/http"
 	"os"
@@ -29,19 +30,21 @@ import (
 type Args struct {
 	Goatfile []string `arg:"positional" help:"Goatfile(s) location"`
 
-	Arg      []string      `arg:"-a,--args,separate" help:"Pass params as key value arguments into the execution (format: key=value)"`
-	Delay    time.Duration `arg:"-d,--delay,env:GOATARG_DELAY" help:"Delay requests by the given duration"`
-	Dry      bool          `arg:"--dry" help:"Only parse the goatfile(s) without executing any requests"`
-	Gradual  bool          `arg:"-g,--gradual" help:"Advance the requests maually"`
-	Json     bool          `arg:"--json,env:GOATARG_JSON" help:"Use JSON format instead of pretty console format for logging"`
-	LogLevel string        `arg:"-l,--loglevel,env:GOATARG_LOGLEVEL" default:"info" help:"Logging level (see https://github.com/zekrotja/rogu#levels for reference)"`
-	New      bool          `arg:"--new" help:"Create a new base Goatfile"`
-	NoAbort  bool          `arg:"--no-abort,env:GOATARG_NOABORT" help:"Do not abort batch execution on error"`
-	NoColor  bool          `arg:"--no-color,env:GOATARG_NOCOLOR" help:"Supress colored log output"`
-	Params   []string      `arg:"-p,--params,separate,env:GOATARG_PARAMS" help:"Params file location(s)"`
-	Silent   bool          `arg:"-s,--silent,env:GOATARG_SILENT" help:"Disables all logging output"`
-	Skip     []string      `arg:"--skip,separate,env:GOATARG_SKIP" help:"Section(s) to be skipped during execution"`
-	Secure   bool          `arg:"--secure,env:GOATARG_SECURE" help:"Validate TLS certificates"`
+	Arg           []string      `arg:"-a,--args,separate" help:"Pass params as key value arguments into the execution (format: key=value)"`
+	Delay         time.Duration `arg:"-d,--delay,env:GOATARG_DELAY" help:"Delay requests by the given duration"`
+	Dry           bool          `arg:"--dry" help:"Only parse the goatfile(s) without executing any requests"`
+	Gradual       bool          `arg:"-g,--gradual" help:"Advance the requests maually"`
+	Json          bool          `arg:"--json,env:GOATARG_JSON" help:"Use JSON format instead of pretty console format for logging"`
+	LogLevel      string        `arg:"-l,--loglevel,env:GOATARG_LOGLEVEL" default:"info" help:"Logging level (see https://github.com/zekrotja/rogu#levels for reference)"`
+	New           bool          `arg:"--new" help:"Create a new base Goatfile"`
+	NoAbort       bool          `arg:"--no-abort,env:GOATARG_NOABORT" help:"Do not abort batch execution on error"`
+	NoColor       bool          `arg:"--no-color,env:GOATARG_NOCOLOR" help:"Supress colored log output"`
+	Params        []string      `arg:"-p,--params,separate,env:GOATARG_PARAMS" help:"Params file location(s)"`
+	Profile       []string      `arg:"-P,--profile,separate,env:GOATARG_PROFILE" help:"Select a profile from your home config"`
+	ReducedErrors bool          `arg:"--reduced-errors,-R,env:GOATARG_REDUCEDERRORS" help:"Hide template errors in teardown steps"`
+	Secure        bool          `arg:"--secure,env:GOATARG_SECURE" help:"Validate TLS certificates"`
+	Silent        bool          `arg:"-s,--silent,env:GOATARG_SILENT" help:"Disables all logging output"`
+	Skip          []string      `arg:"--skip,separate,env:GOATARG_SKIP" help:"Section(s) to be skipped during execution"`
 }
 
 func main() {
@@ -83,11 +86,20 @@ func main() {
 		return
 	}
 
-	state, err := config.Parse(args.Params, "GOAT_", engine.State{})
+	state := make(engine.State)
+
+	err := config.LoadProfiles(args.Profile, state)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed loading profiles")
+		return
+	}
+
+	cfgState, err := config.Parse[engine.State](args.Params, "GOAT_")
 	if err != nil {
 		log.Fatal().Err(err).Msg("parameter parsing failed")
 		return
 	}
+	state.Merge(cfgState)
 
 	err = config.ParseKVArgs(args.Arg, state)
 	if err != nil {
@@ -118,17 +130,21 @@ func main() {
 
 	log.Debug().Msgf("Initial Params\n%s", state)
 
-	res, err := exec.Execute(args.Goatfile, state)
+	res, err := exec.Execute(args.Goatfile, state, !args.ReducedErrors)
 	res.Log()
 	if err != nil {
+		if args.ReducedErrors {
+			err = filterTeardownParamErrors(err)
+		}
+
 		entry := log.Fatal().Err(err)
 
 		if batchErr, ok := err.(executor.BatchResultError); ok {
-			coloredPathes := batchErr.ErrorMessages()
-			for i, p := range coloredPathes {
-				coloredPathes[i] = clr.Print(clr.Format(p, clr.ColorFGRed))
+			coloredMessages := batchErr.ErrorMessages()
+			for i, p := range coloredMessages {
+				coloredMessages[i] = clr.Print(clr.Format(p, clr.ColorFGRed))
 			}
-			entry.Field("failed_files", coloredPathes)
+			entry.Field("failed_files", coloredMessages)
 		}
 
 		entry.Msg(clr.Print(clr.Format("execution failed", clr.ColorFGRed, clr.FormatBold)))
@@ -203,4 +219,23 @@ func createNewGoatfile(names []string) {
 	log.Info().
 		Field("at", name).
 		Msg("Goatfile created")
+}
+
+func filterTeardownParamErrors(err error) error {
+	switch tErr := err.(type) {
+	case errs.Errors:
+		newErrors := make(errs.Errors, 0, len(tErr))
+		for _, e := range tErr {
+			if errs.IsOfType[executor.TeardownError](e) && errs.IsOfType[executor.ParamsParsingError](e) {
+				continue
+			}
+			newErrors = append(newErrors, e)
+		}
+		return newErrors
+	case executor.BatchResultError:
+		tErr.Inner = filterTeardownParamErrors(tErr.Inner).(errs.Errors)
+		return tErr
+	default:
+		return err
+	}
 }

@@ -51,7 +51,7 @@ func New(engineMaker func() engine.Engine, req requester.Requester) *Executor {
 // from the given file or directory. The given
 // initialParams are used as initial state for the
 // runtime engine.
-func (t *Executor) Execute(pathes []string, initialParams engine.State) (res Result, err error) {
+func (t *Executor) Execute(pathes []string, initialParams engine.State, showTeardownParamErrors bool) (res Result, err error) {
 	if len(pathes) == 1 {
 		stat, err := os.Stat(pathes[0])
 		if err != nil {
@@ -64,16 +64,16 @@ func (t *Executor) Execute(pathes []string, initialParams engine.State) (res Res
 			}
 
 			log.Debug().Msg("Executing goatfile ...")
-			return t.ExecuteGoatfile(gf, initialParams)
+			return t.ExecuteGoatfile(gf, initialParams, showTeardownParamErrors)
 		}
 	}
 
-	return t.executeFromPathes(pathes, initialParams)
+	return t.executeFromPathes(pathes, initialParams, showTeardownParamErrors)
 }
 
 // ExecuteGoatfile runs the given parsed Goatfile. The given initialParams are
 // used as initial state for the runtime engine.
-func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.State) (res Result, err error) {
+func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.State, showTeardownParamErrors bool) (res Result, err error) {
 	log := log.Tagged(gf.Path)
 
 	if t.Dry {
@@ -85,7 +85,7 @@ func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.St
 	eng := t.engineMaker()
 	eng.SetState(initialParams)
 
-	return t.executeGoatfile(log, gf, eng, true)
+	return t.executeGoatfile(log, gf, eng, true, showTeardownParamErrors)
 }
 
 func (t *Executor) executeGoatfile(
@@ -93,6 +93,7 @@ func (t *Executor) executeGoatfile(
 	gf goatfile.Goatfile,
 	eng engine.Engine,
 	printSeperators bool,
+	showTeardownParamErrors bool,
 ) (res Result, err error) {
 	var errsNoAbort errs.Errors
 
@@ -108,21 +109,25 @@ func (t *Executor) executeGoatfile(
 			printSeparator("TEARDOWN")
 		}
 		for _, act := range gf.Teardown {
-			sectRes, exErr := t.executeAction(log, eng, act, gf)
+			sectRes, exErr := t.executeAction(log, eng, act, gf, showTeardownParamErrors)
 			res.Teardown.Merge(sectRes)
 			if exErr != nil {
-				err = errs.Join(err, exErr)
+				err = errs.Join(err, NewTeardownError(exErr))
 				if act.Type() == goatfile.ActionRequest {
-					log.Error().Err(exErr).Field("req", act).Msg("Teardown step failed")
+					isParamsParseErr := errs.IsOfType[ParamsParsingError](exErr)
+
+					if !isParamsParseErr || showTeardownParamErrors {
+						log.Error().Err(exErr).Field("req", act).Msg("Teardown step failed")
+					}
 
 					// If the returned error comes from the params parsing step, don't
 					// cancel the teardown execution. See the following issue for more information.
 					// https://github.com/studio-b12/goat/issues/9
-					if errs.IsOfType[ParamsParsingError](exErr) {
+					if isParamsParseErr {
 						continue
 					}
 
-					if !t.isAbortOnError(act.(goatfile.Request)) {
+					if !AbortOptionsFromMap(act.(goatfile.Request).Options).AlwaysAbort {
 						continue
 					}
 				} else {
@@ -147,13 +152,13 @@ func (t *Executor) executeGoatfile(
 			printSeparator("SETUP")
 		}
 		for _, act := range gf.Setup {
-			sectRes, err := t.executeAction(log, eng, act, gf)
+			sectRes, err := t.executeAction(log, eng, act, gf, showTeardownParamErrors)
 			res.Setup.Merge(sectRes)
 			if err != nil {
 				if act.Type() == goatfile.ActionRequest {
 					log.Error().Err(err).Field("req", act).Msg("Setup step failed")
-					if !t.isAbortOnError(act.(goatfile.Request)) {
-						errsNoAbort = errsNoAbort.Append(err)
+					if errs.IsOfType[NoAbortError](err) {
+						errsNoAbort = errsNoAbort.Append(errors.Unwrap(err))
 						continue
 					}
 				}
@@ -175,11 +180,11 @@ func (t *Executor) executeGoatfile(
 			printSeparator("TESTS")
 		}
 		for _, act := range gf.Tests {
-			sectRes, err := t.executeTest(act, eng, gf)
+			sectRes, err := t.executeTest(act, eng, gf, showTeardownParamErrors)
 			res.Tests.Merge(sectRes)
 			if err != nil {
-				if act.Type() == goatfile.ActionRequest && !t.isAbortOnError(act.(goatfile.Request)) {
-					errsNoAbort = errsNoAbort.Append(err)
+				if act.Type() == goatfile.ActionRequest && errs.IsOfType[NoAbortError](err) {
+					errsNoAbort = errsNoAbort.Append(errors.Unwrap(err))
 					continue
 				}
 				return res, err
@@ -191,7 +196,7 @@ func (t *Executor) executeGoatfile(
 	return res, err
 }
 
-func (t *Executor) executeFromPathes(pathes []string, initialParams engine.State) (finalRes Result, err error) {
+func (t *Executor) executeFromPathes(pathes []string, initialParams engine.State, showTeardownParamErrors bool) (finalRes Result, err error) {
 	var goatfiles []goatfile.Goatfile
 
 	for _, path := range pathes {
@@ -231,13 +236,16 @@ func (t *Executor) executeFromPathes(pathes []string, initialParams engine.State
 	for _, gf := range goatfiles {
 		log.Info().Field("path", gf.Path).Msg(clr.Print(clr.Format("Executing batch ...", clr.ColorFGPurple, clr.FormatBold)))
 
-		res, err := t.ExecuteGoatfile(gf, initialParams)
+		res, err := t.ExecuteGoatfile(gf, initialParams, showTeardownParamErrors)
 		finalRes.Merge(res)
 		if err != nil {
 			entry := log.Error()
 			if mErr, ok := err.(errs.Errors); ok {
 				errLines := make([]string, 0, len(mErr))
 				for _, e := range mErr {
+					if !showTeardownParamErrors && errs.IsOfType[TeardownError](e) && errs.IsOfType[ParamsParsingError](err) {
+						continue
+					}
 					errLines = append(errLines, clr.Print(clr.Format(e.Error(), clr.ColorFGRed)))
 				}
 				entry.Field("errors", errLines)
@@ -289,20 +297,21 @@ func (t *Executor) executeTest(
 	act goatfile.Action,
 	eng engine.Engine,
 	gf goatfile.Goatfile,
+	showTeardownParamErrors bool,
 ) (res ResultSection, err error) {
 	var errsNoAbort errs.Errors
 	log := log.Tagged(gf.Path)
 
-	res, err = t.executeAction(log, eng, act, gf)
+	res, err = t.executeAction(log, eng, act, gf, showTeardownParamErrors)
 	if err != nil {
 		if act.Type() == goatfile.ActionRequest {
 			log.Error().Err(err).Field("req", act).Msg("Test step failed")
 
-			if !t.isAbortOnError(act.(goatfile.Request)) {
+			if !errs.IsOfType[NoAbortError](err) {
 				return res, err
 			}
 
-			errsNoAbort = errsNoAbort.Append(err)
+			errsNoAbort = errsNoAbort.Append(errors.Unwrap(err))
 		} else {
 			return res, err
 		}
@@ -320,6 +329,7 @@ func (t *Executor) executeAction(
 	eng engine.Engine,
 	act goatfile.Action,
 	gf goatfile.Goatfile,
+	showTeardownParamErrors bool,
 ) (res ResultSection, err error) {
 	switch act.Type() {
 
@@ -341,7 +351,7 @@ func (t *Executor) executeAction(
 
 	case goatfile.ActionExecute:
 		execParams := act.(goatfile.Execute)
-		r, err := t.executeExecute(execParams, eng)
+		r, err := t.executeExecute(execParams, eng, showTeardownParamErrors)
 		if err != nil {
 			err = errs.WithSuffix(err, "(imported)")
 		}
@@ -357,6 +367,15 @@ func (t *Executor) executeAction(
 
 func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf goatfile.Goatfile) (err error) {
 	req.Merge(gf.Defaults)
+
+	if !t.isAbortOnError(req) {
+		defer func() {
+			if err != nil {
+				err = NewNoAbortError(err)
+			}
+		}()
+	}
+
 	state := eng.State()
 
 	err = req.PreSubstitudeWithParams(state)
@@ -380,7 +399,7 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf go
 	err = req.SubstitudeWithParams(state)
 	if err != nil {
 		return errs.WithPrefix("failed substituting request with parameters:",
-			ParamsParsingError(err))
+			NewParamsParsingError(err))
 	}
 
 	execOpts := ExecOptionsFromMap(req.Options)
@@ -437,7 +456,7 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf go
 	return nil
 }
 
-func (t *Executor) executeExecute(params goatfile.Execute, eng engine.Engine) (Result, error) {
+func (t *Executor) executeExecute(params goatfile.Execute, eng engine.Engine, showTeardownParamErrors bool) (Result, error) {
 	pth := goatfile.Extend(path.Join(path.Dir(params.Path), params.File), goatfile.FileExtension)
 	gf, err := t.parseGoatfile(pth)
 	if err != nil {
@@ -456,7 +475,7 @@ func (t *Executor) executeExecute(params goatfile.Execute, eng engine.Engine) (R
 	isolatedEng := t.engineMaker()
 	isolatedEng.SetState(params.Params)
 
-	res, err := t.executeGoatfile(log, gf, isolatedEng, false)
+	res, err := t.executeGoatfile(log, gf, isolatedEng, false, showTeardownParamErrors)
 	if err != nil {
 		return res, err
 	}

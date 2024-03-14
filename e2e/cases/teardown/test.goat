@@ -1,0 +1,32 @@
+### Tests
+
+GET {{.instance}}/a
+
+[Script]
+assert(false)
+
+---
+
+### Teardown
+
+GET {{.instance}}/teardown1
+
+[Script]
+print(1)
+assert(false)
+
+---
+
+GET {{.instance}}/teardown2
+
+[Script]
+print(2)
+assert(false)
+
+---
+
+GET {{.instance}}/teardown3
+
+[Script]
+print(3)
+assert(false)

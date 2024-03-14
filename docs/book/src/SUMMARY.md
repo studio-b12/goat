@@ -4,6 +4,7 @@
   - [Glossary](./introduction/glossary.md)
 - [Getting Started](./getting-started/index.md)
 - [Command Line Tool](./command-line-tool/index.md)
+  - [Profiles](./command-line-tool/profiles.md)
 - [How does it work?](./explanations/index.md)
   - [State Management](./explanations/state.md)
   - [Lifecycle](./explanations/lifecycle.md)

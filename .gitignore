@@ -32,3 +32,5 @@ params.yml
 
 bin/
 /test/
+
+*.env

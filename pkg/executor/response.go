@@ -10,8 +10,20 @@ import (
 	"github.com/studio-b12/goat/pkg/errs"
 )
 
+// RawData is an alias for a byte slice which implements
+// String returning the data as string.
+//
+// This is so that when Response.BodyRaw is printed in a
+// Script section, it will be printed as string instead of
+// array of bytes.
+type RawData []byte
+
+func (t RawData) String() string {
+	return string(t)
+}
+
 // Response is the model passed into the engine
-// state containing the requests repsonse data.
+// state containing the requests response data.
 type Response struct {
 	StatusCode    int
 	Status        string
@@ -20,7 +32,7 @@ type Response struct {
 	ProtoMinor    int
 	Header        map[string][]string
 	ContentLength int64
-	BodyRaw       []byte
+	BodyRaw       RawData
 	Body          any
 }
 

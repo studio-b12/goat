@@ -1,11 +1,58 @@
 package goatfile
 
 import (
+	"github.com/studio-b12/goat/pkg/goatfile/ast"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestRequestFromAst(t *testing.T) {
+	astR := ast.Request{
+		Head: ast.RequestHead{
+			Method: "GET",
+			Url:    "https://foo.bar",
+		},
+		Blocks: []ast.RequestBlock{
+			ast.RequestOptions{ast.KVList[any]{ast.KV[any]{Key: "a", Value: "b"}}},
+			ast.RequestBody{ast.TextBlock{"body stuff"}},
+			ast.RequestScript{ast.TextBlock{"script stuff"}},
+		},
+	}
+
+	gf, err := RequestFromAst(&astR, "somepath")
+	assert.Nil(t, err, err)
+
+	assert.Equal(t, "somepath", gf.Path)
+	assert.Equal(t, "GET", gf.Method)
+	assert.Equal(t, "https://foo.bar", gf.URI)
+	assert.Equal(t, "b", gf.Options["a"])
+	assert.Equal(t, StringContent("body stuff"), gf.Body)
+	assert.Equal(t, StringContent("script stuff"), gf.Script)
+
+}
+
+func TestPartialRequestFromAst(t *testing.T) {
+	astR := ast.PartialRequest{
+		Blocks: []ast.RequestBlock{
+			ast.RequestOptions{ast.KVList[any]{ast.KV[any]{Key: "a", Value: "b"}}},
+			ast.RequestBody{ast.TextBlock{"body stuff"}},
+			ast.RequestScript{ast.TextBlock{"script stuff"}},
+		},
+	}
+
+	gf, err := PartialRequestFromAst(astR, "somepath")
+	assert.Nil(t, err, err)
+
+	assert.Equal(t, "somepath", gf.Path)
+	assert.Equal(t, "", gf.Method)
+	assert.Equal(t, "", gf.URI)
+	assert.Equal(t, "b", gf.Options["a"])
+	assert.Equal(t, StringContent("body stuff"), gf.Body)
+	assert.Equal(t, StringContent("script stuff"), gf.Script)
+
+}
 
 func TestToHttpRequest(t *testing.T) {
 	req := newRequest()

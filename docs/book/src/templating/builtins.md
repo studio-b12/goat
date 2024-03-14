@@ -2,6 +2,21 @@
 
 The following built-in functions are available in templates used in Goatfiles.
 
+- [`base64`](#base64)
+- [`base64Url`](#base64Url)
+- [`base64Unpadded`](#base64Unpadded)
+- [`base64UrlUnpadded`](#base64UrlUnpadded)
+- [`formatTimestamp`](#formatTimestamp)
+- [`md5`](#md5)
+- [`sha1`](#sha1)
+- [`sha256`](#sha256)
+- [`sha512`](#sha512)
+- [`randomString`](#randomString)
+- [`randomInt`](#randomInt)
+- [`timestamp`](#timestamp)
+- [`isset`](#isset)
+- [`json`](#json)
+
 ## `base64`
 
 ```
@@ -58,6 +73,19 @@ Returns the input `value` as base64url encoded string without padding.
 {{ base64UrlUnpadded "hello world" }}
 ```
 
+## `formatTimestamp`
+
+```
+formatTimestamp <value: Date> <format?: string> -> string
+formatTimestamp <value: string> <valueFormat: string> <format?: string> -> string
+```
+
+Takes either a `Date` object and an optional output format or a timestamp string, the format for the input timestamp and
+an optional output format and returns the formatted timestamp.
+
+The format is according to Go's [`time` package definition](https://pkg.go.dev/time#pkg-constants). You can also specify
+the names of the predefined formats like `rfc3339` or `DateOnly`. If no format is passed, the time will be represented as
+Unix seconds.
 
 ## `md5`
 
@@ -149,7 +177,11 @@ Returns a random integer in the range `[0, n)` where `n` is given as parameter. 
 timestamp <format?: string> -> string
 ```
 
-Returns the current timestamp in the given format. The format is specified in [Go's time format](https://pkg.go.dev/time). If no format is given, the time is returned as a Unix seconds string.
+Returns the current timestamp in the given format. 
+
+The format is according to Go's [`time` package definition](https://pkg.go.dev/time#pkg-constants). You can also specify
+the names of the predefined formats like `rfc3339` or `DateOnly`. If no format is passed, the time will be represented as
+Unix seconds.
 
 **Example:**
 
@@ -160,7 +192,7 @@ Returns the current timestamp in the given format. The format is specified in [G
 ## `isset`
 
 ```
-timestamp <map: map[string]any> <key: string> -> bool
+isset <map: map[string]any> <key: string> -> bool
 ```
 
 Returns `true` when the given `key` is present and its corresponding value is not `nil` in the given `map`. Otherwise, `false` is returned.
@@ -169,4 +201,18 @@ Returns `true` when the given `key` is present and its corresponding value is no
 
 ```
 {{ isset . "username" }}
+```
+
+## `json`
+
+```
+json <value: any> <ident?: string | int> -> string
+```
+
+Serializes a given `value` into a JSON string. You can pass a string value used as ident or a number of spaces used as indent.
+
+**Example:**
+
+```
+{{ json .someObject 2 }}
 ```

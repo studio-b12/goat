@@ -18,5 +18,6 @@ func (t ParameterValue) ApplyTemplate(params any) (any, error) {
 		return nil, err
 	}
 
-	return NewParser(b, "").parseValue()
+	v, _, err := NewParser(b, "").parseValue()
+	return v, err
 }
