@@ -2,10 +2,11 @@ package requester
 
 // Options wraps request specific options.
 type Options struct {
-	CookieJar    any
-	StoreCookies bool
-	SendCookies  bool
-	ResponseType string
+	CookieJar       any
+	StoreCookies    bool
+	SendCookies     bool
+	ResponseType    string
+	FollowRedirects bool
 }
 
 // OptionsFromMap takes a map and builds an
@@ -13,10 +14,11 @@ type Options struct {
 // pairs.
 func OptionsFromMap(m map[string]any) Options {
 	opt := Options{
-		CookieJar:    "default",
-		StoreCookies: true,
-		SendCookies:  true,
-		ResponseType: "",
+		CookieJar:       "default",
+		StoreCookies:    true,
+		SendCookies:     true,
+		ResponseType:    "",
+		FollowRedirects: true,
 	}
 
 	if v, ok := m["cookiejar"]; ok {
@@ -30,6 +32,9 @@ func OptionsFromMap(m map[string]any) Options {
 	}
 	if v, ok := m["responsetype"].(string); ok {
 		opt.ResponseType = v
+	}
+	if v, ok := m["followredirects"].(bool); ok {
+		opt.FollowRedirects = v
 	}
 
 	return opt

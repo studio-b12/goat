@@ -69,6 +69,12 @@ func (t HttpWithCookies) Do(req *http.Request, opt Options) (*http.Response, err
 	client := *t.client
 	client.Jar = jar
 
+	if !opt.FollowRedirects {
+		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}
+	}
+
 	res, err := client.Do(req)
 	if err != nil {
 		return nil, err
