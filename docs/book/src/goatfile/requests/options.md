@@ -84,3 +84,10 @@ A duration formatted as a Go [time.ParseDuration](https://pkg.go.dev/time#ParseD
 - **Default**: `""` 
 
 Explicit type declaration for body parsing. Implicit body parsing (json/xml) can be prevented by setting this option to `raw`.
+
+### `followredirects`
+
+- **Type**: `bool` 
+- **Default**: `true` 
+
+Define whether or not to follow redirect responses on `GET` requests.
