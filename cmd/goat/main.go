@@ -35,7 +35,7 @@ type Args struct {
 	Dry           bool          `arg:"--dry" help:"Only parse the goatfile(s) without executing any requests"`
 	Gradual       bool          `arg:"-g,--gradual" help:"Advance the requests maually"`
 	Json          bool          `arg:"--json,env:GOATARG_JSON" help:"Use JSON format instead of pretty console format for logging"`
-	LogLevel      string        `arg:"-l,--loglevel,env:GOATARG_LOGLEVEL" default:"info" help:"Logging level (see https://github.com/zekrotja/rogu#levels for reference)"`
+	LogLevel      level.Level   `arg:"-l,--loglevel,env:GOATARG_LOGLEVEL" default:"info" help:"Logging level"`
 	New           bool          `arg:"--new" help:"Create a new base Goatfile"`
 	NoAbort       bool          `arg:"--no-abort,env:GOATARG_NOABORT" help:"Do not abort batch execution on error"`
 	NoColor       bool          `arg:"--no-color,env:GOATARG_NOCOLOR" help:"Supress colored log output"`
@@ -55,12 +55,7 @@ func main() {
 	if args.Silent {
 		log.SetLevel(level.Off)
 	} else {
-		lvl, ok := level.LevelFromString(args.LogLevel)
-		if !ok {
-			log.Fatal().Msg("invalid log level; see https://github.com/zekrotja/rogu#levels for reference")
-			return
-		}
-		log.SetLevel(lvl)
+		log.SetLevel(args.LogLevel)
 	}
 
 	if args.Json {
