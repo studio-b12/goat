@@ -23,7 +23,7 @@ type Data interface {
 	Reader() (io.Reader, error)
 }
 
-func DataFromAst(di ast.DataContent, path string) (Data, error) {
+func DataFromAst(di ast.DataContent, filePath string) (Data, error) {
 	switch d := di.(type) {
 	case ast.NoContent:
 		return NoContent{}, nil
@@ -32,7 +32,7 @@ func DataFromAst(di ast.DataContent, path string) (Data, error) {
 	case ast.FileDescriptor:
 		return FileContent{
 			filePath: d.Path,
-			currDir:  filepath.Dir(path),
+			currDir:  path.Dir(filePath),
 		}, nil
 	default:
 		return nil, fmt.Errorf("invalid ast data content type: %v", di)
