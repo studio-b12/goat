@@ -1,0 +1,36 @@
+POST {{.instance}}/
+
+[FormData]
+someString = "some string"
+someInt = 42
+file = @test-file.txt:text/plain
+
+[Script]
+const [contentType, boundaryKV] = response.Body.headers["Content-Type"][0]
+    .split(';')
+    .map(v => v.trim());
+assert(contentType, 'multipart/form-data', `Invalid Content-Type header: ${contentType}`);
+const boundary = boundaryKV.split('=')[1];
+const bodyText = response.Body.body_string.replaceAll('\r', '');
+const bodyValues = bodyText
+    .substr(0, bodyText.length - 3)
+    .split(`--${boundary}`)
+    .map(v => v.trim())
+    .filter(v => !!v)
+    .map(v => v.split('\n').map(l => l.trim()).filter(l => !!l));
+{
+    const v = bodyValues.find(v => v[0].includes('name="someString"'));
+    assert(v[0] === 'Content-Disposition: form-data; name="someString"', `Invalid header: ${v[0]}`);
+    assert(v[1] === 'some string', `[0] Invalid value: ${v[1]}`);
+}
+{
+    const v = bodyValues.find(v => v[0].includes('name="someInt"'));
+    assert(v[0] === 'Content-Disposition: form-data; name="someInt"', `Invalid header: ${v[0]}`);
+    assert(v[1] === '42', `Invalid value: ${v[1]}`);
+}
+{
+    const v = bodyValues.find(v => v[0].includes('name="file"'));
+    assert(v[0] === 'Content-Disposition: form-data; name="file"; filename="test-file.txt"', `Invalid header: ${v[0]}`);
+    assert(v[1] === 'Content-Type: text/plain', `Invalid content type: ${v[1]}`);
+    assert(v[2] === 'This is a test file!', `Invalid value: ${v[2]}`);
+}

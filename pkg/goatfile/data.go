@@ -2,17 +2,22 @@ package goatfile
 
 import (
 	"bytes"
+	"crypto/rand"
 	"fmt"
+	"github.com/studio-b12/goat/pkg/errs"
 	"github.com/studio-b12/goat/pkg/goatfile/ast"
 	"io"
+	"mime/multipart"
+	"net/http"
+	"net/textproto"
 	"os"
 	"os/user"
 	"path"
 	"path/filepath"
 	"strings"
-
-	"github.com/studio-b12/goat/pkg/errs"
 )
+
+var quoteEscaper = strings.NewReplacer("\\", "\\\\", `"`, "\\\"")
 
 // Data provides a getter to receive
 // a reader to internal data.
@@ -23,19 +28,39 @@ type Data interface {
 	Reader() (io.Reader, error)
 }
 
-func DataFromAst(di ast.DataContent, path string) (Data, error) {
+func DataFromAst(di ast.DataContent, filePath string) (data Data, header http.Header, err error) {
 	switch d := di.(type) {
 	case ast.NoContent:
-		return NoContent{}, nil
+		return NoContent{}, nil, nil
 	case ast.TextBlock:
-		return StringContent(d.Content), nil
+		return StringContent(d.Content), nil, nil
 	case ast.FileDescriptor:
-		return FileContent{
+		fc := FileContent{
 			filePath: d.Path,
-			currDir:  filepath.Dir(path),
-		}, nil
+			currDir:  path.Dir(filePath),
+		}
+		if d.ContentType != "" {
+			header = http.Header{
+				"Content-Type": []string{d.ContentType},
+			}
+		}
+		return fc, header, nil
+	case ast.FormData:
+		boundary, err := randomBoundary()
+		if err != nil {
+			return nil, nil, err
+		}
+		header = http.Header{
+			"Content-Type": []string{"multipart/form-data; boundary=" + boundary},
+		}
+		fd := FormData{
+			fields:   d.KVList.ToMap(),
+			currDir:  path.Dir(filePath),
+			boundary: boundary,
+		}
+		return fd, header, nil
 	default:
-		return nil, fmt.Errorf("invalid ast data content type: %v", di)
+		return nil, nil, fmt.Errorf("invalid ast data content type: %v", di)
 	}
 }
 
@@ -62,24 +87,106 @@ type FileContent struct {
 }
 
 func (t FileContent) Reader() (r io.Reader, err error) {
-	pth := t.filePath
-
-	if strings.HasPrefix(pth, "~/") {
-		currentUser, err := user.Current()
-		if err != nil {
-			return nil, errs.WithPrefix(
-				"failed resolving current user for relative path resolution:", err)
-		}
-		pth = path.Join(currentUser.HomeDir, pth[2:])
-	} else if !filepath.IsAbs(pth) {
-		pth = path.Join(t.currDir, pth)
+	pth, err := joinPath(t.currDir, t.filePath)
+	if err != nil {
+		return nil, err
 	}
-
 	r, err = os.Open(pth)
 	return r, err
+}
+
+// FormData writes the given key-value pairs into a Multipart Formdata
+// encoded reader stream.
+type FormData struct {
+	fields   map[string]any
+	currDir  string
+	boundary string
+}
+
+func (t FormData) Reader() (io.Reader, error) {
+	var b bytes.Buffer
+
+	w := multipart.NewWriter(&b)
+	err := w.SetBoundary(t.boundary)
+	if err != nil {
+		return nil, err
+	}
+	defer w.Close()
+
+	//goland:noinspection GoDeferInLoop
+	for k, v := range t.fields {
+		if fd, ok := v.(ast.FileDescriptor); ok {
+			filePath, err := joinPath(t.currDir, fd.Path)
+			if err != nil {
+				return nil, err
+			}
+			fileName := filepath.Base(filePath)
+
+			h := make(textproto.MIMEHeader)
+			h.Set("Content-Disposition",
+				fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
+					quoteEscaper.Replace(k), quoteEscaper.Replace(fileName)))
+			if fd.ContentType == "" {
+				fd.ContentType = "application/octet-stream"
+			}
+			h.Set("Content-Type", fd.ContentType)
+			fw, err := w.CreatePart(h)
+			if err != nil {
+				return nil, err
+			}
+
+			f, err := os.Open(filePath)
+			if err != nil {
+				return nil, err
+			}
+			defer f.Close()
+			_, err = io.Copy(fw, f)
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
+
+		fw, err := w.CreateFormField(k)
+		if err != nil {
+			return nil, err
+		}
+		_, err = fmt.Fprintf(fw, "%v", v)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &b, nil
 }
 
 func IsNoContent(d Data) bool {
 	_, ok := d.(NoContent)
 	return ok
+}
+
+func joinPath(currDir string, fileName string) (string, error) {
+	if strings.HasPrefix(fileName, "~/") {
+		currentUser, err := user.Current()
+		if err != nil {
+			return "", errs.WithPrefix(
+				"failed resolving current user for relative path resolution:", err)
+		}
+		return path.Join(currentUser.HomeDir, fileName[2:]), nil
+	}
+
+	if filepath.IsAbs(fileName) {
+		return fileName, nil
+	}
+
+	return filepath.Join(currDir, fileName), nil
+}
+
+func randomBoundary() (string, error) {
+	var buf [30]byte
+	_, err := io.ReadFull(rand.Reader, buf[:])
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", buf[:]), nil
 }

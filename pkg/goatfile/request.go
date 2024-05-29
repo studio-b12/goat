@@ -56,6 +56,8 @@ func RequestFromAst(req *ast.Request, path string) (t Request, err error) {
 	t.URI = req.Head.Url
 	t.PosLine = req.Pos.Line + 1 // TODO: actually, this should start counting at 0 and the printer should add 1
 
+	var additionalHeader http.Header
+
 	for _, block := range req.Blocks {
 		switch b := block.(type) {
 		case ast.RequestHeader:
@@ -67,14 +69,20 @@ func RequestFromAst(req *ast.Request, path string) (t Request, err error) {
 		case ast.RequestAuth:
 			t.Auth = b.KVList.ToMap()
 		case ast.RequestBody:
-			t.Body, err = DataFromAst(b.DataContent, path)
+			t.Body, additionalHeader, err = DataFromAst(b.DataContent, path)
 		case ast.RequestPreScript:
-			t.PreScript, err = DataFromAst(b.DataContent, path)
+			t.PreScript, _, err = DataFromAst(b.DataContent, path)
 		case ast.RequestScript:
-			t.Script, err = DataFromAst(b.DataContent, path)
+			t.Script, _, err = DataFromAst(b.DataContent, path)
+		case ast.FormData:
+			t.Body, additionalHeader, err = DataFromAst(b, path)
 		default:
 			err = fmt.Errorf("invalid request ast block type: %+v", block)
 		}
+	}
+
+	for k, v := range additionalHeader {
+		t.Header[k] = append(t.Header[k], v...)
 	}
 
 	if err != nil {

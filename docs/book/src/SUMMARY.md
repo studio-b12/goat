@@ -22,6 +22,7 @@
     - [Query Parameters](./goatfile/requests/query-params.md)
     - [Auth](./goatfile/requests/auth.md)
     - [Body](./goatfile/requests/body.md)
+    - [FormData](./goatfile/requests/formdata.md)
     - [PreScript](./goatfile/requests/prescript.md)
     - [Script](./goatfile/requests/script.md)
 - [Templating](./templating/index.md)
