@@ -218,6 +218,10 @@ func (t *scanner) scanDelimiter() (tk token, lit string) {
 }
 
 func (t *scanner) scanString() (tk token, lit string) {
+	return t.scanStringStopAt(0)
+}
+
+func (t *scanner) scanStringStopAt(end rune) (tk token, lit string) {
 	var b bytes.Buffer
 	wrapper := rune(0)
 	inString := false
@@ -229,6 +233,11 @@ func (t *scanner) scanString() (tk token, lit string) {
 			if inString && wrapper != 0 {
 				return tokILLEGAL, ""
 			}
+			break
+		}
+
+		if wrapper == 0 && r == end {
+			t.unread()
 			break
 		}
 

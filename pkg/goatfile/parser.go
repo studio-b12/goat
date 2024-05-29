@@ -536,6 +536,14 @@ func (t *Parser) parseBlock() (ast.RequestBlock, []ast.Comment, error) {
 		comments = append(comments, comms...)
 		return ast.RequestAuth{KVList: data}, comments, nil
 
+	case optionNameFormData:
+		data, comms, err := t.parseBlockEntries(nil)
+		if err != nil {
+			return nil, nil, err
+		}
+		comments = append(comments, comms...)
+		return ast.FormData{KVList: data}, comments, nil
+
 	default:
 		return nil, nil, errs.WithSuffix(ErrInvalidBlockHeader,
 			fmt.Sprintf("('%s')", blockHeader))
@@ -633,11 +641,7 @@ func (t *Parser) parseRaw() (ast.DataContent, error) {
 
 	r := t.s.read()
 	if r == '@' {
-		tk, file := t.s.scanString()
-		if tk != tokSTRING {
-			return nil, ErrInvalidFileDescriptor
-		}
-		return ast.FileDescriptor{Path: file}, nil
+		return t.parseFileDescriptor()
 	}
 
 	t.s.unread()
@@ -741,6 +745,9 @@ func (t *Parser) parseValue() (any, []ast.Comment, error) {
 		return t.parseArray()
 	case tokPARAMETER:
 		return ParameterValue(lit), nil, nil
+	case tokFILEDESC:
+		v, err := t.parseFileDescriptor()
+		return v, nil, err
 	default:
 		return nil, nil, errs.WithSuffix(ErrInvalidToken, "(value)")
 	}
@@ -778,6 +785,29 @@ loop:
 	}
 
 	return arr, comments, nil
+}
+
+func (t *Parser) parseFileDescriptor() (ast.DataContent, error) {
+	tk, file := t.s.scanStringStopAt(':')
+	if tk != tokSTRING {
+		return ast.NoContent{}, ErrInvalidFileDescriptor
+	}
+
+	fd := ast.FileDescriptor{Path: file}
+
+	if t.s.read() != ':' {
+		t.s.unread()
+		return fd, nil
+	}
+
+	tk, lit := t.s.scanString()
+	if tk == tokILLEGAL {
+		return nil, ErrInvalidStringLiteral
+	}
+
+	fd.ContentType = lit
+
+	return fd, nil
 }
 
 func (t *Parser) astPos() ast.Pos {

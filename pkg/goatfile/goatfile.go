@@ -32,6 +32,7 @@ const (
 	optionNameScript      = optionName("script")
 	optionNameOptions     = optionName("options")
 	optionNameAuth        = optionName("auth")
+	optionNameFormData    = optionName("formdata")
 )
 
 // Goatfile holds all sections and

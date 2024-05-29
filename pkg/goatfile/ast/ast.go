@@ -132,7 +132,8 @@ type TextBlock struct {
 }
 
 type FileDescriptor struct {
-	Path string
+	Path        string
+	ContentType string
 }
 
 type NoContent struct{}
@@ -170,4 +171,8 @@ type RequestPreScript struct {
 
 type RequestScript struct {
 	DataContent
+}
+
+type FormData struct {
+	KVList[any]
 }

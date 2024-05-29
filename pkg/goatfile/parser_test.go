@@ -143,6 +143,42 @@ password = "{{.creds.password}}"
 		}}, res.Actions[0].(*ast.Request).Blocks[3].(ast.RequestAuth))
 	})
 
+	t.Run("single-file-value", func(t *testing.T) {
+		const raw = `
+		
+GET https://example.com
+
+[FormData]
+file = @file.txt
+fileWithContentType = @../../file/with/content/type.txt:text/csv
+spaced = @"my file.png":"image / png"
+windows = @"C:\test\file.png":image/png // yes, people actually still use this
+		`
+
+		p := stringParser(raw)
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t, 1, len(res.Actions))
+		assert.Equal(t, "GET", res.Actions[0].(*ast.Request).Head.Method)
+		assert.Equal(t, "https://example.com", res.Actions[0].(*ast.Request).Head.Url)
+
+		formData := res.Actions[0].(*ast.Request).Blocks[0].(ast.FormData).KVList.ToMap()
+		assert.Equal(t, ast.FileDescriptor{Path: "file.txt"}, formData["file"])
+		assert.Equal(t, ast.FileDescriptor{
+			Path:        "../../file/with/content/type.txt",
+			ContentType: "text/csv",
+		}, formData["fileWithContentType"])
+		assert.Equal(t, ast.FileDescriptor{
+			Path:        "my file.png",
+			ContentType: "image / png",
+		}, formData["spaced"])
+		assert.Equal(t, ast.FileDescriptor{
+			Path:        "C:\\test\\file.png",
+			ContentType: "image/png",
+		}, formData["windows"])
+	})
+
 	t.Run("single-invalidblockheader", func(t *testing.T) {
 		const raw = `
 		
