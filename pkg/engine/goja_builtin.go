@@ -2,20 +2,38 @@ package engine
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/zekrotja/rogu/log"
 )
 
 func (t *Goja) builtin_assert(v bool, msg ...string) {
+	if v {
+		return
+	}
+
 	mesg := "assertion failed"
 	if len(msg) != 0 {
 		mesg = fmt.Sprintf("%s: %s", mesg, strings.Join(msg, " "))
 	}
 
-	if !v {
-		panic(t.rt.ToValue(mesg))
+	panic(t.rt.ToValue(mesg))
+}
+
+func (t *Goja) builtin_assert_eq(value any, expected any, msg ...string) {
+	if reflect.DeepEqual(value, expected) {
+		return
 	}
+
+	part := "unexpected value"
+	if len(msg) != 0 {
+		part = strings.Join(msg, " ")
+	}
+
+	mesg := fmt.Sprintf("assertion failed: %s: expected `%v` != received `%v`", part, value, expected)
+
+	panic(t.rt.ToValue(mesg))
 }
 
 func (t *Goja) builtin_debug(msg ...string) {

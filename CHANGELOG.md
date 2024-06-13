@@ -6,6 +6,8 @@
 
 - Added a new request option [`followredirects`](https://studio-b12.github.io/goat/goatfile/requests/options.html#followredirects). This is `true` by default, but can be set to `false` if redirects should not be followed transparently. [#61]
 
+- Addeda  new script builtin [`assert_eq`](https://studio-b12.github.io/goat/scripting/builtins.html#assert_eq), where you can pass two values which are compared and output for better error clarification.
+
 # Minor Changes and Bug Fixes
 
 - Fixed an issue when parsing file descriptors on Windows systems.
