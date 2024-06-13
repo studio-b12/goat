@@ -31,7 +31,7 @@ func (t *Goja) builtin_assert_eq(value any, expected any, msg ...string) {
 		part = strings.Join(msg, " ")
 	}
 
-	mesg := fmt.Sprintf("assertion failed: %s: expected `%v` != received `%v`", part, value, expected)
+	mesg := fmt.Sprintf("assertion failed: %s: expected `%v` != received `%v`", part, expected, value)
 
 	panic(t.rt.ToValue(mesg))
 }
