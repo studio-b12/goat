@@ -1428,6 +1428,7 @@ bar = 2
 <p>The following built-in functions are available in each script instance.</p>
 <ul>
 <li><a href="scripting/builtins.html#assert"><code>assert</code></a></li>
+<li><a href="scripting/builtins.html#assert_eq"><code>assert_eq</code></a></li>
 <li><a href="scripting/builtins.html#print"><code>print</code></a></li>
 <li><a href="scripting/builtins.html#println"><code>println</code></a></li>
 <li><a href="scripting/builtins.html#info"><code>info</code></a></li>
@@ -1445,6 +1446,13 @@ bar = 2
 <pre><code class="language-ts">function assert(expression: bool, fail_message?: string): void;
 </code></pre>
 <p>Takes an <code>expression</code> which, when evaluated to <code>false</code>, will throw an assert exception. You can pass an additional <code>fail_message</code> which will be shown in the exception. This can be used to assert values in responses and fail test execution if they are invalid.</p>
+<p><strong>Example</strong></p>
+<pre><code class="language-js">assert(response.StatusCode &gt;= 400, `Status code was ${response.StatusCode}`);
+</code></pre>
+<h2 id="assert_eq"><a class="header" href="#assert_eq"><code>assert_eq</code></a></h2>
+<pre><code class="language-ts">function assert_eq(value: any, expected: any, fail_message?: string): void;
+</code></pre>
+<p>Takes a <code>value</code> and an <code>expected</code> value and deep-equals them. That means, that also contents of objects and lists are compared. If the comparison fails, it will throw an exception which will also display both compared values. You can also pass an additional <code>fail_message</code> to further specify the error output.</p>
 <p><strong>Example</strong></p>
 <pre><code class="language-js">assert(response.StatusCode &gt;= 400, `Status code was ${response.StatusCode}`);
 </code></pre>
