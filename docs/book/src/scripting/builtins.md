@@ -3,6 +3,7 @@
 The following built-in functions are available in each script instance.
 
 - [`assert`](#assert)
+- [`assert_eq`](#assert_eq)
 - [`print`](#print)
 - [`println`](#println)
 - [`info`](#info)
@@ -24,6 +25,20 @@ function assert(expression: bool, fail_message?: string): void;
 ```
 
 Takes an `expression` which, when evaluated to `false`, will throw an assert exception. You can pass an additional `fail_message` which will be shown in the exception. This can be used to assert values in responses and fail test execution if they are invalid.
+
+**Example**
+
+```js
+assert(response.StatusCode >= 400, `Status code was ${response.StatusCode}`);
+```
+
+## `assert_eq`
+
+```ts
+function assert_eq(value: any, expected: any, fail_message?: string): void;
+```
+
+Takes a `value` and an `expected` value and deep-equals them. That means, that also contents of objects and lists are compared. If the comparison fails, it will throw an exception which will also display both compared values. You can also pass an additional `fail_message` to further specify the error output.
 
 **Example**
 

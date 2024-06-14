@@ -22,6 +22,7 @@ func NewGoja() Engine {
 	t.rt = goja.New()
 
 	t.Set("assert", t.builtin_assert)
+	t.Set("assert_eq", t.builtin_assert_eq)
 	t.Set("debug", t.builtin_debug)
 	t.Set("debugf", t.builtin_debugf)
 	t.Set("info", t.builtin_info)

@@ -18,14 +18,14 @@ info(response)
 
 var body = response.Body;
 
-assert(response.StatusCode == 200);
-assert(body.method == "POST");
-assert(body.query.orderBy[0] == "date");
-assert(body.query.filterBy[0] == "date");
-assert(body.query.filterBy[1] == "name");
-assert(body.query.filterBy[2] == "age");
-assert(body.query.page[0] == "2");
-assert(body.query.count[0] == "100");
-assert(body.headers["Content-Type"][0] == "text/plain");
-assert(body.headers["X-Foo"][0] == "bar");
-assert(body.body_string == "some\nbody\ncontent");
+assert_eq(response.StatusCode, 200, "status code");
+assert_eq(body.method, "POST", "method");
+assert_eq(body.query.orderBy[0], "date", "query.orderBy");
+assert_eq(body.query.filterBy[0], "date", "query.filterBy.0");
+assert_eq(body.query.filterBy[1], "name", "query.filterBy.1");
+assert_eq(body.query.filterBy[2], "age", "query.filterBy.2");
+assert_eq(body.query.page[0], "2", "query.page");
+assert_eq(body.query.count[0], "100", "query.count");
+assert_eq(body.headers["Content-Type"][0], "text/plain", "headers.content-type");
+assert_eq(body.headers["X-Foo"][0], "bar", "headers.x-foo");
+assert_eq(body.body_string, "some\nbody\ncontent", "body");
