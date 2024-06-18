@@ -203,7 +203,7 @@
 </code></pre>
 <p>Takes a <code>value</code> and an <code>expected</code> value and deep-equals them. That means, when comparing objects and lists, their structure as well as primitive contenst are compared as well. If the comparison fails, it will throw an exception which will display both compared values. You can also pass an additional <code>fail_message</code> to further specify the error output.</p>
 <p><strong>Example</strong></p>
-<pre><code class="language-js">assert(response.StatusCode &gt;= 400, `Status code was ${response.StatusCode}`);
+<pre><code class="language-js">assert_eq(response.StatusCode, 200, "invalid status code");
 </code></pre>
 <h2 id="print"><a class="header" href="#print"><code>print</code></a></h2>
 <pre><code class="language-ts">function print(...message: string[]): void;
