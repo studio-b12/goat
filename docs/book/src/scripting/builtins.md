@@ -43,7 +43,7 @@ Takes a `value` and an `expected` value and deep-equals them. That means, when c
 **Example**
 
 ```js
-assert(response.StatusCode >= 400, `Status code was ${response.StatusCode}`);
+assert_eq(response.StatusCode, 200, "invalid status code");
 ```
 
 ## `print`
