@@ -38,7 +38,7 @@ assert(response.StatusCode >= 400, `Status code was ${response.StatusCode}`);
 function assert_eq(value: any, expected: any, fail_message?: string): void;
 ```
 
-Takes a `value` and an `expected` value and deep-equals them. That means, that also contents of objects and lists are compared. If the comparison fails, it will throw an exception which will also display both compared values. You can also pass an additional `fail_message` to further specify the error output.
+Takes a `value` and an `expected` value and deep-equals them. That means, when comparing objects and lists, their structure as well as primitive contenst are compared as well. If the comparison fails, it will throw an exception which will display both compared values. You can also pass an additional `fail_message` to further specify the error output.
 
 **Example**
 
