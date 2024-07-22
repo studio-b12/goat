@@ -36,6 +36,7 @@ func NewGoja() Engine {
 	t.Set("print", t.builtin_print)
 	t.Set("printf", t.builtin_printf)
 	t.Set("println", t.builtin_println)
+	t.Set("jq", t.builtin_jq)
 
 	return &t
 }

@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"github.com/itchyny/gojq"
 	"reflect"
 	"strings"
 
@@ -86,4 +87,29 @@ func (t *Goja) builtin_fatalf(format string, v ...any) {
 
 func (t *Goja) builtin_printf(format string, v ...any) {
 	fmt.Printf(format, v...)
+}
+
+func (t *Goja) builtin_jq(object any, src string) []any {
+	query, err := gojq.Parse(src)
+	if err != nil {
+		panic(t.rt.ToValue(fmt.Sprintf("command parsing failed: %s", err.Error())))
+	}
+
+	var results []any
+	iter := query.Run(object)
+	for {
+		v, ok := iter.Next()
+		if !ok {
+			break
+		}
+		if err, ok := v.(error); ok {
+			if err, ok := err.(*gojq.HaltError); ok && err.Value() == nil {
+				break
+			}
+			panic(t.rt.ToValue(err.Error()))
+		}
+		results = append(results, v)
+	}
+
+	return results
 }
