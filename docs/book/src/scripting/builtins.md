@@ -16,6 +16,7 @@ The following built-in functions are available in each script instance.
 - [`errorf`](#errorf)
 - [`fatalf`](#fatalf)
 - [`debugf`](#debugf)
+- [`jq`](#jq)
 
 
 ## `assert`
@@ -212,4 +213,25 @@ Logs a *debug* log entry to the output logger(s) with the given `format` formatt
 
 ```js
 debugf("Hello %s!", "World");
+```
+
+## `jq`
+
+```ts
+function jq(object: any, src: string): any[];
+```
+
+For more complex analysis on JSON responses, `jq` can be used to perform JQ commands on any passed `object`. Goat uses [itchyny/gojq](https://github.com/itchyny/gojq) as implementation of JQ. [Here](https://jqlang.github.io/jq/manual) you can find more information about the JQ syntax.
+
+The results are always returned as a list. If there are no results, an empty list is returned. When the command compilation fails or the JQ execution fails, the function will throw an exception.
+
+**Example**
+
+*Explanation: Lists all instances recursively where the value of `href` is an object and is empty.*
+
+```js
+jq(response.Body, `..
+    | if type == "object" then .href else empty end
+    | if type == "object" then . else empty end
+    | select( . | length == 0 )`);
 ```
