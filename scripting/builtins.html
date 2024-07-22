@@ -190,6 +190,7 @@
 <li><a href="#errorf"><code>errorf</code></a></li>
 <li><a href="#fatalf"><code>fatalf</code></a></li>
 <li><a href="#debugf"><code>debugf</code></a></li>
+<li><a href="#jq"><code>jq</code></a></li>
 </ul>
 <h2 id="assert"><a class="header" href="#assert"><code>assert</code></a></h2>
 <pre><code class="language-ts">function assert(expression: bool, fail_message?: string): void;
@@ -288,6 +289,18 @@
 <p>Logs a <em>debug</em> log entry to the output logger(s) with the given <code>format</code> formatted with the given <code>values</code>. Formatting is handled according to <a href="https://pkg.go.dev/fmt">Go's formatting implementation</a>.</p>
 <p><strong>Example</strong></p>
 <pre><code class="language-js">debugf("Hello %s!", "World");
+</code></pre>
+<h2 id="jq"><a class="header" href="#jq"><code>jq</code></a></h2>
+<pre><code class="language-ts">function jq(object: any, src: string): any[];
+</code></pre>
+<p>For more complex analysis on JSON responses, <code>jq</code> can be used to perform JQ commands on any passed <code>object</code>. Goat uses <a href="https://github.com/itchyny/gojq">itchyny/gojq</a> as implementation of JQ. <a href="https://jqlang.github.io/jq/manual">Here</a> you can find more information about the JQ syntax.</p>
+<p>The results are always returned as a list. If there are no results, an empty list is returned. When the command compilation fails or the JQ execution fails, the function will throw an exception.</p>
+<p><strong>Example</strong></p>
+<p><em>Explanation: Lists all instances recursively where the value of <code>href</code> is an object and is empty.</em></p>
+<pre><code class="language-js">jq(response.Body, `..
+    | if type == "object" then .href else empty end
+    | if type == "object" then . else empty end
+    | select( . | length == 0 )`);
 </code></pre>
 
                     </main>
