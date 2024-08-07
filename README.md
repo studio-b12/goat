@@ -1,6 +1,6 @@
 # 🐐 goat &nbsp; [![GitHub release (with filter)](https://img.shields.io/github/v/release/studio-b12/goat)](https://github.com/studio-b12/goat/releases) [![Deploy Book](https://github.com/studio-b12/goat/actions/workflows/docgen.yml/badge.svg)](https://studio-b12.github.io/goat)  [![Unit Tests](https://github.com/studio-b12/goat/actions/workflows/tests.yml/badge.svg)](https://github.com/studio-b12/goat/actions/workflows/tests.yml)
 
-goat *(**Go** **A**PI **T**ester)*, a CLI tool to simplify and automate integration testing of HTTP APIs by using script files.
+goat *(**Go** **A**PI **T**ester)* is a CLI tool to simplify and automate integration testing of HTTP APIs by using human writable, readable, reusable and committable script files.
 
 ![](.github/media/demo.gif)
 
@@ -10,7 +10,7 @@ use util/login
 
 ### Setup
 
-LOGIN {{.instance}}/api/v1/auth
+POST {{.instance}}/api/v1/auth/login
 
 [Header]
 Content-Type: application/json
@@ -22,7 +22,7 @@ Content-Type: application/json
 }
 
 [Script]
-assert(response.StatusCode == 200, `Status code was ${response.StatusCode}`);
+assert_eq(response.StatusCode, 200, "non-ok status code");
 
 ---
 
@@ -31,7 +31,7 @@ assert(response.StatusCode == 200, `Status code was ${response.StatusCode}`);
 GET {{.instance}}/api/v1/list
 
 [Script]
-assert(response.StatusCode == 200, `Status code was ${response.StatusCode}`);
+assert(response.StatusCode >= 400, `Status code was ${response.StatusCode}`);
 print(response.Body);
 ```
 
@@ -42,11 +42,13 @@ This tool is very much inspired by [Hurl](https://hurl.dev). Please give them a 
 goat has some advantages versus common tools like Postman or Insomnia.
 
 - Write your API tests in easy to read and write, simple text files.
-- Build easy to reproduce end to end tests which you can directly commit with your source code.
+- Build easy to reproduce end-to-end tests which you can directly commit with your source code.
 - Build for being used headlessly in CI/CD systems.
 - Easy to install due to being one single, self contained binary.
 - Goatfiles can be read, written and understood using any type of text editor.
-- High level of flexibility due to the usage of a micro script engine (JavaScript) for assertions. 
+- High level of flexibility due to the usage of a micro script engine (JavaScript) for assertions.
+- Scripts can be imported and executed by other scripts to reduce code duplication.
+- Supports custom HTTP methods, status codes and headers.
 
 ## Getting Started
 
@@ -87,4 +89,4 @@ If you want to contribute to the project, just [create a fork](https://github.co
 © 2023 B12-Touch GmbH
 https://b12-touch.de
 
-Covered by the [BSD 3-Clause License](LICENSE).
+Licenced under the [BSD 3-Clause License](LICENSE).
