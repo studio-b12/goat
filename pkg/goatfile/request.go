@@ -3,13 +3,13 @@ package goatfile
 import (
 	"errors"
 	"fmt"
+	"github.com/studio-b12/goat/pkg/engine"
+	"github.com/studio-b12/goat/pkg/errs"
 	"github.com/studio-b12/goat/pkg/goatfile/ast"
+	"github.com/studio-b12/goat/pkg/util"
 	"io"
 	"net/http"
 	"net/url"
-
-	"github.com/studio-b12/goat/pkg/errs"
-	"github.com/studio-b12/goat/pkg/util"
 )
 
 const conditionOptionName = "condition"
@@ -213,6 +213,41 @@ func (t *Request) SubstitudeWithParams(params any) error {
 	}
 	t.Script = StringContent(scriptStr)
 
+	return nil
+}
+
+// InsertRawDataIntoBody evaluates the raw bytes required for the request
+func (t *Request) InsertRawDataIntoBody(state engine.State) error {
+	body, ok := t.Body.(RawContent)
+	if !ok {
+		return nil
+	}
+	v, ok := state[body.varName]
+	if !ok {
+		return ErrVarNotFound
+	}
+	body.value = v
+	t.Body = body
+	return nil
+}
+
+// InsertRawDataIntoFormData evaluates the raw bytes required for the request
+func (t *Request) InsertRawDataIntoFormData(state engine.State) error {
+	body, ok := t.Body.(FormData)
+	if !ok {
+		return nil
+	}
+	for k, v := range body.fields {
+		if vd, ok := v.(ast.VarDescriptor); ok {
+			v, ok := state[vd.VarName]
+			if !ok {
+				return ErrVarNotFound
+			}
+			body.fields[k] = v
+		}
+	}
+
+	t.Body = body
 	return nil
 }
 

@@ -643,6 +643,9 @@ func (t *Parser) parseRaw() (ast.DataContent, error) {
 	if r == '@' {
 		return t.parseFileDescriptor()
 	}
+	if r == '$' {
+		return t.parseByteDescriptor()
+	}
 
 	t.s.unread()
 
@@ -748,6 +751,10 @@ func (t *Parser) parseValue() (any, []ast.Comment, error) {
 	case tokFILEDESC:
 		v, err := t.parseFileDescriptor()
 		return v, nil, err
+	case tokRAW:
+		v, err := t.parseByteDescriptor()
+		return v, nil, err
+
 	default:
 		return nil, nil, errs.WithSuffix(ErrInvalidToken, "(value)")
 	}
@@ -808,6 +815,29 @@ func (t *Parser) parseFileDescriptor() (ast.DataContent, error) {
 	fd.ContentType = lit
 
 	return fd, nil
+}
+
+func (t *Parser) parseByteDescriptor() (ast.DataContent, error) {
+	tk, varName := t.s.scanStringStopAt(':')
+	if tk != tokSTRING {
+		return ast.NoContent{}, ErrInvalidFileDescriptor
+	}
+
+	rd := ast.VarDescriptor{VarName: varName}
+
+	if t.s.read() != ':' {
+		t.s.unread()
+		return rd, nil
+	}
+
+	tk, lit := t.s.scanString()
+	if tk == tokILLEGAL {
+		return nil, ErrInvalidStringLiteral
+	}
+
+	rd.ContentType = lit
+
+	return tk, nil
 }
 
 func (t *Parser) astPos() ast.Pos {

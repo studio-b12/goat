@@ -418,6 +418,18 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf go
 
 	t.Waiter.Wait()
 
+	err = req.InsertRawDataIntoBody(state)
+	if err != nil {
+		return errs.WithPrefix("failed inserting raw variable in body:",
+			NewParamsParsingError(err))
+	}
+
+	err = req.InsertRawDataIntoFormData(state)
+	if err != nil {
+		return errs.WithPrefix("failed reading raw variable:",
+			NewParamsParsingError(err))
+	}
+
 	httpReq, err := req.ToHttpRequest()
 	if err != nil {
 		return errs.WithPrefix("failed transforming to http request:", err)

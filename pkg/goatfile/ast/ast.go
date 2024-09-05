@@ -136,6 +136,11 @@ type FileDescriptor struct {
 	ContentType string
 }
 
+type VarDescriptor struct {
+	VarName     string
+	ContentType string
+}
+
 type NoContent struct{}
 
 type RequestHead struct {

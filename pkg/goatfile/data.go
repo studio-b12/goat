@@ -14,6 +14,7 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"reflect"
 	"strings"
 )
 
@@ -45,6 +46,11 @@ func DataFromAst(di ast.DataContent, filePath string) (data Data, header http.He
 			}
 		}
 		return fc, header, nil
+	case ast.VarDescriptor:
+		rc := RawContent{
+			varName: d.VarName,
+		}
+		return rc, header, nil
 	case ast.FormData:
 		boundary, err := randomBoundary()
 		if err != nil {
@@ -95,6 +101,28 @@ func (t FileContent) Reader() (r io.Reader, err error) {
 	return r, err
 }
 
+// RawContent can be used for reading raw
+// data.
+type RawContent struct {
+	varName string
+	value   any
+}
+
+func (t RawContent) Reader() (r io.Reader, err error) {
+	rv := reflect.ValueOf(t.value)
+	switch rv.Kind() {
+	case reflect.Slice:
+		if rv.Type().Elem().Kind() == reflect.Uint8 {
+			r = bytes.NewReader(rv.Bytes())
+		} else {
+			r = strings.NewReader(rv.String())
+		}
+	default:
+		r = strings.NewReader(rv.String())
+	}
+	return r, nil
+}
+
 // FormData writes the given key-value pairs into a Multipart Formdata
 // encoded reader stream.
 type FormData struct {
@@ -141,6 +169,25 @@ func (t FormData) Reader() (io.Reader, error) {
 			}
 			defer f.Close()
 			_, err = io.Copy(fw, f)
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
+
+		rv := reflect.ValueOf(v)
+		if rv.Kind() == reflect.Slice && rv.Type().Elem().Kind() == reflect.Uint8 {
+			h := make(textproto.MIMEHeader)
+			h.Set("Content-Disposition",
+				fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
+					quoteEscaper.Replace(k), quoteEscaper.Replace("binary-data")))
+			contentType := http.DetectContentType(rv.Bytes())
+			h.Set("Content-Type", contentType)
+			fw, err := w.CreatePart(h)
+			if err != nil {
+				return nil, err
+			}
+			_, err = fw.Write(rv.Bytes())
 			if err != nil {
 				return nil, err
 			}

@@ -34,6 +34,7 @@ var (
 	ErrSectionDefinedMultiple      = errors.New("the section has been already defined")
 	ErrUnclosedGroup               = errors.New("group has not been closed")
 	ErrMissingGroup                = errors.New("missing group definition")
+	ErrVarNotFound                 = errors.New("variable not found")
 )
 
 // ParseError wraps an inner error with
