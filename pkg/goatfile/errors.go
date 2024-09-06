@@ -35,6 +35,7 @@ var (
 	ErrUnclosedGroup               = errors.New("group has not been closed")
 	ErrMissingGroup                = errors.New("missing group definition")
 	ErrVarNotFound                 = errors.New("variable not found")
+	ErrNotAByteArray               = errors.New("not a byte array")
 )
 
 // ParseError wraps an inner error with

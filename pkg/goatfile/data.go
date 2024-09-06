@@ -46,7 +46,7 @@ func DataFromAst(di ast.DataContent, filePath string) (data Data, header http.He
 			}
 		}
 		return fc, header, nil
-	case ast.VarDescriptor:
+	case ast.RawDescriptor:
 		rc := RawContent{
 			varName: d.VarName,
 		}
@@ -101,8 +101,8 @@ func (t FileContent) Reader() (r io.Reader, err error) {
 	return r, err
 }
 
-// RawContent can be used for reading raw
-// data.
+// RawContent can be used for reading byte
+// array data
 type RawContent struct {
 	varName string
 	value   any
@@ -110,17 +110,11 @@ type RawContent struct {
 
 func (t RawContent) Reader() (r io.Reader, err error) {
 	rv := reflect.ValueOf(t.value)
-	switch rv.Kind() {
-	case reflect.Slice:
-		if rv.Type().Elem().Kind() == reflect.Uint8 {
-			r = bytes.NewReader(rv.Bytes())
-		} else {
-			r = strings.NewReader(rv.String())
-		}
-	default:
-		r = strings.NewReader(rv.String())
+	if rv.Kind() == reflect.Slice && rv.Type().Elem().Kind() == reflect.Uint8 {
+		r = bytes.NewReader(rv.Bytes())
+		return r, nil
 	}
-	return r, nil
+	return nil, fmt.Errorf("variable is not a byte array: %v", t.varName)
 }
 
 // FormData writes the given key-value pairs into a Multipart Formdata

@@ -1,0 +1,14 @@
+POST {{.instance}}/
+
+[PreScript]
+var binaryBody = new Uint8Array(4);
+binaryBody[0] = 0x67;
+binaryBody[1] = 0x6f;
+binaryBody[2] = 0x61;
+binaryBody[3] = 0x74;
+
+[Body]
+$binaryBody
+
+[Script]
+assert_eq(response.Body.body_string, '\x67\x6f\x61\x74');

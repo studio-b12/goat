@@ -1,0 +1,28 @@
+POST {{.instance}}/
+
+[PreScript]
+var binaryBody = new Uint8Array(4);
+
+[FormData]
+file = $binaryBody
+
+[Script]
+info(JSON.stringify(response.Body,null,2))
+const [contentType, boundaryKV] = response.Body.headers["Content-Type"][0]
+    .split(';')
+    .map(v => v.trim());
+assert(contentType, 'multipart/form-data', `Invalid Content-Type header: ${contentType}`);
+const boundary = boundaryKV.split('=')[1];
+const bodyText = response.Body.body_string.replaceAll('\r', '');
+const bodyValues = bodyText
+    .substr(0, bodyText.length - 3)
+    .split(`--${boundary}`)
+    .map(v => v.trim())
+    .filter(v => !!v)
+    .map(v => v.split('\n').map(l => l.trim()).filter(l => !!l));
+{
+    const v = bodyValues.find(v => v[0].includes('name="file"'));
+    assert(v[0] === 'Content-Disposition: form-data; name="file"; filename="binary-data"', `Invalid header: ${v[0]}`);
+    assert(v[1] === 'Content-Type: application/octet-stream', `Invalid content type: ${v[1]}`);
+    assert(v[2] === '\x00\x00\x00\x00', `Invalid value: ${v[2]}`);
+}

@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"reflect"
 )
 
 const conditionOptionName = "condition"
@@ -36,7 +37,8 @@ type Request struct {
 
 var _ Action = (*Request)(nil)
 
-func newRequest() (t Request) {
+func newRequest() (t *Request) {
+	t = new(Request)
 	t.Header = http.Header{}
 	t.Body = NoContent{}
 	t.PreScript = NoContent{}
@@ -44,9 +46,9 @@ func newRequest() (t Request) {
 	return t
 }
 
-func RequestFromAst(req *ast.Request, path string) (t Request, err error) {
+func RequestFromAst(req *ast.Request, path string) (t *Request, err error) {
 	if req == nil {
-		return Request{}, errors.New("request ast is nil")
+		return &Request{}, errors.New("request ast is nil")
 	}
 
 	t = newRequest()
@@ -86,13 +88,13 @@ func RequestFromAst(req *ast.Request, path string) (t Request, err error) {
 	}
 
 	if err != nil {
-		return Request{}, err
+		return &Request{}, err
 	}
 
 	return t, nil
 }
 
-func PartialRequestFromAst(req ast.PartialRequest, path string) (t Request, err error) {
+func PartialRequestFromAst(req ast.PartialRequest, path string) (t *Request, err error) {
 	var fullReq ast.Request
 
 	fullReq.Pos = req.Pos
@@ -101,14 +103,14 @@ func PartialRequestFromAst(req ast.PartialRequest, path string) (t Request, err 
 	return RequestFromAst(&fullReq, path)
 }
 
-func (t Request) Type() ActionType {
+func (t *Request) Type() ActionType {
 	return ActionRequest
 }
 
-// PreSubstitudeWithParams takes the given parameters and replaces placeholders
+// PreSubstituteWithParams takes the given parameters and replaces placeholders
 // within specific parts of the request which shall be executed before the
 // actual request is substituted (like PreScript).
-func (t *Request) PreSubstitudeWithParams(params any) error {
+func (t *Request) PreSubstituteWithParams(params any) error {
 	if t.preParsed {
 		return ErrTemplateAlreadyPreParsed
 	}
@@ -130,10 +132,10 @@ func (t *Request) PreSubstitudeWithParams(params any) error {
 	return nil
 }
 
-// SubstitudeWithParams takes the given parameters
+// SubstituteWithParams takes the given parameters
 // and replaces placeholders within the request
 // with values from the given params.
-func (t *Request) SubstitudeWithParams(params any) error {
+func (t *Request) SubstituteWithParams(params any) error {
 	if t.parsed {
 		return ErrTemplateAlreadyParsed
 	}
@@ -226,7 +228,12 @@ func (t *Request) InsertRawDataIntoBody(state engine.State) error {
 	if !ok {
 		return ErrVarNotFound
 	}
-	body.value = v
+	rv := reflect.ValueOf(v)
+	if rv.Kind() != reflect.Slice || rv.Type().Elem().Kind() != reflect.Uint8 {
+		return errs.WithPrefix(fmt.Sprintf("$%v :", body.varName), ErrNotAByteArray)
+	}
+
+	body.value = rv.Bytes()
 	t.Body = body
 	return nil
 }
@@ -238,10 +245,14 @@ func (t *Request) InsertRawDataIntoFormData(state engine.State) error {
 		return nil
 	}
 	for k, v := range body.fields {
-		if vd, ok := v.(ast.VarDescriptor); ok {
+		if vd, ok := v.(ast.RawDescriptor); ok {
 			v, ok := state[vd.VarName]
 			if !ok {
 				return ErrVarNotFound
+			}
+			rv := reflect.ValueOf(v)
+			if rv.Kind() != reflect.Slice || rv.Type().Elem().Kind() != reflect.Uint8 {
+				return errs.WithPrefix(fmt.Sprintf("$%v :", vd.VarName), ErrNotAByteArray)
 			}
 			body.fields[k] = v
 		}
@@ -253,7 +264,7 @@ func (t *Request) InsertRawDataIntoFormData(state engine.State) error {
 
 // ToHttpRequest returns a *http.Request built from the
 // given Reuqest.
-func (t Request) ToHttpRequest() (*http.Request, error) {
+func (t *Request) ToHttpRequest() (*http.Request, error) {
 	uri, err := url.Parse(t.URI)
 	if err != nil {
 		return nil, errs.WithPrefix("failed parsing URI:", err)
@@ -334,7 +345,7 @@ func (t *Request) Merge(with *Request) {
 	}
 }
 
-func (t Request) String() string {
+func (t *Request) String() string {
 	return fmt.Sprintf("%s %s", t.Method, t.URI)
 }
 
