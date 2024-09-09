@@ -246,15 +246,16 @@ func (t *Request) InsertRawDataIntoFormData(state engine.State) error {
 	}
 	for k, v := range body.fields {
 		if vd, ok := v.(ast.RawDescriptor); ok {
-			v, ok := state[vd.VarName]
+			valeFromState, ok := state[vd.VarName]
 			if !ok {
 				return ErrVarNotFound
 			}
-			rv := reflect.ValueOf(v)
+			rv := reflect.ValueOf(valeFromState)
 			if rv.Kind() != reflect.Slice || rv.Type().Elem().Kind() != reflect.Uint8 {
 				return errs.WithPrefix(fmt.Sprintf("$%v :", vd.VarName), ErrNotAByteArray)
 			}
-			body.fields[k] = v
+			vd.Data = rv.Bytes()
+			body.fields[k] = vd
 		}
 	}
 

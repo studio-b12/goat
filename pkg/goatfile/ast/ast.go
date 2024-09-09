@@ -137,7 +137,9 @@ type FileDescriptor struct {
 }
 
 type RawDescriptor struct {
-	VarName string
+	VarName     string
+	ContentType string
+	Data        []byte
 }
 
 type NoContent struct{}

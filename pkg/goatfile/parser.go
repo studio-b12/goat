@@ -818,11 +818,23 @@ func (t *Parser) parseFileDescriptor() (ast.DataContent, error) {
 }
 
 func (t *Parser) parseRawDescriptor() (ast.DataContent, error) {
-	tk, varName := t.s.scanString()
+	tk, varName := t.s.scanStringStopAt(':')
 	if tk != tokSTRING {
 		return ast.NoContent{}, ErrInvalidFileDescriptor
 	}
 	rd := ast.RawDescriptor{VarName: varName}
+
+	if t.s.read() != ':' {
+		t.s.unread()
+		return rd, nil
+	}
+
+	tk, lit := t.s.scanString()
+	if tk == tokILLEGAL {
+		return nil, ErrInvalidStringLiteral
+	}
+
+	rd.ContentType = lit
 
 	return rd, nil
 }

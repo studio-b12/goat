@@ -50,6 +50,11 @@ func DataFromAst(di ast.DataContent, filePath string) (data Data, header http.He
 		rc := RawContent{
 			varName: d.VarName,
 		}
+		if d.ContentType != "" {
+			header = http.Header{
+				"Content-Type": []string{d.ContentType},
+			}
+		}
 		return rc, header, nil
 	case ast.FormData:
 		boundary, err := randomBoundary()
@@ -169,19 +174,20 @@ func (t FormData) Reader() (io.Reader, error) {
 			continue
 		}
 
-		rv := reflect.ValueOf(v)
-		if rv.Kind() == reflect.Slice && rv.Type().Elem().Kind() == reflect.Uint8 {
+		if rd, ok := v.(ast.RawDescriptor); ok {
 			h := make(textproto.MIMEHeader)
 			h.Set("Content-Disposition",
 				fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
 					quoteEscaper.Replace(k), quoteEscaper.Replace("binary-data")))
-			contentType := http.DetectContentType(rv.Bytes())
-			h.Set("Content-Type", contentType)
+			if rd.ContentType == "" {
+				rd.ContentType = http.DetectContentType(rd.Data)
+			}
+			h.Set("Content-Type", rd.ContentType)
 			fw, err := w.CreatePart(h)
 			if err != nil {
 				return nil, err
 			}
-			_, err = fw.Write(rv.Bytes())
+			_, err = fw.Write(rd.Data)
 			if err != nil {
 				return nil, err
 			}
