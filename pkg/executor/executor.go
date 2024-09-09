@@ -127,7 +127,7 @@ func (t *Executor) executeGoatfile(
 						continue
 					}
 
-					if !AbortOptionsFromMap(act.(goatfile.Request).Options).AlwaysAbort {
+					if !AbortOptionsFromMap(act.(*goatfile.Request).Options).AlwaysAbort {
 						continue
 					}
 				} else {
@@ -335,9 +335,9 @@ func (t *Executor) executeAction(
 
 	case goatfile.ActionRequest:
 		res.Inc()
-		req := act.(goatfile.Request)
+		req := act.(*goatfile.Request)
 		log.Trace().Fields("options", req.Options).Msg("Request Options")
-		err = t.executeRequest(eng, req, gf)
+		err = t.executeRequest(eng, *req, gf)
 		if err != nil {
 			res.IncFailed()
 			err = errs.WithSuffix(err, fmt.Sprintf("(%s:%d)", req.Path, req.PosLine))
@@ -378,7 +378,7 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf go
 
 	state := eng.State()
 
-	err = req.PreSubstitudeWithParams(state)
+	err = req.PreSubstituteWithParams(state)
 	if err != nil {
 		return errs.WithPrefix("failed pre-substituting request with parameters:", err)
 	}
@@ -396,7 +396,7 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf go
 		state = eng.State()
 	}
 
-	err = req.SubstitudeWithParams(state)
+	err = req.SubstituteWithParams(state)
 	if err != nil {
 		return errs.WithPrefix("failed substituting request with parameters:",
 			NewParamsParsingError(err))
@@ -417,6 +417,18 @@ func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf go
 	}
 
 	t.Waiter.Wait()
+
+	err = req.InsertRawDataIntoBody(state)
+	if err != nil {
+		return errs.WithPrefix("failed inserting raw variable in body:",
+			NewParamsParsingError(err))
+	}
+
+	err = req.InsertRawDataIntoFormData(state)
+	if err != nil {
+		return errs.WithPrefix("failed reading raw variable:",
+			NewParamsParsingError(err))
+	}
 
 	httpReq, err := req.ToHttpRequest()
 	if err != nil {

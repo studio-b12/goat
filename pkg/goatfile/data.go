@@ -14,6 +14,7 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"reflect"
 	"strings"
 )
 
@@ -45,6 +46,16 @@ func DataFromAst(di ast.DataContent, filePath string) (data Data, header http.He
 			}
 		}
 		return fc, header, nil
+	case ast.RawDescriptor:
+		rc := RawContent{
+			varName: d.VarName,
+		}
+		if d.ContentType != "" {
+			header = http.Header{
+				"Content-Type": []string{d.ContentType},
+			}
+		}
+		return rc, header, nil
 	case ast.FormData:
 		boundary, err := randomBoundary()
 		if err != nil {
@@ -95,6 +106,22 @@ func (t FileContent) Reader() (r io.Reader, err error) {
 	return r, err
 }
 
+// RawContent can be used for reading byte
+// array data
+type RawContent struct {
+	varName string
+	value   any
+}
+
+func (t RawContent) Reader() (r io.Reader, err error) {
+	rv := reflect.ValueOf(t.value)
+	if rv.Kind() == reflect.Slice && rv.Type().Elem().Kind() == reflect.Uint8 {
+		r = bytes.NewReader(rv.Bytes())
+		return r, nil
+	}
+	return nil, fmt.Errorf("variable is not a byte array: %v", t.varName)
+}
+
 // FormData writes the given key-value pairs into a Multipart Formdata
 // encoded reader stream.
 type FormData struct {
@@ -141,6 +168,26 @@ func (t FormData) Reader() (io.Reader, error) {
 			}
 			defer f.Close()
 			_, err = io.Copy(fw, f)
+			if err != nil {
+				return nil, err
+			}
+			continue
+		}
+
+		if rd, ok := v.(ast.RawDescriptor); ok {
+			h := make(textproto.MIMEHeader)
+			h.Set("Content-Disposition",
+				fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
+					quoteEscaper.Replace(k), quoteEscaper.Replace("binary-data")))
+			if rd.ContentType == "" {
+				rd.ContentType = http.DetectContentType(rd.Data)
+			}
+			h.Set("Content-Type", rd.ContentType)
+			fw, err := w.CreatePart(h)
+			if err != nil {
+				return nil, err
+			}
+			_, err = fw.Write(rd.Data)
 			if err != nil {
 				return nil, err
 			}

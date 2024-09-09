@@ -1,0 +1,7 @@
+POST {{.instance}}/
+
+[PreScript]
+var text = "test text"
+
+[FormData]
+file = $text

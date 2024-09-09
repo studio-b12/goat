@@ -1,0 +1,7 @@
+POST {{.instance}}/
+
+[PreScript]
+var number = 123.5
+
+[Body]
+$number

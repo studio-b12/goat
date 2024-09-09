@@ -15,7 +15,7 @@
 > *BlockDelimiter* :  
 > `` ``` ``
 
-## Example
+## Examples
 
 ````toml
 [Body]
@@ -30,6 +30,16 @@
   }
 }
 ```
+````
+
+````toml
+[Body]
+@path/to/some/file
+````
+
+````toml
+[Body]
+$someVar
 ````
 
 ## Explanation
@@ -52,4 +62,23 @@ Example:
   }
 }
 ```
+````
+
+### File Descriptor
+With the `@` prefix in front of a file path, it is possible to send a file as a request body.
+
+Example:
+````toml
+[Body]
+@path/to/some/file
+````
+
+### Raw Descriptor
+With the `$` prefix in front of a variable name it is possible to pass raw byte arrays to the request body. 
+This can e.g. be used to send a `response.BodyRaw` to another endpoint.
+
+Example:
+````toml
+[Body]
+$someVar
 ````
