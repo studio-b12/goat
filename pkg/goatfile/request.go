@@ -200,6 +200,12 @@ func (t *Request) SubstituteWithParams(params any) error {
 			return err
 		}
 		t.Body = body
+	case FormData:
+		err = ApplyTemplateToMap(body.fields, params)
+		if err != nil {
+			return err
+		}
+		t.Body = body
 	}
 
 	// Substitute Script

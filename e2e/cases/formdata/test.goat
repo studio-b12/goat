@@ -6,13 +6,13 @@ someInt = 42
 file = @test-file.txt:text/plain
 
 [Script]
-const [contentType, boundaryKV] = response.Body.headers["Content-Type"][0]
+var [contentType, boundaryKV] = response.Body.headers["Content-Type"][0]
     .split(';')
     .map(v => v.trim());
 assert(contentType, 'multipart/form-data', `Invalid Content-Type header: ${contentType}`);
-const boundary = boundaryKV.split('=')[1];
-const bodyText = response.Body.body_string.replaceAll('\r', '');
-const bodyValues = bodyText
+var boundary = boundaryKV.split('=')[1];
+var bodyText = response.Body.body_string.replaceAll('\r', '');
+var bodyValues = bodyText
     .substr(0, bodyText.length - 3)
     .split(`--${boundary}`)
     .map(v => v.trim())
@@ -33,4 +33,41 @@ const bodyValues = bodyText
     assert(v[0] === 'Content-Disposition: form-data; name="file"; filename="test-file.txt"', `Invalid header: ${v[0]}`);
     assert(v[1] === 'Content-Type: text/plain', `Invalid content type: ${v[1]}`);
     assert(v[2] === 'This is a test file!', `Invalid value: ${v[2]}`);
+}
+
+
+---
+// Paramter Substitution
+POST {{.instance}}/
+
+[PreScript]
+var someOtherString = "some other string";
+var someOtherInt = 43;
+
+[FormData]
+someOtherString = "{{.someOtherString}}"
+someOtherInt = {{.someOtherInt}}
+
+[Script]
+var [contentType, boundaryKV] = response.Body.headers["Content-Type"][0]
+    .split(';')
+    .map(v => v.trim());
+assert(contentType, 'multipart/form-data', `Invalid Content-Type header: ${contentType}`);
+var boundary = boundaryKV.split('=')[1];
+var bodyText = response.Body.body_string.replaceAll('\r', '');
+var bodyValues = bodyText
+    .substr(0, bodyText.length - 3)
+    .split(`--${boundary}`)
+    .map(v => v.trim())
+    .filter(v => !!v)
+    .map(v => v.split('\n').map(l => l.trim()).filter(l => !!l));
+{
+    const v = bodyValues.find(v => v[0].includes('name="someOtherString"'));
+    assert(v[0] === 'Content-Disposition: form-data; name="someOtherString"', `Invalid header: ${v[0]}`);
+    assert(v[1] === 'some other string', `[0] Invalid value: ${v[1]}`);
+}
+{
+    const v = bodyValues.find(v => v[0].includes('name="someOtherInt"'));
+    assert(v[0] === 'Content-Disposition: form-data; name="someOtherInt"', `Invalid header: ${v[0]}`);
+    assert(v[1] === '43', `Invalid value: ${v[1]}`);
 }
