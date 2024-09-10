@@ -262,7 +262,7 @@ func (t *Executor) executeFromPathes(pathes []string, initialParams engine.State
 	}
 
 	if mErr.HasSome() {
-		err = BatchResultError{
+		err = &BatchResultError{
 			Inner: mErr,
 			Total: len(goatfiles),
 		}

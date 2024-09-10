@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"crypto/tls"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/studio-b12/goat/pkg/errs"
 	"io/fs"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -41,10 +43,11 @@ type Args struct {
 	NoColor       bool          `arg:"--no-color,env:GOATARG_NOCOLOR" help:"Supress colored log output"`
 	Params        []string      `arg:"-p,--params,separate,env:GOATARG_PARAMS" help:"Params file location(s)"`
 	Profile       []string      `arg:"-P,--profile,separate,env:GOATARG_PROFILE" help:"Select a profile from your home config"`
-	ReducedErrors bool          `arg:"--reduced-errors,-R,env:GOATARG_REDUCEDERRORS" help:"Hide template errors in teardown steps"`
+	ReducedErrors bool          `arg:"-R,--reduced-errors,env:GOATARG_REDUCEDERRORS" help:"Hide template errors in teardown steps"`
 	Secure        bool          `arg:"--secure,env:GOATARG_SECURE" help:"Validate TLS certificates"`
 	Silent        bool          `arg:"-s,--silent,env:GOATARG_SILENT" help:"Disables all logging output"`
 	Skip          []string      `arg:"--skip,separate,env:GOATARG_SKIP" help:"Section(s) to be skipped during execution"`
+	RetryFailed   bool          `arg:"--retry-failed,env:GOATARG_RETRYFAILED" help:"Retry files which have failed in the previous run"`
 }
 
 func main() {
@@ -76,7 +79,24 @@ func main() {
 		return
 	}
 
-	if len(args.Goatfile) == 0 {
+	goatfiles := args.Goatfile
+
+	if args.RetryFailed {
+		failed, err := loadLastFailedFiles()
+		if err != nil {
+			log.Fatal().Err(err).Msg("Failed loading last failed files")
+			return
+		}
+		if len(failed) == 0 {
+			log.Fatal().Msg("No failed files have been recorded in previous runs")
+			return
+		}
+
+		goatfiles = failed
+		spew.Dump(goatfiles)
+	}
+
+	if len(goatfiles) == 0 {
 		argParser.Fail("Goatfile must be specified.")
 		return
 	}
@@ -125,7 +145,7 @@ func main() {
 
 	log.Debug().Msgf("Initial Params\n%s", state)
 
-	res, err := exec.Execute(args.Goatfile, state, !args.ReducedErrors)
+	res, err := exec.Execute(goatfiles, state, !args.ReducedErrors)
 	res.Log()
 	if err != nil {
 		if args.ReducedErrors {
@@ -134,7 +154,11 @@ func main() {
 
 		entry := log.Fatal().Err(err)
 
-		if batchErr, ok := err.(executor.BatchResultError); ok {
+		if batchErr, ok := errs.As[*executor.BatchResultError](err); ok {
+			if sErr := storeLastFailedFiles(batchErr.FailedFiles()); err != nil {
+				log.Error().Err(sErr).Msg("failed storing latest failed files")
+			}
+
 			coloredMessages := batchErr.ErrorMessages()
 			for i, p := range coloredMessages {
 				coloredMessages[i] = clr.Print(clr.Format(p, clr.ColorFGRed))
@@ -227,10 +251,46 @@ func filterTeardownParamErrors(err error) error {
 			newErrors = append(newErrors, e)
 		}
 		return newErrors
-	case executor.BatchResultError:
+	case *executor.BatchResultError:
 		tErr.Inner = filterTeardownParamErrors(tErr.Inner).(errs.Errors)
 		return tErr
 	default:
 		return err
 	}
+}
+
+const lastFailedRunFileName = "goat_last_failed_run"
+
+func storeLastFailedFiles(paths []string) error {
+	failedRunPath := path.Join(os.TempDir(), lastFailedRunFileName)
+	f, err := os.Create(failedRunPath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = f.WriteString(strings.Join(paths, "\n"))
+	return err
+}
+
+func loadLastFailedFiles() (paths []string, err error) {
+	failedRunPath := path.Join(os.TempDir(), lastFailedRunFileName)
+	f, err := os.Open(failedRunPath)
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if err = scanner.Err(); err != nil {
+			return nil, err
+		}
+		paths = append(paths, scanner.Text())
+	}
+
+	return paths, nil
 }

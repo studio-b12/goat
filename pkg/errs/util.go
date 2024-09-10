@@ -22,3 +22,15 @@ func IsOfType[T any](err error) bool {
 
 	return false
 }
+
+// As applies errors.As() on the given err
+// using the given type T as target for the
+// unwrapping.
+//
+// Refer to the documentation of errors.As()
+// for more details:
+// https://pkg.go.dev/errors#As
+func As[T error](err error) (t T, ok bool) {
+	ok = errors.As(err, &t)
+	return t, ok
+}
