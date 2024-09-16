@@ -1099,7 +1099,7 @@ token = "foobarbaz"
 <p><em>BlockDelimiter</em> :<br />
 <code>```</code></p>
 </blockquote>
-<h2 id="example-12"><a class="header" href="#example-12">Example</a></h2>
+<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
 <pre><code class="language-toml">[Body]
 ```
 {
@@ -1112,6 +1112,12 @@ token = "foobarbaz"
   }
 }
 ```
+</code></pre>
+<pre><code class="language-toml">[Body]
+@path/to/some/file
+</code></pre>
+<pre><code class="language-toml">[Body]
+$someVar
 </code></pre>
 <h2 id="explanation-12"><a class="header" href="#explanation-12">Explanation</a></h2>
 <p>Define the data to be transmitted with the request.</p>
@@ -1130,6 +1136,19 @@ token = "foobarbaz"
 }
 ```
 </code></pre>
+<h3 id="file-descriptor"><a class="header" href="#file-descriptor">File Descriptor</a></h3>
+<p>With the <code>@</code> prefix in front of a file path, it is possible to send a file as a request body.</p>
+<p>Example:</p>
+<pre><code class="language-toml">[Body]
+@path/to/some/file
+</code></pre>
+<h3 id="raw-descriptor"><a class="header" href="#raw-descriptor">Raw Descriptor</a></h3>
+<p>With the <code>$</code> prefix in front of a variable name it is possible to pass raw byte arrays to the request body.
+This can e.g. be used to send a <code>response.BodyRaw</code> to another endpoint.</p>
+<p>Example:</p>
+<pre><code class="language-toml">[Body]
+$someVar
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="formdata"><a class="header" href="#formdata">FormData</a></h1>
 <blockquote>
 <p><em>FormData</em> :<br />
@@ -1137,17 +1156,20 @@ token = "foobarbaz"
 <p><em>FormDataContent</em> :<br />
 <em>TomlKeyValues</em></p>
 </blockquote>
-<h2 id="example-13"><a class="header" href="#example-13">Example</a></h2>
+<h2 id="example-12"><a class="header" href="#example-12">Example</a></h2>
 <pre><code class="language-toml">[FormData]
 someString = "some string"
 someInt = 42
 someFile = @files/goat.png:image/png
+someRaw = $someVar:application/zip
 </code></pre>
 <h2 id="explanation-13"><a class="header" href="#explanation-13">Explanation</a></h2>
 <p>Defines entries in a key-value pair format which will be sent in the request body as <code>multipart/form-data</code> request.
 The format of the contents of this block is <a href="https://toml.io/"><code>TOML</code></a>.</p>
 <p>The file's content type can be specified after the file descriptor, separated by a colon (<code>:</code>). Otherwise,
 the content type will default to <code>application/octet-stream</code>.</p>
+<p>The <code>$</code> sign can be used in <code>FormData</code> values to directly pass byte array variables. This can e.g. be used when a
+previous <code>response.BodyRaw</code> should be send to another endpoint as a <code>FormData</code> request.</p>
 <blockquote>
 <p>The example from above results in the following body content.</p>
 <pre><code>--e8b9253313450dbcf0d09df1a0f3ff36dd00e888339415a239ce167f279c
@@ -1163,6 +1185,11 @@ Content-Type: image/png
 Content-Disposition: form-data; name="someString"
 
 some string
+--e8b9253313450dbcf0d09df1a0f3ff36dd00e888339415a239ce167f279c--
+Content-Disposition: form-data; name="someRaw" ; filename="binary-data"
+Content-Type: application/zip
+
+&lt;raw byte data&gt;
 --e8b9253313450dbcf0d09df1a0f3ff36dd00e888339415a239ce167f279c--
 </code></pre>
 </blockquote>
@@ -1180,7 +1207,7 @@ some string
 <p><em>BlockDelimiter</em> :<br />
 <code>```</code></p>
 </blockquote>
-<h2 id="example-14"><a class="header" href="#example-14">Example</a></h2>
+<h2 id="example-13"><a class="header" href="#example-13">Example</a></h2>
 <pre><code class="language-toml">[PreScript]
 ```
 var fileName = requestedFile.Metadata.Name;
@@ -1220,7 +1247,7 @@ var userid = user.id;
 <p><em>BlockDelimiter</em> :<br />
 <code>```</code></p>
 </blockquote>
-<h2 id="example-15"><a class="header" href="#example-15">Example</a></h2>
+<h2 id="example-14"><a class="header" href="#example-14">Example</a></h2>
 <pre><code class="language-toml">[Script]
 ```
 assert(response.StatusCode === 200, `Response status code was ${response.StatusCode}`);

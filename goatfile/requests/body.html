@@ -186,7 +186,7 @@
 <p><em>BlockDelimiter</em> :<br />
 <code>```</code></p>
 </blockquote>
-<h2 id="example"><a class="header" href="#example">Example</a></h2>
+<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
 <pre><code class="language-toml">[Body]
 ```
 {
@@ -199,6 +199,12 @@
   }
 }
 ```
+</code></pre>
+<pre><code class="language-toml">[Body]
+@path/to/some/file
+</code></pre>
+<pre><code class="language-toml">[Body]
+$someVar
 </code></pre>
 <h2 id="explanation"><a class="header" href="#explanation">Explanation</a></h2>
 <p>Define the data to be transmitted with the request.</p>
@@ -216,6 +222,19 @@
   }
 }
 ```
+</code></pre>
+<h3 id="file-descriptor"><a class="header" href="#file-descriptor">File Descriptor</a></h3>
+<p>With the <code>@</code> prefix in front of a file path, it is possible to send a file as a request body.</p>
+<p>Example:</p>
+<pre><code class="language-toml">[Body]
+@path/to/some/file
+</code></pre>
+<h3 id="raw-descriptor"><a class="header" href="#raw-descriptor">Raw Descriptor</a></h3>
+<p>With the <code>$</code> prefix in front of a variable name it is possible to pass raw byte arrays to the request body.
+This can e.g. be used to send a <code>response.BodyRaw</code> to another endpoint.</p>
+<p>Example:</p>
+<pre><code class="language-toml">[Body]
+$someVar
 </code></pre>
 
                     </main>

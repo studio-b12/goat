@@ -185,12 +185,15 @@
 someString = "some string"
 someInt = 42
 someFile = @files/goat.png:image/png
+someRaw = $someVar:application/zip
 </code></pre>
 <h2 id="explanation"><a class="header" href="#explanation">Explanation</a></h2>
 <p>Defines entries in a key-value pair format which will be sent in the request body as <code>multipart/form-data</code> request.
 The format of the contents of this block is <a href="https://toml.io/"><code>TOML</code></a>.</p>
 <p>The file's content type can be specified after the file descriptor, separated by a colon (<code>:</code>). Otherwise,
 the content type will default to <code>application/octet-stream</code>.</p>
+<p>The <code>$</code> sign can be used in <code>FormData</code> values to directly pass byte array variables. This can e.g. be used when a
+previous <code>response.BodyRaw</code> should be send to another endpoint as a <code>FormData</code> request.</p>
 <blockquote>
 <p>The example from above results in the following body content.</p>
 <pre><code>--e8b9253313450dbcf0d09df1a0f3ff36dd00e888339415a239ce167f279c
@@ -206,6 +209,11 @@ Content-Type: image/png
 Content-Disposition: form-data; name="someString"
 
 some string
+--e8b9253313450dbcf0d09df1a0f3ff36dd00e888339415a239ce167f279c--
+Content-Disposition: form-data; name="someRaw" ; filename="binary-data"
+Content-Type: application/zip
+
+&lt;raw byte data&gt;
 --e8b9253313450dbcf0d09df1a0f3ff36dd00e888339415a239ce167f279c--
 </code></pre>
 </blockquote>
