@@ -11,11 +11,11 @@ type BatchExecutionError struct {
 	Path string
 }
 
-func wrapBatchExecutionError(err error, path string) BatchExecutionError {
+func wrapBatchExecutionError(err error, path string) *BatchExecutionError {
 	var batchErr BatchExecutionError
 	batchErr.Inner = err
 	batchErr.Path = path
-	return batchErr
+	return &batchErr
 }
 
 // BatchResultError holds and array of errors
@@ -25,21 +25,32 @@ type BatchResultError struct {
 	Total int
 }
 
-func (t BatchResultError) Error() string {
+func (t *BatchResultError) Error() string {
 	return fmt.Sprintf("%02d of %02d batches failed", len(t.Inner), t.Total)
 }
 
-func (t BatchResultError) Unwrap() error {
+func (t *BatchResultError) Unwrap() error {
 	return t.Inner.Condense()
+}
+
+// FailedFiles returns the list of files that have failed.
+func (t *BatchResultError) FailedFiles() (files []string) {
+	files = make([]string, 0, len(t.Inner))
+	for _, err := range t.Inner {
+		if batchErr, ok := errs.As[*BatchExecutionError](err); ok {
+			files = append(files, batchErr.Path)
+		}
+	}
+	return files
 }
 
 // ErrorMessages returns a list of the inner errors
 // as strings assambled from the path and error
 // message.
-func (t BatchResultError) ErrorMessages() []string {
+func (t *BatchResultError) ErrorMessages() []string {
 	errMsgs := make([]string, 0, len(t.Inner))
 	for _, err := range t.Inner {
-		if batchErr, ok := err.(BatchExecutionError); ok {
+		if batchErr, ok := errs.As[*BatchExecutionError](err); ok {
 			errMsgs = append(errMsgs, fmt.Sprintf("%s: %s", batchErr.Path, batchErr.Error()))
 		}
 	}

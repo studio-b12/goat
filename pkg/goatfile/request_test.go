@@ -77,7 +77,7 @@ func TestToHttpRequest(t *testing.T) {
 }
 
 func TestPreSubstituteWithParams(t *testing.T) {
-	getReq := func() Request {
+	getReq := func() *Request {
 		r := newRequest()
 		r.URI = "{{.instance}}/api/v1/login"
 		r.Header.Set("Content-Type", "{{.contentType}}")
@@ -106,7 +106,7 @@ func TestPreSubstituteWithParams(t *testing.T) {
 		}
 
 		r := getReq()
-		err := r.PreSubstitudeWithParams(params)
+		err := r.PreSubstituteWithParams(params)
 		assert.Nil(t, err, err)
 
 		assert.Equal(t,
@@ -137,7 +137,7 @@ func TestPreSubstituteWithParams(t *testing.T) {
 }
 
 func TestSubstituteWithParams(t *testing.T) {
-	getReq := func() Request {
+	getReq := func() *Request {
 		r := newRequest()
 		r.URI = "{{.instance}}/api/v1/login"
 		r.Header.Set("Content-Type", "{{.contentType}}")
@@ -166,7 +166,7 @@ func TestSubstituteWithParams(t *testing.T) {
 		}
 
 		r := getReq()
-		err := r.SubstitudeWithParams(params)
+		err := r.SubstituteWithParams(params)
 		assert.Nil(t, err, err)
 
 		assert.Equal(t,
@@ -206,7 +206,7 @@ func TestMerge_request(t *testing.T) {
 		req.Header.Add("bazz", "fuzz")
 		req.Header.Add("hello", "moon")
 
-		req.Merge(&def)
+		req.Merge(def)
 
 		assert.Equal(t, "bar",
 			req.Header.Get("foo"))
@@ -227,7 +227,7 @@ func TestMerge_request(t *testing.T) {
 		req.QueryParams["bazz"] = "fuzz"
 		req.QueryParams["hello"] = "moon"
 
-		req.Merge(&def)
+		req.Merge(def)
 
 		assert.Equal(t, "bar",
 			req.QueryParams["foo"])
@@ -248,7 +248,7 @@ func TestMerge_request(t *testing.T) {
 		req.Options["bazz"] = "fuzz"
 		req.Options["hello"] = "moon"
 
-		req.Merge(&def)
+		req.Merge(def)
 
 		assert.Equal(t, "bar",
 			req.Options["foo"])
@@ -262,25 +262,25 @@ func TestMerge_request(t *testing.T) {
 		def := newRequest()
 		def.Body = StringContent("foo bar")
 		req := newRequest()
-		req.Merge(&def)
+		req.Merge(def)
 		assert.Equal(t, StringContent("foo bar"), req.Body)
 
 		def = newRequest()
 		req = newRequest()
 		req.Body = StringContent("foo bar")
-		req.Merge(&def)
+		req.Merge(def)
 		assert.Equal(t, StringContent("foo bar"), req.Body)
 
 		def = newRequest()
 		def.Body = StringContent("hello world")
 		req = newRequest()
 		req.Body = StringContent("foo bar")
-		req.Merge(&def)
+		req.Merge(def)
 		assert.Equal(t, StringContent("foo bar"), req.Body)
 
 		def = newRequest()
 		req = newRequest()
-		req.Merge(&def)
+		req.Merge(def)
 		assert.Equal(t, NoContent{}, req.Body)
 	})
 
@@ -288,25 +288,25 @@ func TestMerge_request(t *testing.T) {
 		def := newRequest()
 		def.PreScript = StringContent("foo bar")
 		req := newRequest()
-		req.Merge(&def)
+		req.Merge(def)
 		assert.Equal(t, StringContent("foo bar"), req.PreScript)
 
 		def = newRequest()
 		req = newRequest()
 		req.PreScript = StringContent("foo bar")
-		req.Merge(&def)
+		req.Merge(def)
 		assert.Equal(t, StringContent("foo bar"), req.PreScript)
 
 		def = newRequest()
 		def.PreScript = StringContent("hello world")
 		req = newRequest()
 		req.PreScript = StringContent("foo bar")
-		req.Merge(&def)
+		req.Merge(def)
 		assert.Equal(t, StringContent("foo bar"), req.PreScript)
 
 		def = newRequest()
 		req = newRequest()
-		req.Merge(&def)
+		req.Merge(def)
 		assert.Equal(t, NoContent{}, req.PreScript)
 	})
 
@@ -314,25 +314,25 @@ func TestMerge_request(t *testing.T) {
 		def := newRequest()
 		def.Script = StringContent("foo bar")
 		req := newRequest()
-		req.Merge(&def)
+		req.Merge(def)
 		assert.Equal(t, StringContent("foo bar"), req.Script)
 
 		def = newRequest()
 		req = newRequest()
 		req.Script = StringContent("foo bar")
-		req.Merge(&def)
+		req.Merge(def)
 		assert.Equal(t, StringContent("foo bar"), req.Script)
 
 		def = newRequest()
 		def.Script = StringContent("hello world")
 		req = newRequest()
 		req.Script = StringContent("foo bar")
-		req.Merge(&def)
+		req.Merge(def)
 		assert.Equal(t, StringContent("foo bar"), req.Script)
 
 		def = newRequest()
 		req = newRequest()
-		req.Merge(&def)
+		req.Merge(def)
 		assert.Equal(t, NoContent{}, req.Script)
 	})
 }

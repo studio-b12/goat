@@ -34,6 +34,7 @@ const (
 	tokCOMMA
 	tokASSIGNMENT
 	tokFILEDESC
+	tokRAW
 	tokGROUPSTART
 	tokGROUPEND
 
@@ -143,6 +144,8 @@ func (t *scanner) scan() (tk token, lit string) {
 		return tokASSIGNMENT, ""
 	case '@':
 		return tokFILEDESC, ""
+	case '$':
+		return tokRAW, ""
 	case '\n':
 		return tokLF, ""
 	case eof:

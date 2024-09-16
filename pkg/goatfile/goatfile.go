@@ -80,9 +80,9 @@ func FromAst(astGf *ast.Goatfile) (gf Goatfile, err error) {
 				return Goatfile{}, err
 			}
 			if gf.Defaults == nil {
-				gf.Defaults = &defReq
+				gf.Defaults = defReq
 			} else {
-				gf.Defaults.Merge(&defReq)
+				gf.Defaults.Merge(defReq)
 			}
 		case ast.SectionSetup:
 			for _, act := range s.Actions {
