@@ -2,14 +2,12 @@
 
 # New Features
 
-- Added a new request block `[FormData]`, which enables to specify `multipart/form-data` request payloads. [Here](https://studio-b12.github.io/goat/goatfile/requests/formdata.html) you can read the documentation. [#55]
+- Added raw data identifier `$` to directly use raw data from a response as request body. See the example in the
+  documentation for more information. [#66, #67]
 
-- Added a new request option [`followredirects`](https://studio-b12.github.io/goat/goatfile/requests/options.html#followredirects). This is `true` by default, but can be set to `false` if redirects should not be followed transparently. [#61]
+- Added a new flag `--retry-failed` (or `-R` for short). When a batch execution fails, failed files are now saved to a
+  temporary file. After that, goat can be executed again with only the flag which will re-run only the failed files.
 
-- Added a new script builtin [`assert_eq`](https://studio-b12.github.io/goat/scripting/builtins.html#assert_eq), where you can pass two values which are compared and output for better error clarification.
+<!-- # Minor Changes and Bug Fixes -->
 
-- Added a new script builtin [`jq`](https://studio-b12.github.io/goat/scripting/builtins.html#jq), to perform JQ commands on any object in script blocks.
-
-# Minor Changes and Bug Fixes
-
-- Fixed an issue when parsing file descriptors on Windows systems.
+<!-- - Fixed an issue when parsing file descriptors on Windows systems. -->
