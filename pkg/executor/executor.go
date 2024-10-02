@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -26,6 +27,8 @@ type Executor struct {
 	engineMaker func() engine.Engine
 	req         requester.Requester
 
+	ctx context.Context
+
 	Dry     bool
 	NoAbort bool
 	Skip    []string
@@ -37,9 +40,15 @@ type Executor struct {
 // of Engine for each batch execution. Also, a Requester
 // implementation is passed which is used to perform the
 // requests.
-func New(engineMaker func() engine.Engine, req requester.Requester) *Executor {
+//
+// The passed context ctx can cancel a stack execution when
+// the context is done. All subsequent teardown steps will
+// be executed afterward and are not affected by the context
+// state.
+func New(ctx context.Context, engineMaker func() engine.Engine, req requester.Requester) *Executor {
 	var t Executor
 
+	t.ctx = ctx
 	t.engineMaker = engineMaker
 	t.req = req
 	t.Waiter = advancer.None{}
@@ -152,21 +161,26 @@ func (t *Executor) executeGoatfile(
 			printSeparator("SETUP")
 		}
 		for _, act := range gf.Setup {
-			sectRes, err := t.executeAction(log, eng, act, gf, showTeardownParamErrors)
-			res.Setup.Merge(sectRes)
-			if err != nil {
-				if act.Type() == goatfile.ActionRequest {
-					log.Error().Err(err).Field("req", act).Msg("Setup step failed")
-					if errs.IsOfType[NoAbortError](err) {
-						errsNoAbort = errsNoAbort.Append(errors.Unwrap(err))
-						continue
+			select {
+			case <-t.ctx.Done():
+				return res, ErrCanceled
+			default:
+				sectRes, err := t.executeAction(log, eng, act, gf, showTeardownParamErrors)
+				res.Setup.Merge(sectRes)
+				if err != nil {
+					if act.Type() == goatfile.ActionRequest {
+						log.Error().Err(err).Field("req", act).Msg("Setup step failed")
+						if errs.IsOfType[NoAbortError](err) {
+							errsNoAbort = errsNoAbort.Append(errors.Unwrap(err))
+							continue
+						}
 					}
+					return res, err
 				}
-				return res, err
-			}
 
-			if act.Type() == goatfile.ActionRequest {
-				log.Info().Field("req", act).Msg("Setup step completed")
+				if act.Type() == goatfile.ActionRequest {
+					log.Info().Field("req", act).Msg("Setup step completed")
+				}
 			}
 		}
 	}
@@ -180,14 +194,19 @@ func (t *Executor) executeGoatfile(
 			printSeparator("TESTS")
 		}
 		for _, act := range gf.Tests {
-			sectRes, err := t.executeTest(act, eng, gf, showTeardownParamErrors)
-			res.Tests.Merge(sectRes)
-			if err != nil {
-				if act.Type() == goatfile.ActionRequest && errs.IsOfType[NoAbortError](err) {
-					errsNoAbort = errsNoAbort.Append(errors.Unwrap(err))
-					continue
+			select {
+			case <-t.ctx.Done():
+				return res, ErrCanceled
+			default:
+				sectRes, err := t.executeTest(act, eng, gf, showTeardownParamErrors)
+				res.Tests.Merge(sectRes)
+				if err != nil {
+					if act.Type() == goatfile.ActionRequest && errs.IsOfType[NoAbortError](err) {
+						errsNoAbort = errsNoAbort.Append(errors.Unwrap(err))
+						continue
+					}
+					return res, err
 				}
-				return res, err
 			}
 		}
 	}

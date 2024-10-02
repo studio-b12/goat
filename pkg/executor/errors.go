@@ -1,9 +1,14 @@
 package executor
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/studio-b12/goat/pkg/errs"
+)
+
+var (
+	ErrCanceled = errors.New("canceled")
 )
 
 type BatchExecutionError struct {

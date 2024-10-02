@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"crypto/tls"
 	"fmt"
 	"github.com/davecgh/go-spew/spew"
@@ -9,10 +10,12 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
+	"os/signal"
 	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/alexflint/go-arg"
@@ -129,7 +132,11 @@ func main() {
 		}}
 	})
 
-	exec := executor.New(engineMaker, req)
+	ctx, cancel := signal.NotifyContext(context.Background(),
+		syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	defer cancel()
+
+	exec := executor.New(ctx, engineMaker, req)
 	exec.Dry = args.Dry
 	exec.Skip = args.Skip
 	exec.NoAbort = args.NoAbort
