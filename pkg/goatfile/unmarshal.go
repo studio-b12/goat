@@ -3,12 +3,12 @@ package goatfile
 import (
 	"fmt"
 	"io/fs"
-	"os"
 	"path"
 	"strings"
 
 	"github.com/studio-b12/goat/pkg/errs"
 	"github.com/studio-b12/goat/pkg/set"
+	"github.com/studio-b12/goat/pkg/util"
 	"github.com/zekrotja/rogu/log"
 )
 
@@ -16,7 +16,7 @@ import (
 // to parse it. Returns the parsed Goatfile.
 func Unmarshal(raw string, fileDir string) (gf Goatfile, err error) {
 	fileDir = strings.ReplaceAll(fileDir, "\\", "/")
-	return unmarshal(os.DirFS("."), raw, fileDir, set.Set[string]{})
+	return unmarshal(&util.RootFs{}, raw, fileDir, set.Set[string]{})
 }
 
 func unmarshal(fSys fs.FS, raw string, fileDir string, visited set.Set[string]) (gf Goatfile, err error) {

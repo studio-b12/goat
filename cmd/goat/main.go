@@ -5,8 +5,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/studio-b12/goat/pkg/errs"
 	"io/fs"
 	"net/http"
 	"os"
@@ -17,6 +15,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/studio-b12/goat/pkg/errs"
 
 	"github.com/alexflint/go-arg"
 	"github.com/studio-b12/goat/internal/embedded"
@@ -96,7 +96,6 @@ func main() {
 		}
 
 		goatfiles = failed
-		spew.Dump(goatfiles)
 	}
 
 	if len(goatfiles) == 0 {
