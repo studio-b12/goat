@@ -1,4 +1,6 @@
-# 🐐 goat &nbsp; [![GitHub release (with filter)](https://img.shields.io/github/v/release/studio-b12/goat)](https://github.com/studio-b12/goat/releases) [![Deploy Book](https://github.com/studio-b12/goat/actions/workflows/docgen.yml/badge.svg)](https://studio-b12.github.io/goat)  [![Unit Tests](https://github.com/studio-b12/goat/actions/workflows/tests.yml/badge.svg)](https://github.com/studio-b12/goat/actions/workflows/tests.yml)
+![](.github/media/banner.png)
+
+[![GitHub release (with filter)](https://img.shields.io/github/v/release/studio-b12/goat)](https://github.com/studio-b12/goat/releases) [![Deploy Book](https://github.com/studio-b12/goat/actions/workflows/docgen.yml/badge.svg)](https://studio-b12.github.io/goat)  [![Unit Tests](https://github.com/studio-b12/goat/actions/workflows/tests.yml/badge.svg)](https://github.com/studio-b12/goat/actions/workflows/tests.yml)
 
 goat *(**Go** **A**PI **T**ester)* is a CLI tool to simplify and automate integration testing of HTTP APIs by using human writable, readable, reusable and committable script files.
 
@@ -84,9 +86,11 @@ If you find any issues, want to submit a suggestion for a new feature or improve
 
 If you want to contribute to the project, just [create a fork](https://github.com/studio-b12/goat/fork) and [create a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) with your changes. We are happy to review your contribution and make you a part of the project. 😄
 
----
+## Licenses
 
-© 2023 B12-Touch GmbH
-https://b12-touch.de
+All code in this Repository is covered by the [BSD 3-Clause License](LICENSE).  
+© 2023 B12-Touch GmbH - https://b12-touch.de
 
-Licenced under the [BSD 3-Clause License](LICENSE).
+The logo of the project is licenced under the [Creative Commons 4.0 Attribution-Sharealike](https://creativecommons.org/licenses/by-sa/4.0/).  
+© 2025 Ringo Hoffmann - https://zekro.de
+
