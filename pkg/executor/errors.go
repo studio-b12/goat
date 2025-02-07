@@ -1,9 +1,16 @@
 package executor
 
 import (
+	"errors"
 	"fmt"
+	"path/filepath"
 
 	"github.com/studio-b12/goat/pkg/errs"
+	"github.com/zekrotja/rogu/log"
+)
+
+var (
+	ErrCanceled = errors.New("canceled")
 )
 
 type BatchExecutionError struct {
@@ -38,7 +45,16 @@ func (t *BatchResultError) FailedFiles() (files []string) {
 	files = make([]string, 0, len(t.Inner))
 	for _, err := range t.Inner {
 		if batchErr, ok := errs.As[*BatchExecutionError](err); ok {
-			files = append(files, batchErr.Path)
+			bePath := batchErr.Path
+			if !filepath.IsAbs(bePath) {
+				absBePath, err := filepath.Abs(bePath)
+				if err == nil {
+					bePath = absBePath
+				} else {
+					log.Error().Err(err).Field("dir", bePath).Msg("Failed getting absolute path to dir")
+				}
+			}
+			files = append(files, bePath)
 		}
 	}
 	return files
