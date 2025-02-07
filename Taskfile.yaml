@@ -102,14 +102,17 @@ tasks:
 
   serve-book:
     desc: "Start the documentation mdbook server."
-    aliases: [book-serve]
+    aliases:
+      - book
+      - book-serve
     dir: "docs/book"
     cmds:
       - mdbook serve
 
   build-book:
     desc: "Build the mdbook documentation."
-    aliases: [book-build]
+    aliases:
+      - book-build
     dir: "docs/book"
     cmds:
       - mdbook build
