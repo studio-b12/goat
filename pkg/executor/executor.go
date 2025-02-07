@@ -356,7 +356,7 @@ func (t *Executor) executeAction(
 		res.Inc()
 		req := act.(*goatfile.Request)
 		log.Trace().Fields("options", req.Options).Msg("Request Options")
-		err = t.executeRequest(eng, *req, gf)
+		err = t.executeRequest(eng, req, gf)
 		if err != nil {
 			res.IncFailed()
 			err = errs.WithSuffix(err, fmt.Sprintf("(%s:%d)", req.Path, req.PosLine))
@@ -384,7 +384,7 @@ func (t *Executor) executeAction(
 	}
 }
 
-func (t *Executor) executeRequest(eng engine.Engine, req goatfile.Request, gf goatfile.Goatfile) (err error) {
+func (t *Executor) executeRequest(eng engine.Engine, req *goatfile.Request, gf goatfile.Goatfile) (err error) {
 	req.Merge(gf.Defaults)
 
 	if !t.isAbortOnError(req) {
@@ -533,7 +533,7 @@ func (t *Executor) isSkip(section goatfile.SectionName) bool {
 	return false
 }
 
-func (t *Executor) isAbortOnError(req goatfile.Request) bool {
+func (t *Executor) isAbortOnError(req *goatfile.Request) bool {
 	opts := AbortOptionsFromMap(req.Options)
 
 	if opts.AlwaysAbort {
