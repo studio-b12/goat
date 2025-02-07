@@ -1,0 +1,18 @@
+### Defaults
+
+[Header]
+A: B
+
+[Auth]
+username = "foo"
+password = "bar"
+
+---
+
+### Tests
+
+GET {{.instance}}/
+
+[Script]
+debug(response);
+assert(response.Body.headers.Authorization[0] === "basic Zm9vOmJhcg==");
