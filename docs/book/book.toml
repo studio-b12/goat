@@ -9,4 +9,5 @@ title = "Goat"
 command = "mdbook-mermaid"
 
 [output.html]
+site-url = "/goat/"
 additional-js = ["js/mermaid.min.js", "js/mermaid-init.js"]

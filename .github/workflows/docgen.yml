@@ -21,6 +21,9 @@ jobs:
           override: true
           toolchain: stable
 
+      - name: Cache cargo & target directories
+        uses: Swatinem/rust-cache@v2
+
       - name: "Checkout Code"
         uses: actions/checkout@v2
 
