@@ -14,6 +14,7 @@ $binaryBody
 assert_eq(response.Body.body_string, '\x67\x6f\x61\x74');
 
 ---
+
 // With manually set Content-Type
 POST {{.instance}}/
 
@@ -29,5 +30,19 @@ $binaryBody:text/plain
 
 [Script]
 assert_eq(response.Body.body_string, '\x67\x6f\x61\x74');
+var contentType = response.Body.headers["Content-Type"];
+assert(contentType, 'text/plain', `Invalid Content-Type header: ${contentType}`);
+
+var binResponse = response.BodyRaw;
+
+---
+
+// With manually set Content-Type
+POST {{.instance}}/
+
+[Body]
+$binResponse:text/plain
+
+[Script]
 var contentType = response.Body.headers["Content-Type"];
 assert(contentType, 'text/plain', `Invalid Content-Type header: ${contentType}`);

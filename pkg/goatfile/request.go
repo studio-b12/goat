@@ -3,14 +3,15 @@ package goatfile
 import (
 	"errors"
 	"fmt"
-	"github.com/studio-b12/goat/pkg/engine"
-	"github.com/studio-b12/goat/pkg/errs"
-	"github.com/studio-b12/goat/pkg/goatfile/ast"
-	"github.com/studio-b12/goat/pkg/util"
 	"io"
 	"net/http"
 	"net/url"
 	"reflect"
+
+	"github.com/studio-b12/goat/pkg/engine"
+	"github.com/studio-b12/goat/pkg/errs"
+	"github.com/studio-b12/goat/pkg/goatfile/ast"
+	"github.com/studio-b12/goat/pkg/util"
 )
 
 const conditionOptionName = "condition"
@@ -234,7 +235,8 @@ func (t *Request) InsertRawDataIntoBody(state engine.State) error {
 	if !ok {
 		return ErrVarNotFound
 	}
-	rv := reflect.ValueOf(v)
+
+	rv := util.UnwrapPointer(reflect.ValueOf(v))
 	if rv.Kind() != reflect.Slice || rv.Type().Elem().Kind() != reflect.Uint8 {
 		return errs.WithPrefix(fmt.Sprintf("$%v :", body.varName), ErrNotAByteArray)
 	}
