@@ -258,7 +258,7 @@ func (t *Request) InsertRawDataIntoFormData(state engine.State) error {
 			if !ok {
 				return ErrVarNotFound
 			}
-			rv := reflect.ValueOf(valeFromState)
+			rv := util.UnwrapPointer(reflect.ValueOf(valeFromState))
 			if rv.Kind() != reflect.Slice || rv.Type().Elem().Kind() != reflect.Uint8 {
 				return errs.WithPrefix(fmt.Sprintf("$%v :", vd.VarName), ErrNotAByteArray)
 			}
