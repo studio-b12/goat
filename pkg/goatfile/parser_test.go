@@ -1,9 +1,10 @@
 package goatfile
 
 import (
-	"github.com/studio-b12/goat/pkg/goatfile/ast"
 	"strings"
 	"testing"
+
+	"github.com/studio-b12/goat/pkg/goatfile/ast"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -177,6 +178,27 @@ windows = @"C:\test\file.png":image/png // yes, people actually still use this
 			Path:        "C:\\test\\file.png",
 			ContentType: "image/png",
 		}, formData["windows"])
+	})
+
+	t.Run("single-rawvalue", func(t *testing.T) {
+		const raw = `
+		
+GET https://example.com
+
+[FormData]
+data = $someData
+		`
+
+		p := stringParser(raw)
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t, 1, len(res.Actions))
+		assert.Equal(t, "GET", res.Actions[0].(*ast.Request).Head.Method)
+		assert.Equal(t, "https://example.com", res.Actions[0].(*ast.Request).Head.Url)
+
+		formData := res.Actions[0].(*ast.Request).Blocks[0].(ast.FormData).KVList.ToMap()
+		assert.Equal(t, ast.RawDescriptor{VarName: "someData"}, formData["data"])
 	})
 
 	t.Run("single-invalidblockheader", func(t *testing.T) {
@@ -598,7 +620,7 @@ some body content
 		assert.ErrorIs(t, err, ErrOpenEscapeBlock, err)
 	})
 
-	t.Run("script general", func(t *testing.T) {
+	t.Run("script-general", func(t *testing.T) {
 		const raw = `
 
 GET https://example.com
@@ -619,6 +641,82 @@ var id = response.Body.id;
 			ast.TextBlock{Content: `assert(response.StatusCode == 200, "invalid status code");` +
 				"\nvar id = response.Body.id;\n"},
 			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestScript).DataContent)
+	})
+
+	t.Run("body-file-descriptor-unescaped", func(t *testing.T) {
+		const raw = `
+
+GET https://example.com
+
+[Body]
+@some/path/to/file.txt:text/plain
+`
+
+		p := stringParser(raw)
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t,
+			ast.FileDescriptor{Path: "some/path/to/file.txt", ContentType: "text/plain"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
+	})
+
+	t.Run("body-file-descriptor-escaped", func(t *testing.T) {
+		const raw = `
+
+GET https://example.com
+
+[Body]
+´´´
+@some/path/to/file.txt:text/plain
+´´´
+`
+
+		p := stringParser(swapTicks(raw))
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t,
+			ast.TextBlock{Content: "@some/path/to/file.txt:text/plain\n"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
+	})
+
+	t.Run("body-raw-descriptor-unescaped", func(t *testing.T) {
+		const raw = `
+
+GET https://example.com
+
+[Body]
+$someVariable:text/plain
+`
+
+		p := stringParser(raw)
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t,
+			ast.RawDescriptor{VarName: "someVariable", ContentType: "text/plain"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
+	})
+
+	t.Run("body-raw-descriptor-unescaped", func(t *testing.T) {
+		const raw = `
+
+GET https://example.com
+
+[Body]
+´´´
+$someVariable:text/plain
+´´´
+`
+
+		p := stringParser(swapTicks(raw))
+		res, err := p.Parse()
+
+		assert.Nil(t, err, err)
+		assert.Equal(t,
+			ast.TextBlock{Content: "$someVariable:text/plain\n"},
+			res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestBody).DataContent)
 	})
 }
 
@@ -1272,105 +1370,6 @@ someoption = {{ print {{ "}}" }} }}
 		assert.Equal(t, ParameterValue(` print {{ "}}" }} `), res.Actions[0].(*ast.Request).Blocks[0].(ast.RequestOptions).GetUnchecked("someoption"))
 	})
 }
-
-// TODO: This validation should now be handled on the AST
-// See https://github.com/studio-b12/goat/issues/19
-//func TestParseMultipleSectionsCheck(t *testing.T) {
-//	t.Run("multiple-options", func(t *testing.T) {
-//		const raw = `
-//GET https://example.com
-//
-//[Options]
-//someoption = "a"
-//
-//[Header]
-//some: header
-//
-//[Options]
-//anotheroption = "b"
-//		`
-//
-//		p := stringParser(raw)
-//		_, err := p.Parse()
-//
-//		assert.ErrorIs(t, err, ErrSectionDefinedMultiple, err)
-//		var ewd errs.ErrorWithDetails
-//		assert.True(t, errors.As(err, &ewd))
-//		assert.Equal(t, fmt.Sprintf("[%s]:", optionNameOptions), ewd.Details.(string))
-//	})
-//
-//	t.Run("multiple-header", func(t *testing.T) {
-//		const raw = `
-//GET https://example.com
-//[Header]
-//some: header
-//
-//[Options]
-//someoption = "a"
-//
-//[Header]
-//		`
-//
-//		p := stringParser(raw)
-//		_, err := p.Parse()
-//
-//		assert.ErrorIs(t, err, ErrSectionDefinedMultiple, err)
-//		var ewd errs.ErrorWithDetails
-//		assert.True(t, errors.As(err, &ewd))
-//		assert.Equal(t, fmt.Sprintf("[%s]:", optionNameHeader), ewd.Details.(string))
-//	})
-//
-//	t.Run("multiple-script", func(t *testing.T) {
-//		const raw = `
-//GET https://example.com
-//[Header]
-//some: header
-//
-//[Options]
-//someoption = "a"
-//
-//[Script]
-//
-//[Script]
-//
-//		`
-//
-//		p := stringParser(raw)
-//		_, err := p.Parse()
-//
-//		assert.ErrorIs(t, err, ErrSectionDefinedMultiple, err)
-//		var ewd errs.ErrorWithDetails
-//		assert.True(t, errors.As(err, &ewd))
-//		assert.Equal(t, fmt.Sprintf("[%s]:", optionNameScript), ewd.Details.(string))
-//	})
-//
-//	t.Run("multiple-body", func(t *testing.T) {
-//		const raw = `
-//GET https://example.com
-//[Header]
-//some: header
-//
-//[Options]
-//someoption = "a"
-//
-//[Body]
-//foobar
-//
-//[Script]
-//
-//[Body]
-//barbazz
-//		`
-//
-//		p := stringParser(raw)
-//		_, err := p.Parse()
-//
-//		assert.ErrorIs(t, err, ErrSectionDefinedMultiple, err)
-//		var ewd errs.ErrorWithDetails
-//		assert.True(t, errors.As(err, &ewd))
-//		assert.Equal(t, fmt.Sprintf("[%s]:", optionNameBody), ewd.Details.(string))
-//	})
-//}
 
 func TestLogSections(t *testing.T) {
 	t.Run("general", func(t *testing.T) {

@@ -6,9 +6,9 @@ import (
 )
 
 // SafeJsonMarshalIndent takes any object and
-// decodes it into indentated JSON, when possible.
+// decodes it into indented JSON, when possible.
 //
-// If an error is returned by the JSON marshaler,
+// If an error is returned by the JSON marshaller,
 // the error will be returned as string.
 func SafeJsonMarshalIndent(v any) string {
 	b, err := json.MarshalIndent(v, "", "  ")
