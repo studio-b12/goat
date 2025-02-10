@@ -15,5 +15,6 @@
 
 # ETC
 
-- Goat now has an official logo *(like every cool and fancy open-source project has)*!
+- Goat now has an official logo *(like every cool and fancy open-source project has)*!  
+  <small>© 2025 Ringo Hoffmann - Licenced under the [Creative Commons 4.0 Attribution-Sharealike](https://creativecommons.org/licenses/by-sa/4.0).</small>  
   ![](https://raw.githubusercontent.com/studio-b12/goat/refs/heads/main/.github/media/banner.png)
