@@ -57,6 +57,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: bin/
+          merge-multiple: "true"
       - name: Inject Version into Changelog
         run: |-
           sed -i "s/\[VERSION\]/$(git describe --tags --abbrev=0)/g" CHANGELOG.md
