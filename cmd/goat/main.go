@@ -70,8 +70,8 @@ func main() {
 	} else {
 		w := rogu.NewPrettyWriter(os.Stdout)
 		w.NoColor = args.NoColor
-		w.TimeFormat = time.RFC3339
-		w.StyleTag.Width(20)
+		w.TimeFormat = time.TimeOnly
+		w.StyleTag = w.StyleTag.Width(20)
 		log.SetWriter(w)
 	}
 

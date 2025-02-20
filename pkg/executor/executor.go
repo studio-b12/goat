@@ -83,7 +83,7 @@ func (t *Executor) Execute(pathes []string, initialParams engine.State, showTear
 // ExecuteGoatfile runs the given parsed Goatfile. The given initialParams are
 // used as initial state for the runtime engine.
 func (t *Executor) ExecuteGoatfile(gf goatfile.Goatfile, initialParams engine.State, showTeardownParamErrors bool) (res Result, err error) {
-	log := log.Tagged(gf.Path)
+	log := log.Tagged(strings.TrimSuffix(gf.Path, ".goat"))
 
 	if t.Dry {
 		log.Warn().Msg("This is a dry run: no requets will be executed")
@@ -319,7 +319,7 @@ func (t *Executor) executeTest(
 	showTeardownParamErrors bool,
 ) (res ResultSection, err error) {
 	var errsNoAbort errs.Errors
-	log := log.Tagged(gf.Path)
+	log := log.Tagged(strings.TrimSuffix(gf.Path, ".goat"))
 
 	res, err = t.executeAction(log, eng, act, gf, showTeardownParamErrors)
 	if err != nil {
@@ -503,7 +503,7 @@ func (t *Executor) executeExecute(params goatfile.Execute, eng engine.Engine, sh
 		return Result{}, err
 	}
 
-	log := log.Tagged(gf.Path)
+	log := log.Tagged(strings.TrimSuffix(gf.Path, ".goat"))
 
 	isolatedEng := t.engineMaker()
 	isolatedEng.SetState(params.Params)
