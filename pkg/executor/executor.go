@@ -350,6 +350,8 @@ func (t *Executor) executeAction(
 	gf goatfile.Goatfile,
 	showTeardownParamErrors bool,
 ) (res ResultSection, err error) {
+	log.Trace().Field("act", act).Msg("Executing action")
+
 	switch act.Type() {
 
 	case goatfile.ActionRequest:
