@@ -51,6 +51,7 @@ type Args struct {
 	Silent        bool          `arg:"-s,--silent,env:GOATARG_SILENT" help:"Disables all logging output"`
 	Skip          []string      `arg:"--skip,separate,env:GOATARG_SKIP" help:"Section(s) to be skipped during execution"`
 	RetryFailed   bool          `arg:"--retry-failed,env:GOATARG_RETRYFAILED" help:"Retry files which have failed in the previous run"`
+	LogFile       string        `arg:"--log-file,env:GOATARG_LOGFILE" help:"Output JSON logs additionally to a logfile"`
 }
 
 func main() {
@@ -73,6 +74,15 @@ func main() {
 		w.TimeFormat = time.TimeOnly
 		w.StyleTag = w.StyleTag.Width(20)
 		log.SetWriter(w)
+	}
+
+	if args.LogFile != "" {
+		f, err := os.OpenFile(args.LogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+		if err != nil {
+			log.Fatal().Err(err).Msg("Failed to open logfile")
+			return
+		}
+		log.AddWriter(rogu.NewJsonWriter(f))
 	}
 
 	clr.SetEnable(!args.Json && !args.NoColor)
