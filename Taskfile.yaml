@@ -8,26 +8,32 @@ tasks:
       - task: run
 
   build:
-    desc: "Build the goat binary."
+    desc: "Build the goat binary"
+    aliases:
+      - b
     cmds:
       - bash scripts/version.sh
       - defer: git checkout internal/version/version.go
       - "{{.ENV}} go build -v -o bin/goat{{.SUFFIX}} cmd/goat/main.go"
 
   install:
-    desc: "Build the goat binary and install it to the GOPATH binary directory."
+    desc: "Build the goat binary and install it to the GOPATH binary directory"
+    aliases:
+      - i
     cmds:
       - bash scripts/version.sh
       - defer: git checkout internal/version/version.go
       - go build -v -o $(go env GOPATH)/bin/goat cmd/goat/main.go
 
   run:
-    desc: "Compiles and runs goat."
+    desc: "Compiles and runs goat"
+    aliases:
+      - r
     cmds:
       - go run -v cmd/goat/main.go {{.CLI_ARGS}}
 
   release:
-    desc: "Build binaries for different architectures."
+    desc: "Build binaries for different architectures"
     cmds:
       - task: build
         vars:
@@ -55,20 +61,24 @@ tasks:
           ENV: "GOOS=windows GOARCH=arm64"
 
   test:
-    desc: "Run all unit tests."
+    desc: "Run all unit tests"
+    aliases:
+      - t
     deps:
       - mockgen
     cmds:
       - go test -v -cover ./...
 
   e2e:
-    desc: "Run end to end tests."
+    desc: "Run end to end tests"
     cmds:
       - task: install
       - bash ./e2e/run.bash
 
   lint:
-    desc: "Run staticcheck linter."
+    desc: "Run staticcheck linter"
+    aliases:
+      - l
     preconditions:
       - sh: which staticcheck
         msg: staticcheck is not installed!
@@ -79,14 +89,14 @@ tasks:
 
   bundle:
     desc: "Builds binaries for different architectures and bundles the
-      current directory into a gzipped tarball."
+      current directory into a gzipped tarball"
     deps:
       - release
     cmds:
-      - tar -czvf goat.tar.gz $(ls -a1 | grep -v "^\.\.$" | grep -v "^\.$")
+      - tar -czvf goat.tar.gz bin/ LICENSE README.md
 
   mockgen:
-    desc: "(Re-)generate mock files for unit tests."
+    desc: "(Re-)generate mock files for unit tests"
     preconditions:
       - sh: which mockgen
         msg: mockgen is not installed. Use 'task dev-env' to set up all required tools.
@@ -95,13 +105,13 @@ tasks:
       - mockgen -package mocks io/fs FS,File,FileInfo > mocks/fs.go
 
   dev-env:
-    desc: "Execute all necessary steps to set up a working dev environment for goat."
+    desc: "Execute all necessary steps to set up a working dev environment for goat"
     cmds:
       - go install github.com/golang/mock/mockgen@latest
       - task: mockgen
 
   serve-book:
-    desc: "Start the documentation mdbook server."
+    desc: "Start the documentation mdbook server"
     aliases:
       - book
       - book-serve
@@ -110,7 +120,7 @@ tasks:
       - mdbook serve
 
   build-book:
-    desc: "Build the mdbook documentation."
+    desc: "Build the mdbook documentation"
     aliases:
       - book-build
     dir: "docs/book"
