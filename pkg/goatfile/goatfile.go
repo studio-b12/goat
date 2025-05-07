@@ -8,9 +8,10 @@ package goatfile
 
 import (
 	"errors"
+	"slices"
+
 	"github.com/studio-b12/goat/pkg/goatfile/ast"
 	"github.com/studio-b12/goat/pkg/util"
-	"slices"
 )
 
 type SectionName string
@@ -25,14 +26,15 @@ const (
 type optionName string
 
 const (
-	optionNameQueryParams = optionName("queryparams")
-	optionNameHeader      = optionName("header")
-	optionNameBody        = optionName("body")
-	optionNamePreScript   = optionName("prescript")
-	optionNameScript      = optionName("script")
-	optionNameOptions     = optionName("options")
-	optionNameAuth        = optionName("auth")
-	optionNameFormData    = optionName("formdata")
+	optionNameQueryParams    = optionName("queryparams")
+	optionNameHeader         = optionName("header")
+	optionNameBody           = optionName("body")
+	optionNamePreScript      = optionName("prescript")
+	optionNameScript         = optionName("script")
+	optionNameOptions        = optionName("options")
+	optionNameAuth           = optionName("auth")
+	optionNameFormData       = optionName("formdata")
+	optionNameFormUrlEncoded = optionName("formurlencoded")
 )
 
 // Goatfile holds all sections and

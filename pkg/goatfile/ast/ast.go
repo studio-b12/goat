@@ -182,3 +182,7 @@ type RequestScript struct {
 type FormData struct {
 	KVList[any]
 }
+
+type FormUrlEncoded struct {
+	KVList[any]
+}
