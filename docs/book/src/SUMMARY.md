@@ -23,6 +23,7 @@
     - [Auth](./goatfile/requests/auth.md)
     - [Body](./goatfile/requests/body.md)
     - [FormData](./goatfile/requests/formdata.md)
+    - [FormUrlEncoded](./goatfile/requests/formurlencoded.md)
     - [PreScript](./goatfile/requests/prescript.md)
     - [Script](./goatfile/requests/script.md)
 - [Templating](./templating/index.md)

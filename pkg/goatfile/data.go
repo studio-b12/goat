@@ -4,18 +4,20 @@ import (
 	"bytes"
 	"crypto/rand"
 	"fmt"
-	"github.com/studio-b12/goat/pkg/errs"
-	"github.com/studio-b12/goat/pkg/goatfile/ast"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
+	"net/url"
 	"os"
 	"os/user"
 	"path"
 	"path/filepath"
 	"reflect"
 	"strings"
+
+	"github.com/studio-b12/goat/pkg/errs"
+	"github.com/studio-b12/goat/pkg/goatfile/ast"
 )
 
 var quoteEscaper = strings.NewReplacer("\\", "\\\\", `"`, "\\\"")
@@ -70,6 +72,11 @@ func DataFromAst(di ast.DataContent, filePath string) (data Data, header http.He
 			boundary: boundary,
 		}
 		return fd, header, nil
+	case ast.FormUrlEncoded:
+		header = http.Header{
+			"Content-Type": []string{"application/x-www-form-urlencoded"},
+		}
+		return FormUrlEncoded{fields: d.KVList.ToMap()}, header, nil
 	default:
 		return nil, nil, fmt.Errorf("invalid ast data content type: %v", di)
 	}
@@ -236,4 +243,17 @@ func randomBoundary() (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("%x", buf[:]), nil
+}
+
+type FormUrlEncoded struct {
+	fields map[string]any
+}
+
+func (t FormUrlEncoded) Reader() (io.Reader, error) {
+	values := url.Values{}
+	for k, v := range t.fields {
+		values.Add(k, fmt.Sprintf("%v", v))
+	}
+	rdr := strings.NewReader(values.Encode())
+	return rdr, nil
 }

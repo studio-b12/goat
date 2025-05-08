@@ -2,6 +2,7 @@ package goatfile
 
 import (
 	"fmt"
+
 	"github.com/studio-b12/goat/pkg/goatfile/ast"
 )
 
@@ -31,5 +32,7 @@ func ActionFromAst(act ast.Action, path string) (Action, error) {
 // used to cast the action to the specific
 // Action implementation.
 type Action interface {
+	fmt.Stringer
+
 	Type() ActionType
 }

@@ -11,7 +11,7 @@ require (
 	github.com/itchyny/gojq v0.12.17
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.8.1
-	github.com/traefik/paerser v0.2.1
+	github.com/traefik/paerser v0.2.2
 	github.com/zekrotja/rogu v0.8.0
 )
 
@@ -22,9 +22,9 @@ require (
 	github.com/charmbracelet/lipgloss v1.0.0 // indirect
 	github.com/charmbracelet/x/ansi v0.8.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/dlclark/regexp2 v1.11.4 // indirect
+	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.4+incompatible // indirect
-	github.com/google/pprof v0.0.0-20250202011525-fc3143867406 // indirect
+	github.com/google/pprof v0.0.0-20250208200701-d0013a598941 // indirect
 	github.com/itchyny/timefmt-go v0.1.6 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect

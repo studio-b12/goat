@@ -79,6 +79,8 @@ func RequestFromAst(req *ast.Request, path string) (t *Request, err error) {
 			t.Script, _, err = DataFromAst(b.DataContent, path)
 		case ast.FormData:
 			t.Body, additionalHeader, err = DataFromAst(b, path)
+		case ast.FormUrlEncoded:
+			t.Body, additionalHeader, err = DataFromAst(b, path)
 		default:
 			err = fmt.Errorf("invalid request ast block type: %+v", block)
 		}
@@ -202,6 +204,12 @@ func (t *Request) SubstituteWithParams(params any) error {
 		}
 		t.Body = body
 	case FormData:
+		err = ApplyTemplateToMap(body.fields, params)
+		if err != nil {
+			return err
+		}
+		t.Body = body
+	case FormUrlEncoded:
 		err = ApplyTemplateToMap(body.fields, params)
 		if err != nil {
 			return err

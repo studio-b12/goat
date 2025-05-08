@@ -3,10 +3,11 @@ package goatfile
 import (
 	"bytes"
 	"fmt"
-	"github.com/studio-b12/goat/pkg/goatfile/ast"
 	"io"
 	"strconv"
 	"strings"
+
+	"github.com/studio-b12/goat/pkg/goatfile/ast"
 
 	"github.com/studio-b12/goat/pkg/errs"
 )
@@ -543,6 +544,14 @@ func (t *Parser) parseBlock() (ast.RequestBlock, []ast.Comment, error) {
 		}
 		comments = append(comments, comms...)
 		return ast.FormData{KVList: data}, comments, nil
+
+	case optionNameFormUrlEncoded:
+		data, comms, err := t.parseBlockEntries(nil)
+		if err != nil {
+			return nil, nil, err
+		}
+		comments = append(comments, comms...)
+		return ast.FormUrlEncoded{KVList: data}, comments, nil
 
 	default:
 		return nil, nil, errs.WithSuffix(ErrInvalidBlockHeader,
