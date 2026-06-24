@@ -465,6 +465,7 @@ func (t *Executor) executeRequest(eng engine.Engine, req *goatfile.Request, gf g
 	if err != nil {
 		return errs.WithPrefix("http request failed:", err)
 	}
+	defer httpResp.Body.Close()
 
 	resp, err := FromHttpResponse(httpResp, req.Options)
 	if err != nil {
